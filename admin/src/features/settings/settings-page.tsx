@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
-import { AlertTriangle, CheckCircle2, Info, Pencil } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel, PanelBody, PanelHead } from '@/components/ui/panel';
@@ -9,15 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Table } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldHelp, FieldLabel, FormRow } from '@/components/ui/field';
 import { SingleImageUpload } from '@/components/ui/media-upload';
 import { EditPageSkeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/api/client';
-import { EMAIL_TEMPLATES, SETTINGS_TABS, type EmailTemplate } from './fixtures';
+import { SETTINGS_TABS } from './fixtures';
 import { settingsKeys, updateSettings, useSettings, type GeneralSettings } from './queries';
 import {
   currenciesKeys,
@@ -383,137 +381,6 @@ function CurrencyRow({
   );
 }
 
-function EmailTemplatesTab() {
-  const [templates, setTemplates] = useState<EmailTemplate[]>(EMAIL_TEMPLATES);
-  const [editing, setEditing] = useState<EmailTemplate | null>(null);
-
-  const saveTemplate = (updated: EmailTemplate) => {
-    setTemplates((list) => list.map((t) => (t.id === updated.id ? updated : t)));
-    setEditing(null);
-    toast.success('Template saved', { description: `“${updated.name}” updated.` });
-  };
-
-  return (
-    <div className="flex flex-col gap-[18px]">
-      <div className="border-accent/30 bg-accent-soft/40 text-foreground flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-[13px]">
-        <Info className="text-accent mt-0.5 size-4 flex-none" />
-        <span>
-          Automatic emails aren&apos;t active in v1 — they start sending once the email provider is
-          connected. <code>{'{{tokens}}'}</code> are filled in per message.
-        </span>
-      </div>
-
-      <Panel>
-        <PanelHead
-          title="Transactional emails"
-          action={
-            <span className="text-muted-foreground text-xs">{templates.length} templates</span>
-          }
-        />
-        <PanelBody tight>
-          <Table>
-            <thead>
-              <tr>
-                <th>Template</th>
-                <th>Subject</th>
-                <th>Sent when</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {templates.map((t) => (
-                <tr key={t.id}>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{t.name}</span>
-                      <Badge variant={t.manual ? 'secondary' : 'primary'}>
-                        {t.manual ? 'Manual' : 'Automatic'}
-                      </Badge>
-                    </div>
-                    <div className="text-muted-foreground text-[11.5px]">{t.description}</div>
-                  </td>
-                  <td>
-                    <span className="text-[13px]">{t.subject}</span>
-                  </td>
-                  <td>
-                    <span className="text-muted-foreground text-xs">{t.trigger}</span>
-                  </td>
-                  <td>
-                    <div className="flex justify-end">
-                      <Button variant="ghost" size="sm" onClick={() => setEditing(t)}>
-                        <Pencil className="size-3.5" />
-                        Edit
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </PanelBody>
-      </Panel>
-
-      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        {editing && (
-          <EmailTemplateForm
-            key={editing.id}
-            template={editing}
-            onCancel={() => setEditing(null)}
-            onSave={saveTemplate}
-          />
-        )}
-      </Dialog>
-    </div>
-  );
-}
-
-function EmailTemplateForm({
-  template,
-  onCancel,
-  onSave,
-}: {
-  template: EmailTemplate;
-  onCancel: () => void;
-  onSave: (t: EmailTemplate) => void;
-}) {
-  const [subject, setSubject] = useState(template.subject);
-  const [body, setBody] = useState(template.body ?? '');
-
-  return (
-    <DialogContent>
-      <DialogTitle>Edit “{template.name}”</DialogTitle>
-      <DialogDescription>{template.trigger}</DialogDescription>
-
-      <div className="mt-4 flex flex-col gap-3.5">
-        <Field className="mb-0">
-          <FieldLabel htmlFor="tpl-subject">Subject</FieldLabel>
-          <Input id="tpl-subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
-        </Field>
-        <Field className="mb-0">
-          <FieldLabel htmlFor="tpl-body">Body</FieldLabel>
-          <Textarea
-            id="tpl-body"
-            rows={10}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Write the email body…"
-          />
-          <FieldHelp>
-            Use tokens like <code>{'{{firstName}}'}</code> — they&apos;re filled in per message.
-          </FieldHelp>
-        </Field>
-      </div>
-
-      <div className="mt-5 flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button onClick={() => onSave({ ...template, subject, body })}>Save template</Button>
-      </div>
-    </DialogContent>
-  );
-}
-
 export function SettingsPage() {
   const navigate = useNavigate();
   const { tab: tabParam } = useParams<{ tab: string }>();
@@ -522,10 +389,7 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-[880px]">
-      <PageHeader
-        title="Settings"
-        subtitle="Locales, currencies, default tier markup, system preferences"
-      />
+      <PageHeader title="Settings" subtitle="Branding, contact details, and currencies" />
 
       {/* Sub-tab nav */}
       <div
@@ -557,7 +421,6 @@ export function SettingsPage() {
 
       {active.id === 'general' && <GeneralTab />}
       {active.id === 'currencies' && <CurrenciesTab />}
-      {active.id === 'email' && <EmailTemplatesTab />}
     </div>
   );
 }

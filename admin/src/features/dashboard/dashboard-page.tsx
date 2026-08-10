@@ -2,7 +2,6 @@ import { AlertTriangle, Check, Inbox, Search, type LucideIcon } from 'lucide-rea
 import { useNavigate } from 'react-router';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
-import { SelectMenu } from '@/components/ui/select-menu';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { Panel, PanelBody, PanelHead } from '@/components/ui/panel';
 import { ActivitySkeleton, KpiCardSkeleton, Skeleton } from '@/components/ui/skeleton';
@@ -39,21 +38,7 @@ export function DashboardPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Dashboard"
-        subtitle="Snapshot of catalog, buyers, and order pipeline"
-        actions={
-          <SelectMenu
-            defaultValue="30d"
-            className="h-9 w-auto"
-            options={[
-              { value: '30d', label: 'Last 30 days' },
-              { value: '7d', label: 'Last 7 days' },
-              { value: 'quarter', label: 'This quarter' },
-            ]}
-          />
-        }
-      />
+      <PageHeader title="Dashboard" subtitle="What is live, and what is blocking the rest" />
 
       {/* KPIs (hidden until the dashboard backend provides metrics) */}
       {(isLoading || kpis.length > 0) && (

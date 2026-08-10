@@ -10,11 +10,7 @@ export interface DashKpi {
   tone?: KpiTone;
 }
 
-export const KPIS: DashKpi[] = [
-  { label: 'Order requests today', value: '5', delta: '3 awaiting confirmation', tone: 'warn' },
-  { label: 'Pending account requests', value: '3', delta: 'Oldest 2 days', tone: 'down' },
-  { label: 'Buyer accounts', value: '18', delta: '+3 this week', tone: 'up' },
-];
+export const KPIS: DashKpi[] = [];
 
 export type ValueTone = 'success' | 'warning' | 'destructive';
 

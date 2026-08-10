@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
-import { Copy, Info, Plus, UserPlus, X } from 'lucide-react';
+import { Copy, Info, UserPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -15,14 +15,12 @@ import { Input } from '@/components/ui/input';
 import { SelectMenu } from '@/components/ui/select-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { TableSkeleton } from '@/components/ui/skeleton';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import {
   assignUserRole,
   createUser,
-  deleteRole,
   rbacKeys,
   setUserSuspended,
   useRoles,
@@ -157,15 +155,10 @@ function buildMemberColumns(onManage: (m: AdminTeamMember) => void): ColumnDef<A
   ];
 }
 
-function RoleRow({
-  role,
-  onEdit,
-  onDelete,
-}: {
-  role: AdminRole;
-  onEdit: (id: string) => void;
-  onDelete: (role: AdminRole) => void;
-}) {
+// Read-only. Roles are fixed in code (PLAN.md §3) — there is no editor to open
+// and no role to delete, so an Edit or Delete button here would be a control that
+// cannot work. Tavkil's 421-line role editor is gone with them.
+function RoleRow({ role }: { role: AdminRole }) {
   const isSystem = role.type === 'system';
   return (
     <tr>
@@ -178,30 +171,6 @@ function RoleRow({
       </td>
       <td className="text-muted-foreground">{role.memberCount}</td>
       <td className="text-muted-foreground">{role.permissions.length}</td>
-      <td>
-        <div className="flex justify-end gap-1.5">
-          <Button variant="ghost" size="sm" onClick={() => onEdit(role.id)}>
-            {isSystem ? 'View' : 'Edit'}
-          </Button>
-          <ConfirmDialog
-            trigger={
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive"
-                disabled={isSystem || role.memberCount > 0}
-              >
-                Delete
-              </Button>
-            }
-            title={`Delete ${role.name}?`}
-            description="This removes the role. Members must be reassigned first."
-            confirmLabel="Delete role"
-            destructive
-            onConfirm={() => onDelete(role)}
-          />
-        </div>
-      </td>
     </tr>
   );
 }
@@ -230,15 +199,6 @@ export function UsersPage() {
 
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: rbacKeys.users });
 
-  const removeRole = useMutation({
-    mutationFn: (role: AdminRole) => deleteRole(role.id),
-    onSuccess: (_res, role) => {
-      void queryClient.invalidateQueries({ queryKey: rbacKeys.roles });
-      toast.warning('Role deleted', { description: `${role.name} removed.` });
-    },
-    onError: () => toast.error('Could not delete the role.'),
-  });
-
   return (
     <div>
       <PageHeader
@@ -250,12 +210,7 @@ export function UsersPage() {
               <UserPlus className="size-4" />
               Add member
             </Button>
-          ) : (
-            <Button onClick={() => navigate('/users/roles/new')}>
-              <Plus className="size-4" />
-              New role
-            </Button>
-          )
+          ) : undefined
         }
       />
 
@@ -330,19 +285,18 @@ export function UsersPage() {
               </thead>
               <tbody>
                 {roles.map((role) => (
-                  <RoleRow
-                    key={role.id}
-                    role={role}
-                    onEdit={(id) => navigate(`/users/roles/${id}`)}
-                    onDelete={(r) => removeRole.mutate(r)}
-                  />
+                  <RoleRow key={role.id} role={role} />
                 ))}
               </tbody>
             </Table>
           </PanelBody>
           <div className="border-border text-muted-foreground flex items-center gap-2 border-t px-[18px] py-3 text-xs">
             <Info className="size-3.5 flex-none" />
-            <span>System roles can be viewed but not edited or deleted.</span>
+            <span>
+              Roles are fixed in code and the same for every deployment. Change what a role can do
+              by editing the permission catalog and running{' '}
+              <code className="font-mono">pnpm sync:permissions</code>.
+            </span>
           </div>
         </Panel>
       )}
