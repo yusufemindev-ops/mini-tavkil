@@ -11,6 +11,18 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
+
+    // Cloudflare serves static assets BEFORE the Worker runs. The admin SPA lives
+    // in public/admin, so without this every /admin request was answered straight
+    // from the asset store and Next's middleware never executed — the gate was
+    // bypassed in production while working perfectly in `next dev`, which has no
+    // asset layer. Deep links like /admin/products 404'd for the same reason:
+    // there is no file at that path and the Worker never got asked.
+    //
+    // Routing these paths to the Worker first puts the auth check back in front,
+    // and the catch-all handler at app/admin/[[...slug]] serves the shell (and
+    // passes real asset requests back to this binding).
+    "run_worker_first": ["/admin", "/admin/*"],
   },
 
   "observability": { "enabled": true },

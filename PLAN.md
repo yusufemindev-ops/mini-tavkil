@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–8 done and deployed. Start at step 9.
+**Status:** steps 1–9 done and deployed. Start at step 10.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -435,7 +435,34 @@ leaving roughly **700 KB** for steps 8–13. The admin SPA doesn't count (it shi
 static assets), but every dependency a service module pulls in does. Check after
 each module, not at the end — the whole reason Prisma was dropped was 1.85 MB.
 
-## 9. Mount the admin
+## ✅ 9. Mount the admin — DONE
+
+**Deviation from the written plan, deliberately.** It said to build inside
+`~/Documents/tavkil` and copy `dist/` over. That contradicts CLAUDE.md's own
+premise — the tavkil repo retires once this ships — so the deletions step 9 calls
+for would have lived only in the retiring repo and the admin would have become
+unbuildable. The source is vendored here instead: `admin/`, its own package,
+installed with `pnpm --dir admin`. Its dependencies ship as static assets and never
+enter the Worker bundle.
+
+**The hard part was serving it, and it only failed in production.** Cloudflare
+answers static-asset requests before the Worker runs, so with the SPA in
+`public/admin` every `/admin` request was served from the asset store and the
+middleware never executed — the gate was bypassed on the deployed Worker while
+working perfectly under `next dev`, which has no asset layer. Deep links 404'd for
+the same reason. Three things fix it, and all three are needed:
+
+1. `assets.run_worker_first: ["/admin", "/admin/*"]` so the Worker sees the request
+2. a catch-all route handler that checks the session for real (not just cookie
+   presence) and passes genuine asset paths back to the ASSETS binding
+3. `pnpm admin:build` lifts the HTML shell out of `public/` into a generated
+   module. While it was a file, it stayed directly reachable no matter what the
+   handler did — renaming it only moved which URL was unguarded.
+
+Verified on the deployed URL: nine `/admin` paths, including traversal attempts,
+never return the shell without a real session; all 20 assets still 200.
+
+<details><summary>Original step-9 instructions</summary>
 
 1. In `~/Documents/tavkil/admin`, set the API base to same-origin (`/api`) and
    `pnpm build`
@@ -453,6 +480,8 @@ each module, not at the end — the whole reason Prisma was dropped was 1.85 MB.
 
 **Acceptance:** `/admin` loads behind Google auth, products and categories are listable
 and editable, prices show here and only here.
+
+</details>
 
 ## 10. Media pipeline
 

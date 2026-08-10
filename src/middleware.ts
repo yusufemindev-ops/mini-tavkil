@@ -20,10 +20,22 @@ const handleI18n = createMiddleware(routing);
  */
 const SESSION_COOKIE = /(^|;\s*)(__Secure-)?better-auth\.session_token=/;
 
+// Anything under /admin whose last segment has a file extension is a build
+// artefact of the SPA, not a route.
+// .html is excluded: under /admin that can only be the SPA shell, which is
+// gated like any other admin route.
+const ADMIN_ASSET = /\.(?!html?$)[a-z0-9]+$/i;
+
 export default function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/admin')) {
+    // The SPA's own JS, CSS and fonts must not be gated. They carry no data — the
+    // bundle is identical for every visitor — and redirecting them to /sign-in
+    // breaks the page for a signed-in admin whose *first* request is an asset
+    // (a hard refresh, or a cached shell re-fetching a chunk).
+    if (ADMIN_ASSET.test(pathname)) return NextResponse.next();
+
     if (!SESSION_COOKIE.test(request.headers.get('cookie') ?? '')) {
       const url = request.nextUrl.clone();
       url.pathname = '/sign-in';
