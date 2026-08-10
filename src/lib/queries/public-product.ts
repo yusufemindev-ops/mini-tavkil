@@ -18,7 +18,7 @@
  * /api/admin/*. Those may include price and supplier.
  */
 
-import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   categories,
@@ -31,6 +31,7 @@ import {
   productTranslations,
 } from '@/lib/db/schema';
 import { routing } from '@/i18n/routing';
+import { DEFAULT_PRODUCT_SORT, type ProductSort } from '@/lib/catalog/product-sort';
 
 export type Locale = (typeof routing.locales)[number];
 
@@ -91,7 +92,10 @@ export type PublicCategory = {
 export type PublicFilter = {
   /** Category slug **in the requested locale** — it comes from the URL. */
   category?: string;
+  /** Include products in child categories of `category`. */
+  includeDescendants?: boolean;
   featured?: boolean;
+  sort?: ProductSort;
   limit?: number;
   offset?: number;
 };
@@ -338,6 +342,49 @@ function toPublicProduct(
   };
 }
 
+// Resolving the category by its slug in this locale is what makes
+// `/tr/catalogue/temizlik` filter the same category `/en/catalogue/cleaning` does.
+// With `includeDescendants`, a top-level category page also lists everything in
+// its children — otherwise a parent with all its products filed under
+// subcategories would render an empty grid.
+function categoryConditions(filter: PublicFilter, locale: Locale) {
+  if (!filter.category) return [];
+
+  const matched = db
+    .select({ id: categoryTranslations.categoryId })
+    .from(categoryTranslations)
+    .where(
+      and(eq(categoryTranslations.locale, locale), eq(categoryTranslations.slug, filter.category)),
+    );
+
+  if (!filter.includeDescendants) return [inArray(products.categoryId, matched)];
+
+  const withChildren = db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(or(inArray(categories.id, matched), inArray(categories.parentId, matched)));
+
+  return [inArray(products.categoryId, withChildren)];
+}
+
+function orderFor(sort: ProductSort) {
+  switch (sort) {
+    case 'moq':
+      return [asc(products.moq), asc(productTranslations.name)];
+    case 'az':
+      return [asc(productTranslations.name)];
+    default:
+      // Featured first so a home rail reads correctly, then the admin's manual
+      // order, then a stable tiebreak so pagination can't repeat or skip a row.
+      return [
+        desc(products.isFeatured),
+        asc(products.sortOrder),
+        asc(productTranslations.name),
+        asc(products.id),
+      ];
+  }
+}
+
 /**
  * Published products for a listing surface: the home rails, a category grid, or
  * search. Options are omitted — they only matter on the product page, and
@@ -347,29 +394,17 @@ export async function publicProducts(
   filter: PublicFilter,
   locale: Locale,
 ): Promise<PublicProduct[]> {
-  const conditions = [productIsPublic, translationIsComplete(locale)];
-
-  if (filter.category) {
-    // Resolve the category by its slug in this locale, so `/tr/catalogue/temizlik`
-    // filters on the same category `/en/catalogue/cleaning` does.
-    const categoryId = db
-      .select({ id: categoryTranslations.categoryId })
-      .from(categoryTranslations)
-      .where(
-        and(
-          eq(categoryTranslations.locale, locale),
-          eq(categoryTranslations.slug, filter.category),
-        ),
-      );
-    conditions.push(inArray(products.categoryId, categoryId));
-  }
+  const conditions = [
+    productIsPublic,
+    translationIsComplete(locale),
+    ...categoryConditions(filter, locale),
+  ];
 
   if (filter.featured) conditions.push(eq(products.isFeatured, true));
 
   let query = productBaseQuery()
     .where(and(...conditions))
-    // Featured first so a home rail reads correctly, then the admin's manual order.
-    .orderBy(desc(products.isFeatured), asc(products.sortOrder), asc(productTranslations.name));
+    .orderBy(...orderFor(filter.sort ?? DEFAULT_PRODUCT_SORT));
 
   if (filter.limit !== undefined) query = query.limit(filter.limit);
   if (filter.offset !== undefined) query = query.offset(filter.offset);
@@ -559,19 +594,13 @@ export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
 
 /** Total published products in a locale — for a category grid's result count. */
 export async function publicProductCount(filter: PublicFilter, locale: Locale): Promise<number> {
-  const conditions = [productIsPublic, translationIsComplete(locale)];
-  if (filter.category) {
-    const categoryId = db
-      .select({ id: categoryTranslations.categoryId })
-      .from(categoryTranslations)
-      .where(
-        and(
-          eq(categoryTranslations.locale, locale),
-          eq(categoryTranslations.slug, filter.category),
-        ),
-      );
-    conditions.push(inArray(products.categoryId, categoryId));
-  }
+  // Shares categoryConditions with publicProducts on purpose: a count that
+  // disagreed with the grid it labels is worse than no count.
+  const conditions = [
+    productIsPublic,
+    translationIsComplete(locale),
+    ...categoryConditions(filter, locale),
+  ];
   if (filter.featured) conditions.push(eq(products.isFeatured, true));
 
   const [row] = await db

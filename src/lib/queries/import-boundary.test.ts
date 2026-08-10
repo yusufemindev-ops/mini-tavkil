@@ -50,12 +50,46 @@ describe('public route tree', () => {
   it.each(files.map((f) => [f.replace(SRC, 'src'), f]))(
     '%s does not name a supplier table',
     (_label, file) => {
-      const code = readFileSync(file, 'utf8')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .split('\n')
-        .map((line) => line.replace(/\/\/.*$/, ''))
-        .join('\n');
-      expect(code).not.toMatch(DIRECT_SCHEMA_TABLE);
+      expect(stripComments(readFileSync(file, 'utf8'))).not.toMatch(DIRECT_SCHEMA_TABLE);
+    },
+  );
+});
+
+function stripComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => line.replace(/\/\/.*$/, ''))
+    .join('\n');
+}
+
+/**
+ * A Client Component that imports a module which imports `@/lib/db` drags Drizzle,
+ * the whole schema, and `throw new Error('DATABASE_URL is not set')` into the
+ * browser bundle — where that throw fires on load and blanks the page.
+ *
+ * This happened once: the sort dropdown imported its option list from
+ * `lib/queries/public-product`. The constants now live in
+ * `lib/catalog/product-sort`, which touches nothing. `import type` is fine — types
+ * are erased — so only value imports are checked.
+ */
+describe("'use client' modules", () => {
+  const clientFiles = filesUnder(SRC).filter((file) =>
+    /^\s*['"]use client['"]/.test(readFileSync(file, 'utf8')),
+  );
+
+  // A value import (not `import type`) of a server-only module.
+  const SERVER_ONLY_VALUE_IMPORT =
+    /import\s+(?!type\b)[^;]*?from\s+['"](@\/lib\/db(?:\/[\w-]+)?|@\/lib\/queries\/[\w-]+|@\/lib\/settings|drizzle-orm(?:\/[\w-]+)?|@neondatabase\/serverless)['"]/;
+
+  it('found some client components (the scan did not go stale)', () => {
+    expect(clientFiles.length).toBeGreaterThan(0);
+  });
+
+  it.each(clientFiles.map((f) => [f.replace(SRC, 'src'), f]))(
+    '%s pulls in no database module',
+    (_label, file) => {
+      expect(stripComments(readFileSync(file, 'utf8'))).not.toMatch(SERVER_ONLY_VALUE_IMPORT);
     },
   );
 });
