@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–4 done and deployed. Start at step 5.
+**Status:** steps 1–5 done. Start at step 6.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -198,7 +198,26 @@ you on the same page; all three message files have identical key sets.
 
 </details>
 
-## 5. Public query layer
+## ✅ 5. Public query layer — DONE
+
+`publicProduct` · `publicProducts` · `publicProductCount` · `publicCategory` ·
+`publicCategories` · `publicSitemapEntries`, plus `admin-products.ts` for the reads
+that may include price and supplier. Three layers of enforcement, not one:
+
+1. the public shape has no price and no supplier field, so a leak is a type error
+2. `public-product.test.ts` greps the module's own source — the words
+   `basePriceAmount`, `supplierId`, `suppliers` never appear in it
+3. `public-product.integration.test.ts` runs all six functions against Neon in all
+   three locales and deep-walks every returned object for a price-ish key or a
+   seeded supplier name — 32 tests
+4. `import-boundary.test.ts` asserts nothing under `app/[locale]` or `components/`
+   imports an `admin-*` query or names a supplier table
+
+**Note:** `PublicImage` has no `width`/`height` — `product_images` stores neither.
+CLS is handled with a fixed aspect-ratio box instead. Step 10's upload route knows
+the real dimensions, so add the columns there if responsive `sizes` ever matter.
+
+<details><summary>Original step-5 instructions</summary>
 
 Implement the signatures already stubbed in `src/lib/queries/public-product.ts`.
 
@@ -231,6 +250,8 @@ price and supplier. Different file, different type, called only from `/api/admin
 
 **Acceptance:** a Vitest test per function asserting no `price`/`supplier` key appears
 anywhere in the returned object, nested and arrays included.
+
+</details>
 
 ## 6. Storefront pages
 
