@@ -30,7 +30,8 @@ function filesUnder(dir: string): string[] {
 }
 
 const PUBLIC_TREES = [join(SRC, 'app', '[locale]'), join(SRC, 'components')];
-const ADMIN_ONLY_IMPORT = /from\s+['"](@\/lib\/queries\/admin-[\w-]+|\.\/admin-[\w-]+)['"]/;
+const ADMIN_ONLY_IMPORT =
+  /from\s+['"](@\/lib\/queries\/admin-[\w-]+|\.\/admin-[\w-]+|@\/lib\/services\/(?!catalog-schemas|settings-schema|publish-gates)[\w-]+)['"]/;
 const DIRECT_SCHEMA_TABLE = /\b(suppliers|supplierTranslations)\b/;
 
 describe('public route tree', () => {
@@ -77,9 +78,13 @@ const MUST_STAY_PURE = [
   'lib/permissions/allowlist.ts',
   'lib/permissions/catalog.ts',
   'lib/catalog/product-sort.ts',
-  'lib/services/catalog-schemas.ts',
   'lib/services/publish-gates.ts',
   'i18n/routing.ts',
+  // Every validation module, matched by name rather than listed — the rule kept
+  // being rediscovered one file at a time.
+  ...filesUnder(join(SRC, 'lib', 'services'))
+    .filter((file) => /-schemas?\.ts$/.test(file))
+    .map((file) => file.slice(SRC.length + 1)),
 ];
 
 describe('dependency-free modules', () => {

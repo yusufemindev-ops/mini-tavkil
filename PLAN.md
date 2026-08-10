@@ -326,7 +326,7 @@ Better Auth + Google, `/api/auth/[...all]`, `requireAdmin` / `requirePermission`
 28 permissions synced, three fixed roles.
 
 **Two layers, and only one of them is the boundary.** The middleware check on
-`/admin` looks for the *presence* of a session cookie — anyone can forge that. Its
+`/admin` looks for the _presence_ of a session cookie — anyone can forge that. Its
 job is to redirect a signed-out visitor to `/sign-in` instead of a blank shell, and
 to keep a database round-trip off every asset request. The real check is
 `requireAdmin()` running server-side in the page and in every `/api/admin/*`
@@ -382,7 +382,7 @@ and the per-module checklist. Source: `~/Documents/tavkil/backend/src/modules/`.
 | categories | `GET /categories/:slug` | `/admin/categories` · `:id` · `POST reorder` · `PATCH :id` · `DELETE :id` · `:id/publish` · `:id/unpublish`                     |
 | products   | `GET /products/:slug`   | `/admin/products` · `counts` · `:id` · `reorder` · `PATCH :id` · `DELETE :id` · `publish` · `unpublish` · `archive` · `restore` |
 | suppliers  | —                       | `/admin/suppliers` · `:id` · `PATCH` · `DELETE` · `publish` · `unpublish`                                                       |
-| media      | —                       | `/admin/media`                                                                                                                  |
+| media      | —                       | `/admin/media` — **deferred to step 10**, which owns the R2 pipeline                                                            |
 | settings   | `GET /settings`         | `/admin/settings`                                                                                                               |
 | currencies | `GET /currencies`       | `/admin/currencies` · `PATCH :code` · `/admin/fx/runs` · `POST /admin/fx/refresh`                                               |
 | rbac       | —                       | `/admin/users` · `:id/role` · `:id/suspend` · `:id/reactivate` · `/admin/roles` · `/admin/permissions/catalog`                  |
