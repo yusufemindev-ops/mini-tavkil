@@ -14,8 +14,7 @@ Buyers never sign in. Prices are never public. Orders start with a contact form.
 | File             | What's in it                                                        |
 | ---------------- | ------------------------------------------------------------------- |
 | **`CLAUDE.md`**  | Hard rules, stack, definition of done. Read first.                  |
-| **`PLAN.md`**    | Every decision and why — what was cut from Tavkil and what stayed   |
-| **`DAY-1.md`**   | The build runbook, 8 blocks, ~10.75 hours                           |
+| **`PLAN.md`**    | Every decision, plus the 15 numbered steps to finish the project    |
 | **`TESTING.md`** | Vitest + Playwright + Chrome DevTools MCP                           |
 | `.env.example`   | 16 env keys, with `[carry]` markers for values reusable from Tavkil |
 

@@ -130,10 +130,10 @@ and the scaffold already uses 1.02 MB.
 
 ---
 
-## 5. Day-1 minimum
+## 5. Minimum before anything else
 
-`DAY-1.md` block 7 covers the non-negotiable subset — the public-leak Vitest suite plus
+`PLAN.md` step 14 covers the non-negotiable subset — the public-leak Vitest suite plus
 Playwright flows 1, 2, and 8. Those three are what make a live domain safe to iterate on.
 
-Everything else in this file is week 2+. Add flows as features land; don't write the
+Everything else in this file comes after. Add flows as features land; don't write the
 other eight specs against a codebase that's still moving.

@@ -19,11 +19,10 @@ Cloudflare.
 ## Reading order
 
 1. This file
-2. `PLAN.md` — decisions, scope, what was cut and why
-3. `DAY-1.md` — the build runbook
-4. `TESTING.md` — Vitest + Playwright + Chrome DevTools MCP
-5. `README.md` — setup + commands
-6. Tavkil docs at `~/Documents/foundation-pm/Tavkil/` — PRD, architecture, db-schema
+2. `PLAN.md` — decisions + the numbered steps to finish the project
+3. `TESTING.md` — Vitest + Playwright + Chrome DevTools MCP
+4. `README.md` — setup + commands
+5. Tavkil docs at `~/Documents/foundation-pm/Tavkil/` — PRD, architecture, db-schema
 
 Source repos to port from: `~/Documents/tavkil` (UI + services + schema),
 `~/Documents/temsan` (Cloudflare/Neon patterns only — never its schema or admin).
