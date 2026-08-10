@@ -1,0 +1,382 @@
+/* Hero showcase: a "TV set" that channel-hops through the catalogue's categories,
+   with a CRT switch animation and an ambient Ambilight glow. Prototype CSS
+   variables are remapped to the storefront tokens.
+
+   Tavkil's version had a SECOND set — a premium-supplier channel. Suppliers are
+   admin-only here (CLAUDE.md §1), so that set and its .scSup / .tvPrem rules are
+   gone and the remaining set flows in the stage at full width instead of being
+   absolutely positioned to overlap. */
+
+.showcase {
+  position: relative;
+}
+.stage {
+  position: relative;
+  isolation: isolate;
+}
+
+/* ambient "light from the screens" — Ambilight */
+.ambient {
+  position: absolute;
+  z-index: 0;
+  inset: 2% -4% 0;
+  border-radius: 50px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 44%,
+    color-mix(in srgb, var(--primary) 78%, transparent),
+    transparent 62%
+  );
+  filter: blur(52px);
+  opacity: 0.65;
+  transition: opacity 0.4s ease;
+}
+:global(.dark) .ambient {
+  opacity: 0.9;
+}
+.ambient.flash {
+  animation: ambFlashL 0.66s var(--ease);
+}
+:global(.dark) .ambient.flash {
+  animation: ambFlashD 0.66s var(--ease);
+}
+@keyframes ambFlashL {
+  0% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  8% {
+    opacity: 0.3;
+    transform: scale(0.96);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1.3);
+    filter: blur(92px);
+  }
+  34% {
+    opacity: 0.95;
+    transform: scale(1.16);
+  }
+  55% {
+    opacity: 0.78;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+}
+@keyframes ambFlashD {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  8% {
+    opacity: 0.45;
+    transform: scale(0.96);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1.34);
+    filter: blur(98px);
+  }
+  34% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+  55% {
+    opacity: 0.96;
+    transform: scale(1.07);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+/* —— TV set: dark bezel (same in light & dark themes) —— */
+.tv {
+  position: relative;
+  border-radius: 20px;
+  padding: 13px 13px 0;
+  background: linear-gradient(165deg, #2a2e36, #14161b);
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 72px -10px color-mix(in srgb, var(--primary) 70%, transparent);
+}
+.scCat {
+  inline-size: 100%;
+  z-index: 2;
+}
+
+.tvScreen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #06080c;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.7);
+}
+.tvInner {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform-origin: center;
+}
+.tvPh {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 30% 22%,
+    color-mix(in srgb, var(--primary) 55%, #1b1e25),
+    #0b0d12
+  );
+}
+.tvPhoto {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.tvScreen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0.13) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 120% at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.5));
+}
+.tvScreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(125deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 42%);
+}
+
+/* OSD channel chip */
+.tvOsd {
+  position: absolute;
+  inset-block-start: 11px;
+  inset-inline-start: 11px;
+  z-index: 5;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.tvCh {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.tvLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: var(--primary);
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+.tvLive .dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: scPulse 2s infinite;
+}
+
+/* caption */
+.tvCap {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 5;
+  padding: 34px 15px 14px;
+  background: linear-gradient(transparent, rgba(4, 6, 10, 0.88));
+  color: #fff;
+}
+.tvCap .k {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary-hover);
+}
+.tvCap h3 {
+  color: #fff;
+  font-size: 1.3rem;
+  margin-block-start: 5px;
+  letter-spacing: -0.01em;
+}
+.tvCap .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-block-start: 7px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+.tvCap .meta svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+:global([dir='rtl']) .tvCap .meta svg.ar {
+  transform: scaleX(-1);
+}
+
+/* bezel chrome */
+.tvFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 5px 11px;
+}
+.tvBrand {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.24em;
+  color: rgba(255, 255, 255, 0.42);
+}
+.tvCtrl {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tvKnob {
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 50%;
+  background: #3b3f48;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+.tvPwr {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+/* static + channel switch */
+.tvStatic {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  border-radius: 9px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.75'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+.tvInner.switching {
+  animation: tvSwitch 0.52s var(--ease);
+}
+.tvStatic.on {
+  animation: tvNoise 0.52s linear;
+}
+@keyframes tvSwitch {
+  0% {
+    transform: scaleY(1) scaleX(1);
+    filter: brightness(1);
+  }
+  14% {
+    transform: scaleY(0.014) scaleX(1.04);
+    filter: brightness(2.8);
+  }
+  24% {
+    transform: scaleY(0.014) scaleX(1.04);
+    filter: brightness(2.4);
+  }
+  48% {
+    transform: scaleY(1) scaleX(1);
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: scaleY(1) scaleX(1);
+    filter: brightness(1);
+  }
+}
+@keyframes tvNoise {
+  0%,
+  8% {
+    opacity: 0;
+  }
+  16% {
+    opacity: 0.9;
+  }
+  32% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.12;
+  }
+  64%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes scPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* nav */
+.scNav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-block-start: 20px;
+}
+.scDots {
+  display: flex;
+  gap: 8px;
+}
+.scDots button {
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 50%;
+  background: var(--border);
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition:
+    width 0.25s var(--ease),
+    background 0.2s;
+}
+.scDots button.on {
+  background: var(--primary);
+  inline-size: 26px;
+  border-radius: 100px;
+}
+.scArrows {
+  display: flex;
+  gap: 6px;
+  margin-inline-start: auto;
+}

@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–5 done. Start at step 6.
+**Status:** steps 1–6 done and deployed. Start at step 7.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -253,7 +253,41 @@ anywhere in the returned object, nested and arrays included.
 
 </details>
 
-## 6. Storefront pages
+## ✅ 6. Storefront pages — DONE
+
+All six routes live in EN/TR/AR: home, catalogue, category, product, about, contact.
+
+**Deleted, not ported:** `login`, `cart`, `request`, `orders`, `account`, `ui`;
+`auth/`, `cart/`, `orders/`, `account/`, `notifications/`, `dev/`; `supplier-card`,
+`price-lock`, `product-price-block`, `lib/api/*`, `lib/catalog/fixtures.ts`.
+
+**Reshaped rather than copied:**
+
+- `ProductBuyPanel` → `ProductEnquiryPanel`: order terms + a CTA to the contact form
+  with the product in the URL. No price, no supplier, no cart.
+- `ProductOptions` becomes read-only — a picker with nothing to change is worse
+  than no picker.
+- `TvShowcase` loses its premium-supplier channel (admin-only data) and the
+  remaining set fills the stage instead of overlapping.
+- The about page's six invented stat cards (340+ suppliers, 38 countries, 48h,
+  0% markup) become three counted from the database. A supplier count is
+  admin-only and there is no public price to mark up.
+
+**Bugs found by looking, not by tests:** a Client Component pulled `@/lib/db` into
+the browser bundle; a null filter rail still reserved its 300px grid track; `Reveal`
+left content permanently invisible when scrolled past quickly; `"12 L"` rendered as
+`"L 12"` under bidi in Arabic.
+
+**Copy rewritten in all three locales** — the ported strings promised buyer accounts
+and unlocked pricing throughout: `hero_lead`, `ht1-3`, `how_h2`, `s1-3_t/_d`,
+`at_l2`, `cta_*`, `cat_lead`, `con_lead`, `ab_mission_p2`, `pr3_d`, `pd_about_text`,
+`sec_h2`, `feat_*`.
+
+**Still open:** `/contact` has no working action until a `general` settings row
+carries a contact email, or step 13 lands the real form. Both controls self-hide
+rather than render dead, so the page degrades correctly meanwhile.
+
+<details><summary>Original step-6 instructions</summary>
 
 Port from `tavkil/storefront/src/app/[locale]/`:
 
@@ -283,6 +317,8 @@ Server Components only. Delete `lib/catalog/fixtures.ts` and `lib/api/*`.
 **Acceptance:** every page renders in 3 locales; **view-source** on each contains no
 price and no supplier name; unknown slug → 404 not 500; 375px wide has no horizontal
 scroll.
+
+</details>
 
 ## 7. Admin auth
 
