@@ -401,6 +401,12 @@ Order: **categories → products → suppliers → media → settings + currenci
 - Zod DTOs in `dto/` port unchanged — parse at the top of each handler.
 - After each module: `wrangler deploy --dry-run` to watch the bundle.
 
+**⚠ Bundle headroom is now the real constraint.** Better Auth cost ~630 KB gzipped
+at step 7: the Worker went from **1.66 MB → 2.29 MB** of the 3 MB free-plan limit,
+leaving roughly **700 KB** for steps 8–13. The admin SPA doesn't count (it ships as
+static assets), but every dependency a service module pulls in does. Check after
+each module, not at the end — the whole reason Prisma was dropped was 1.85 MB.
+
 ## 9. Mount the admin
 
 1. In `~/Documents/tavkil/admin`, set the API base to same-origin (`/api`) and
