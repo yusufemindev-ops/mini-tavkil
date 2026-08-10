@@ -1,0 +1,25 @@
+node_modules/
+.next/
+.open-next/
+.wrangler/
+dist/
+build/
+
+# secrets — never commit
+.env
+.env.local
+.dev.vars
+.claude/settings.local.json
+
+# generated
+prisma/generated/
+*.tsbuildinfo
+next-env.d.ts
+
+# test output
+playwright-report/
+test-results/
+coverage/
+.playwright-mcp/
+
+.DS_Store

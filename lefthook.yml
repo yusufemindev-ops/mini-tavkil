@@ -1,0 +1,28 @@
+# Local gates. Mirror of CI — see TESTING.md §4.
+# Install: pnpm exec lefthook install
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: prettier
+      glob: '**/*.{ts,tsx,js,mjs,json,md,css,yml,yaml}'
+      run: pnpm exec prettier --check {staged_files}
+
+    - name: eslint
+      glob: '**/*.{ts,tsx}'
+      run: pnpm exec eslint {staged_files}
+
+    - name: no-secrets
+      run: |
+        if git diff --cached --name-only | grep -qE '^(\.env|\.dev\.vars)$'; then
+          echo "Refusing to commit .env / .dev.vars"; exit 1
+        fi
+
+pre-push:
+  parallel: false
+  jobs:
+    - name: typecheck
+      run: pnpm typecheck
+
+    - name: unit-tests
+      run: pnpm test

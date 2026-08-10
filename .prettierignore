@@ -1,0 +1,7 @@
+.next/
+.open-next/
+node_modules/
+pnpm-lock.yaml
+src/generated/
+prisma/migrations/
+playwright-report/
