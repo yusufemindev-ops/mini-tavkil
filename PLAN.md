@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–7 done and deployed. Start at step 8.
+**Status:** steps 1–8 done and deployed. Start at step 9.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -370,7 +370,33 @@ rejected; `permissions` table is populated; `/api/admin/*` returns 401 when sign
 
 </details>
 
-## 8. Port the services
+## ✅ 8. Port the services — DONE
+
+Six modules, **39 admin routes**, every one verified returning 401 to an anonymous
+caller on the deployed URL. Media is deferred to step 10, which owns the R2
+pipeline — Tavkil's writes to local disk with multer, which cannot run on Workers.
+
+**`adminRoute()` is the load-bearing piece.** Nest applied `@RequirePermission`
+through the framework; a Next route handler is just an exported function, so
+nothing stops someone writing one without a guard. Making the permission a required
+argument of the only helper used to build these handlers puts it back in the type
+system, and it authorises before reading the body.
+
+**No public API endpoints were ported.** Tavkil's storefront fetched over HTTP;
+ours reads the database directly from Server Components. A public JSON endpoint
+would be an un-consumed surface and one more place a price could leak.
+
+**Business logic kept verbatim:** both publish gates, publish-appends-to-the-end,
+reorder-is-published-only, the options/variants rebuild keyed by client `key`, and
+product↔default-variant price sync. **Machinery cut:** the role editor (1078
+lines), custom roles, the email template table, audit writes, tier pricing.
+
+**Rules that are business decisions, not validation:** the last active Owner cannot
+be suspended or un-roled; USD cannot be deactivated; `price_asc`/`price_desc` exist
+for the admin list but were removed from the storefront sort, because ordering by a
+hidden price leaks the ranking.
+
+<details><summary>Original step-8 instructions</summary>
 
 Follow `.claude/skills/port-nest-module.md` — it has the Prisma→Drizzle mapping table
 and the per-module checklist. Source: `~/Documents/tavkil/backend/src/modules/`.
@@ -400,6 +426,8 @@ Order: **categories → products → suppliers → media → settings + currenci
   the publish-gate validation; it's real business logic.
 - Zod DTOs in `dto/` port unchanged — parse at the top of each handler.
 - After each module: `wrangler deploy --dry-run` to watch the bundle.
+
+</details>
 
 **⚠ Bundle headroom is now the real constraint.** Better Auth cost ~630 KB gzipped
 at step 7: the Worker went from **1.66 MB → 2.29 MB** of the 3 MB free-plan limit,
