@@ -125,6 +125,10 @@ Rules for every step: `pnpm typecheck` → `pnpm test` → commit → push. Depl
 of any step that changes runtime behaviour, then verify the live URL actually works.
 Never mark a step done without running it.
 
+**Every step that touches UI** also gets a look in a real browser via the Chrome
+DevTools MCP before it's called done — all three locales, and 375px wide. Don't defer
+all UI checking to step 14; by then it's a pile.
+
 ## ✅ 1. Scaffold — DONE
 
 Next.js 16 + React 19 + Tailwind v4 + shadcn (Base UI, RTL) + Vitest + Playwright +
@@ -250,17 +254,66 @@ Turnstile widget + server-side siteverify, then send via **Cloudflare Email Serv
 (Postmark was dropped). Rate-limit it. This is the only public write and the only
 conversion path — make the success state unambiguous.
 
-## 14. Tests
+## 14. Verification — five passes, all of them
 
-Per `TESTING.md`. Non-negotiable minimum:
+Don't collapse these into "ran the tests". Each catches a different class of failure.
 
-- **Public-leak suite** — every public query and route handler asserts no `price` /
-  `supplier` key anywhere in the returned object, nested included
-- Playwright: flow 1 (home → category → product), flow 2 (no price/supplier text in
-  rendered HTML), flow 8 (admin create → publish → visible on storefront)
+### 14a. Automated — Vitest
 
-Then the remaining flows in `TESTING.md` §2. One live database — tests create only
-`e2e-` prefixed rows and delete them in teardown, pass or fail. Never a broad delete.
+- **Public-leak suite** (the one that must never be skipped) — every public query and
+  route handler asserts no `price` / `supplier` key anywhere in the returned object,
+  nested and arrays included
+- Unit: slug generation, locale fallback, FX conversion, permission resolution
+- Component: RHF + zod validation paths, image dropzone resize, locale switcher
+- Integration: route handlers, happy path + permission-denied per module
+
+One live database — tests create only `e2e-` prefixed rows and delete them in teardown,
+pass or fail. **Never a broad delete.**
+
+### 14b. Automated — Playwright E2E
+
+All 11 flows in `TESTING.md` §2. Priority order if time runs short: **1, 2, 8**, then
+the rest. Port the harness from `~/Documents/temsan/e2e` — session-saving, admin/public
+projects, and `@axe-core/playwright` are already wired there.
+
+Run against the **deployed** URL, not just localhost — `E2E_BASE_URL` is supported in
+`playwright.config.ts`.
+
+### 14c. Manual — Chrome DevTools MCP
+
+Automated tests confirm what you thought to assert. This pass finds what you didn't.
+Drive a real browser through every page, in **all three locales**:
+
+- Does it actually look right, or merely render without throwing?
+- **View-source** each public page and grep for price/supplier — the DOM is not enough;
+  a Server Component passing an object to a Client Component serialises it into the HTML
+- Console clean? Any failed network requests, 404 images, layout shift on load?
+- AR: is it genuinely RTL — mirrored layout, correct text alignment, icons flipped —
+  or just Arabic text in an LTR shell?
+- Resize to 375px. Does anything overflow horizontally?
+
+### 14d. UI quality — `/web-interface-guidelines`
+
+Run the skill against the storefront and admin. It's a checklist for interaction,
+layout, forms, content, and performance — the things that separate "works" from "good".
+Fix what it flags.
+
+Alongside it, check the house rules:
+
+- Every UI primitive comes from `src/components/ui` (shadcn/Base UI). No hand-rolled
+  buttons, inputs, dialogs, or tables.
+- **No inline SVG** — `lucide-react` only
+- **No hardcoded user-visible strings** — everything from `messages/{locale}.json`,
+  all three files in parity
+- Loading and empty states exist on every list and form. A blank screen during fetch is a bug.
+- Focus states visible, forms keyboard-navigable, labels bound to inputs
+
+### 14e. Accessibility + performance
+
+- `@axe-core/playwright` on every public page — WCAG 2.1 AA, zero violations
+- Lighthouse via Chrome DevTools MCP on home, category, product: Core Web Vitals,
+  LCP under control, no CLS from images loading without dimensions
+- `pnpm exec wrangler deploy --dry-run` — bundle still well under 3 MB
 
 ## 15. Go live
 
