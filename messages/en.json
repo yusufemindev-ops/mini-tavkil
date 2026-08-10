@@ -157,7 +157,7 @@
     "pd_pending_t": "Prices show once your account is verified",
     "pd_pending_d": "Your account is under review — pricing and supplier details unlock after approval.",
     "pd_about": "About this product",
-    "pd_about_text": "Catalogued with full specifications, MOQ and certifications, and verified compliance documents on file. Pricing and supplier details unlock once your account is approved.",
+    "pd_about_text": "Catalogued with full specifications, minimum order quantity and country of origin, with compliance documents on file. Contact us for a quote and lead time.",
     "si_title": "Sign in",
     "si_sub": "Welcome back — sign in with Google.",
     "si_error_t": "Couldn't sign you in",
@@ -411,6 +411,11 @@
     "rq_city": "City",
     "rq_address": "Address",
     "menu_open": "Open menu",
-    "menu_close": "Close menu"
+    "menu_close": "Close menu",
+    "gallery_thumb": "View image {n}",
+    "pd_options": "Available variants",
+    "pd_quote_d": "Tell us the quantity and variant you need and we’ll come back with a quote, lead time and shipping options.",
+    "pd_quote_cta": "Request a quote",
+    "pd_whatsapp": "Ask on WhatsApp"
   }
 }

@@ -43,7 +43,10 @@ export function ProductCard({
         </h3>
         <div className="border-border-2 mt-auto flex items-center justify-between gap-2 border-t pt-3">
           <span className="text-muted-foreground text-[0.76rem]">
-            {t('moq')} <b className="text-foreground font-mono">{product.moq}</b>
+            {t('moq')}{' '}
+            <b dir="ltr" className="text-foreground font-mono" style={{ unicodeBidi: 'isolate' }}>
+              {product.moq}
+            </b>
           </span>
           <span className="text-muted-foreground text-[0.76rem]">{product.unit}</span>
         </div>

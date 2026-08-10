@@ -157,7 +157,7 @@
     "pd_pending_t": "Fiyatlar hesabınız doğrulandığında görünür",
     "pd_pending_d": "Hesabınız inceleniyor — fiyatlandırma ve tedarikçi bilgileri onaydan sonra açılır.",
     "pd_about": "Bu ürün hakkında",
-    "pd_about_text": "Tam teknik özellikler, MOQ ve sertifikalarla kataloglandı; uygunluk belgeleri dosyada doğrulandı. Fiyatlar ve tedarikçi bilgileri hesabınız onaylandığında açılır.",
+    "pd_about_text": "Tüm teknik özellikleri, minimum sipariş miktarı ve menşe ülkesiyle kataloglanmıştır; uygunluk belgeleri dosyamızda mevcuttur. Fiyat teklifi ve teslim süresi için bize ulaşın.",
     "si_title": "Giriş yap",
     "si_sub": "Tekrar hoş geldiniz — Google ile giriş yapın.",
     "si_error_t": "Giriş yapılamadı",
@@ -411,6 +411,11 @@
     "rq_city": "Şehir",
     "rq_address": "Adres",
     "menu_open": "Menüyü aç",
-    "menu_close": "Menüyü kapat"
+    "menu_close": "Menüyü kapat",
+    "gallery_thumb": "{n}. görseli göster",
+    "pd_options": "Mevcut seçenekler",
+    "pd_quote_d": "İhtiyacınız olan miktarı ve varyantı bize iletin; fiyat teklifi, teslim süresi ve sevkiyat seçenekleriyle dönüş yapalım.",
+    "pd_quote_cta": "Teklif isteyin",
+    "pd_whatsapp": "WhatsApp’tan sorun"
   }
 }
