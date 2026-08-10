@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–3 done and deployed. Start at step 4.
+**Status:** steps 1–4 done and deployed. Start at step 5.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -148,7 +148,21 @@ Live on Workers, 6 secrets set, Google OAuth configured for 4 origins.
 `pnpm seed` → 3 categories, 12 products, 2 suppliers, 51 translations EN/TR/AR.
 `/api/health` returns real counts.
 
-## 4. i18n + storefront shell
+## ✅ 4. i18n + storefront shell — DONE
+
+next-intl wired (`createNextIntlPlugin` in `next.config.ts`), 392 keys × EN/TR/AR
+with a parity test, middleware reduced to locale handling only, `[locale]/layout`
+with per-locale fonts and `dir`, header/footer/switcher/theme-toggle ported with
+every buyer surface removed, 24 `ui/*` primitives merged, tokens vendored into
+`globals.css`, `icons.tsx` aliased onto lucide except the four brand marks lucide
+doesn't ship. `/` → `/en`, all three locales 200, `/en/nope` → 404, AR RTL
+verified at 1280px and 375px with no overflow and a clean console.
+
+**Carried into step 6:** the ported copy still says "request an account to see
+pricing" (hero, footer, about). There are no accounts and no public prices here —
+rewrite those strings in all three locales when the real pages land.
+
+<details><summary>Original step-4 instructions</summary>
 
 **Copy from `~/Documents/tavkil/storefront/src`:**
 
@@ -181,6 +195,8 @@ lib/catalog/localized-path.ts + .test.ts
 **Acceptance:** `/en`, `/tr`, `/ar` render; `/` redirects to the default locale; AR is
 genuinely RTL (`dir="rtl"`, mirrored layout, not just Arabic text); the switcher keeps
 you on the same page; all three message files have identical key sets.
+
+</details>
 
 ## 5. Public query layer
 
