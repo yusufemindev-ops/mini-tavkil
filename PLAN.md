@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–6 done and deployed. Start at step 7.
+**Status:** steps 1–7 done and deployed. Start at step 8.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -320,7 +320,36 @@ scroll.
 
 </details>
 
-## 7. Admin auth
+## ✅ 7. Admin auth — DONE
+
+Better Auth + Google, `/api/auth/[...all]`, `requireAdmin` / `requirePermission`,
+28 permissions synced, three fixed roles.
+
+**Two layers, and only one of them is the boundary.** The middleware check on
+`/admin` looks for the *presence* of a session cookie — anyone can forge that. Its
+job is to redirect a signed-out visitor to `/sign-in` instead of a blank shell, and
+to keep a database round-trip off every asset request. The real check is
+`requireAdmin()` running server-side in the page and in every `/api/admin/*`
+handler, validating against the database and re-reading `ADMIN_ALLOWLIST` on every
+request. Verified: a forged cookie gets past the middleware and lands on
+`/sign-in?error=not-allowed`, and `/api/admin/me` returns 401 for it.
+
+**Decisions worth remembering:**
+
+- Role codes reuse the rows the Tavkil migration already created —
+  `super_admin` / `catalog_manager` / `member` — relabelled Owner / Catalog manager
+  / Viewer. No migration needed.
+- Owner resolves to a wildcard over the whole catalog rather than grant rows, so a
+  new permission is owned the moment it's added and a forgotten sync can never lock
+  an owner out.
+- An unset `ADMIN_ALLOWLIST` denies everyone. Treating "unset" as "anyone with a
+  Google account" would turn one missing config line into a breach.
+- `roles:*` permissions dropped — no role editor exists, so they'd guard nothing.
+- Staff pages (`/sign-in`, `/admin`) live outside `[locale]`: English-only,
+  `robots: noindex, nofollow` unconditionally, and `/admin/*` left free for step 9's
+  SPA.
+
+<details><summary>Original step-7 instructions</summary>
 
 1. `src/lib/auth.ts` — Better Auth with the Google social provider, Drizzle adapter
    pointed at the existing `authUser` / `authSession` / `authAccount` / `authVerification`
@@ -338,6 +367,8 @@ scroll.
 
 **Acceptance:** allowlisted Google account reaches `/admin`; a non-allowlisted one is
 rejected; `permissions` table is populated; `/api/admin/*` returns 401 when signed out.
+
+</details>
 
 ## 8. Port the services
 
