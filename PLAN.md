@@ -150,113 +150,266 @@ Live on Workers, 6 secrets set, Google OAuth configured for 4 origins.
 
 ## 4. i18n + storefront shell
 
-1. Copy from `~/Documents/tavkil/storefront/src`: `i18n/`, `messages/`,
-   `middleware.ts`, `app/[locale]/layout.tsx`, `components/site-header.tsx`,
-   `site-footer.tsx`, `locale-switcher.tsx`, `theme-toggle.tsx`, `providers.tsx`.
-2. Vendor `@repo/tokens` (115 lines CSS) into `globals.css` and `@repo/icons`
-   (249 lines) as `src/components/icons.tsx`. Drop `@repo/countries` unless contact needs it.
-3. Delete every import of TanStack Query and MSW from anything under `[locale]`.
-4. Verify: `/en`, `/tr`, `/ar` all render, AR is RTL, the switcher preserves the path.
+**Copy from `~/Documents/tavkil/storefront/src`:**
+
+```
+i18n/routing.ts  i18n/request.ts  i18n/navigation.ts
+middleware.ts                     (91 lines — locale detection + localized slugs)
+messages/{en,tr,ar}.json          (namespaces: seo nav home footer account store)
+app/[locale]/layout.tsx
+components/site-header.tsx  site-header-nav.tsx  site-footer.tsx
+components/locale-switcher.tsx  localized-paths.tsx  theme-toggle.tsx  providers.tsx
+components/whatsapp-button.tsx
+components/ui/*                   (28 files — merge with the shadcn set already here)
+lib/utils.ts  lib/env.ts  lib/settings.ts
+lib/catalog/localized-path.ts + .test.ts
+```
+
+**Vendor the workspace packages** (this repo is not a monorepo):
+
+- `packages/tokens/tokens.css` (115 lines) → append to `src/app/globals.css`
+- `packages/icons/src/index.tsx` (249 lines) → `src/components/icons.tsx`
+- `packages/countries` (2515 lines) → skip unless the contact form needs a country picker
+
+**Strip:**
+
+- Delete the `account` namespace from all three `messages/*.json` — no buyer accounts
+- Remove `notification-bell` from the header, and any account/cart links
+- Delete every TanStack Query and MSW import under `[locale]`
+- `lib/auth-client.ts` and `lib/protected-routes.ts` — buyer-side, not needed
+
+**Acceptance:** `/en`, `/tr`, `/ar` render; `/` redirects to the default locale; AR is
+genuinely RTL (`dir="rtl"`, mirrored layout, not just Arabic text); the switcher keeps
+you on the same page; all three message files have identical key sets.
 
 ## 5. Public query layer
 
-Implement `src/lib/queries/public-product.ts` — the signatures are already written there.
+Implement the signatures already stubbed in `src/lib/queries/public-product.ts`.
 
-- `publicProduct(slug, locale)` and `publicProducts(filter)`
-- Join `products` → `product_translations` (by locale) → `product_images` → `categories`
-- **Select no price column and no supplier column.** Ever.
-- Add `publicCategory` / `publicCategories` alongside
-- Only `status = 'published'` rows, and only where that locale has a complete translation
-- Return `updatedAt` — the sitemap needs it
+**Functions:**
 
-Then `src/lib/queries/admin-*.ts` for admin reads, which may include price and supplier.
+```ts
+publicProduct(slug: string, locale: Locale): Promise<PublicProduct | null>
+publicProducts(filter: { category?: string; featured?: boolean; limit?: number; offset?: number }, locale): Promise<PublicProduct[]>
+publicCategory(slug: string, locale): Promise<PublicCategory | null>
+publicCategories(locale): Promise<PublicCategory[]>
+publicSitemapEntries(): Promise<{ type, slug, locale, updatedAt }[]>
+```
+
+**Joins:** `products` → `product_translations` (on locale) → `product_images` →
+`categories` → `category_translations`. Variants/options via `product_variants`,
+`product_options`, `product_option_values` when the product page needs them.
+
+**Rules, all load-bearing:**
+
+- **Never select `basePriceAmount`, `basePriceCurrency`, `supplierId`, or anything from
+  `suppliers`.** Not into a variable, not into a discarded field.
+- `status = 'published'` only, and `deletedAt IS NULL`
+- Only rows where that locale's translation exists and `isComplete = true` — never fall
+  back to English on a public page (those URLs are `noindex`)
+- Return `updatedAt` — step 11's sitemap depends on it
+- Order by `sortOrder`, then `isFeatured` for home rails
+
+Then `src/lib/queries/admin-products.ts` etc. for admin reads, which **may** include
+price and supplier. Different file, different type, called only from `/api/admin/*`.
+
+**Acceptance:** a Vitest test per function asserting no `price`/`supplier` key appears
+anywhere in the returned object, nested and arrays included.
 
 ## 6. Storefront pages
 
-Port from `tavkil/storefront/src/app/[locale]`: `page.tsx`, `catalogue/`,
-`catalogue/[category]/`, `product/[slug]/`, `about/`, `contact/`.
+Port from `tavkil/storefront/src/app/[locale]/`:
 
-- Swap `src/lib/api/*` calls for the step-5 query functions. Server Components only.
-- **Strip supplier** from 6 places: home (`tv-showcase`), `product/[slug]`,
-  `catalogue/[category]`, `about`; delete `components/catalog/supplier-card.tsx`.
-- Replace the cart CTA with **"Request a quote"** → contact form.
-- Delete routes `login`, `cart`, `request`, `orders`, `account` and component folders
-  `auth/`, `cart/`, `orders/`, `account/`, `notifications/`.
-- Verify each page live in all 3 locales with the Chrome DevTools MCP. Check
-  **view-source** for price/supplier leaks, not just the rendered DOM.
+| Port                   | With components                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| `page.tsx` (home)      | `home/*` — tv-showcase, about-teaser, cta-panel, step-card, count-up             |
+| `catalogue/`           | `catalog/category-tile.tsx`, `category-rail.tsx`, `category-menu-mobile.tsx`     |
+| `catalogue/[category]` | `category-filters`, `category-sort`, `category-product-grid`, `subcategory-tile` |
+| `product/[slug]`       | `product/product-gallery`, `product-options`, `product-tabs`, `catalog/thumb`    |
+| `about/`, `contact/`   | `ui/captcha.tsx` for contact                                                     |
+
+**Delete outright** — routes `login`, `cart`, `request`, `orders`, `account`, `ui` (the
+dev kit page); component folders `auth/`, `cart/`, `orders/`, `account/`,
+`notifications/`, `dev/`; `lib/orders/`, `lib/notifications/`.
+
+**Strip price** — delete `product/price-lock.tsx`, `product-price-block.tsx`, and the
+price section of `product-buy-panel.tsx`. The panel becomes MOQ + unit + "Request a
+quote".
+
+**Strip supplier** — 6 places: `page.tsx` (tv-showcase), `product/[slug]/page.tsx`,
+`catalogue/[category]/page.tsx`, `about/page.tsx`, and delete
+`components/catalog/supplier-card.tsx`.
+
+**Rewire data** — replace `lib/api/server.ts` / `client.ts` calls with step-5 functions.
+Server Components only. Delete `lib/catalog/fixtures.ts` and `lib/api/*`.
+
+**Acceptance:** every page renders in 3 locales; **view-source** on each contains no
+price and no supplier name; unknown slug → 404 not 500; 375px wide has no horizontal
+scroll.
 
 ## 7. Admin auth
 
-- Better Auth + Google in `src/lib/auth.ts`, mounted at `/api/auth/[...all]`
-- `ADMIN_ALLOWLIST` guard on `/admin/*` and `/api/admin/*`; non-allowlisted → rejected
-- `requirePermission(req, 'x:y')` helper, same colon strings as Tavkil
-- `pnpm sync:permissions` script — port `permissions-sync.service.ts`, drop the
-  `onApplicationBootstrap` hook, run it over `DIRECT_URL` (TCP) so the advisory-lock
-  transaction works. Then run it.
+1. `src/lib/auth.ts` — Better Auth with the Google social provider, Drizzle adapter
+   pointed at the existing `authUser` / `authSession` / `authAccount` / `authVerification`
+   tables (already in the schema — do not create new ones)
+2. Mount at `src/app/api/auth/[...all]/route.ts`
+3. `src/lib/auth-guard.ts` — `requireAdmin(req)` checks the session email against
+   `ADMIN_ALLOWLIST`; `requirePermission(req, 'products:edit')` resolves via
+   `authUserRoles` → `rolePermissions` → `permissions`
+4. Guard `/admin/*` in `middleware.ts` and every `/api/admin/*` handler
+5. **`scripts/sync-permissions.ts`** — port `permissions-sync.service.ts`: drop
+   `onApplicationBootstrap`, keep the `pg_advisory_xact_lock` transaction, run over
+   `DIRECT_URL` with `pg` (TCP, so real transactions work). Copy
+   `permissions/catalog.ts` too, minus the `buyers`/`orders`/`account_requests`/`audit_log`
+   domains → ~29 permissions. Then run `pnpm sync:permissions`.
+
+**Acceptance:** allowlisted Google account reaches `/admin`; a non-allowlisted one is
+rejected; `permissions` table is populated; `/api/admin/*` returns 401 when signed out.
 
 ## 8. Port the services
 
-Follow `.claude/skills/port-nest-module.md` exactly — it has the Prisma→Drizzle mapping
-table. Source: `~/Documents/tavkil/backend/src/modules/`.
+Follow `.claude/skills/port-nest-module.md` — it has the Prisma→Drizzle mapping table
+and the per-module checklist. Source: `~/Documents/tavkil/backend/src/modules/`.
 
-Order: **categories → products → suppliers → media → settings + currencies → rbac**
+**Keep every URL path identical** so the admin SPA needs no changes:
 
-Per module: service → plain functions in `src/lib/services/`, controller → route
-handlers in `src/app/api/`, keep URL paths identical to Tavkil's so the admin SPA needs
-no changes. Business logic unchanged; queries rewritten.
+| Module     | Public                  | Admin                                                                                                                           |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| categories | `GET /categories/:slug` | `/admin/categories` · `:id` · `POST reorder` · `PATCH :id` · `DELETE :id` · `:id/publish` · `:id/unpublish`                     |
+| products   | `GET /products/:slug`   | `/admin/products` · `counts` · `:id` · `reorder` · `PATCH :id` · `DELETE :id` · `publish` · `unpublish` · `archive` · `restore` |
+| suppliers  | —                       | `/admin/suppliers` · `:id` · `PATCH` · `DELETE` · `publish` · `unpublish`                                                       |
+| media      | —                       | `/admin/media`                                                                                                                  |
+| settings   | `GET /settings`         | `/admin/settings`                                                                                                               |
+| currencies | `GET /currencies`       | `/admin/currencies` · `PATCH :code` · `/admin/fx/runs` · `POST /admin/fx/refresh`                                               |
+| rbac       | —                       | `/admin/users` · `:id/role` · `:id/suspend` · `:id/reactivate` · `/admin/roles` · `/admin/permissions/catalog`                  |
 
-**Do not port** `orders`, `buyers`, `account-requests`, `profile-edit-requests`,
-`audit-log`.
+Order: **categories → products → suppliers → media → settings + currencies → rbac.**
 
-Watch: array-form `$transaction([...])` → `db.batch([...])`. Interactive transactions
-don't work on request paths.
+**Do not port:** `orders`, `buyers`, `account-requests`, `profile-edit-requests`,
+`audit-log`. Strip audit-write calls from the services you do port.
+
+**Watch:**
+
+- Array-form `$transaction([...])` → `db.batch([...])`. Interactive transactions don't
+  work on request paths (Neon HTTP).
+- `products.service.ts` is the big one — variants, options, ordering, publish gate. Keep
+  the publish-gate validation; it's real business logic.
+- Zod DTOs in `dto/` port unchanged — parse at the top of each handler.
+- After each module: `wrangler deploy --dry-run` to watch the bundle.
 
 ## 9. Mount the admin
 
-1. `pnpm build` Tavkil's Vite admin as-is
-2. Serve the output under `/admin` as Worker static assets, SPA-fallback to `index.html`
-3. Point its API base at same-origin
-4. Remove **Buyers** and **Operations** from `nav-items.ts`
-5. Delete the two buyer/order stat tiles from `/dashboard`
-6. Delete `role-edit-page.tsx`; reduce `users-page.tsx` to a list with a role dropdown
+1. In `~/Documents/tavkil/admin`, set the API base to same-origin (`/api`) and
+   `pnpm build`
+2. Copy `dist/` into `public/admin/` here
+3. Serve under `/admin` with SPA fallback to `index.html` (Worker static assets)
+4. `nav-items.ts` — delete the **Buyers** and **Operations** groups
+5. `dashboard-page.tsx` — delete the two buyer/order KPI tiles
+6. Delete `features/users/role-edit-page.tsx`; reduce `users-page.tsx` (657 lines) to a
+   list: email, role dropdown (Owner / Catalog manager / Viewer), remove
+7. Delete `features/{buyers,orders,audit}/` entirely
+8. `settings-page.tsx` — delete the Transactional emails table, keep one inquiry-
+   destination field; fix the "default tier markup" subtitle
 
-Do **not** rewrite the admin as Next.js routes.
+**Do not rewrite the admin as Next.js routes.** It's a Vite SPA and stays one.
+
+**Acceptance:** `/admin` loads behind Google auth, products and categories are listable
+and editable, prices show here and only here.
 
 ## 10. Media pipeline
 
-Port from `~/Documents/temsan`: `lib/image-resize.ts`,
+Port from `~/Documents/temsan`: `lib/image-resize.ts` (34 lines),
 `components/admin/ImageDropzone.tsx`, `app/api/admin/upload/route.ts`.
-Upload writes to the `IMAGES` R2 binding; public URL is `NEXT_PUBLIC_R2_PUBLIC_URL`.
-Verify: upload in admin → WebP lands in R2 → renders on the storefront.
+
+- Browser: `createImageBitmap` → canvas → longest side ≤1600px →
+  `canvas.toBlob(…, 'image/webp', 0.8)`
+- POST the WebP to `/api/admin/upload`, which puts it into the `IMAGES` R2 binding
+- Public URL = `NEXT_PUBLIC_R2_PUBLIC_URL` + key
+- Enforce `MAX_UPLOAD_MB`; reject non-images server-side, not just in the picker
+- Write `product_images` rows with `altTranslations` per locale, `isPrimary`, `sortOrder`
+
+**Acceptance:** upload in admin → object appears in `tavkil-images` → renders on the
+storefront product page → replaces the placeholder seed URL.
 
 ## 11. SEO
 
-- `generateMetadata` on all 6 routes: canonical, hreflang ×3 + `x-default`, OG
-- JSON-LD: `Organization` + `WebSite` (home), `CollectionPage` + `ItemList` +
-  `BreadcrumbList` (category), `Product` **without `offers`** + `BreadcrumbList` (product)
-- `app/sitemap.ts` — DB-driven, all products + categories × locales,
-  **`lastModified` from `updated_at`**, `alternates.languages`, cached via `revalidate`,
-  only locales with real content
-- `robots.ts` honouring `SITE_INDEXABLE`
-- `llms.txt` + `llms-full.txt` covering the catalogue — no prices, no suppliers
-- IndexNow ping on publish/unpublish using `INDEXNOW_API_KEY`
+**Metadata** — `generateMetadata` on all 6 routes: title, description, canonical
+(self-locale), `alternates.languages` for the locales that have content, `x-default`,
+OG + Twitter. Port `lib/seo/metadata.ts` (99 lines) and its test.
+
+**JSON-LD** — extend `lib/seo/json-ld.tsx` (currently Organization + WebSite only):
+
+| Page     | Emit                                              |
+| -------- | ------------------------------------------------- |
+| home     | `Organization` + `WebSite` with `SearchAction`    |
+| category | `CollectionPage` + `ItemList` + `BreadcrumbList`  |
+| product  | `Product` **without `offers`** + `BreadcrumbList` |
+| contact  | `Organization` + `ContactPoint`                   |
+
+`Product` carries name, description, all images, `sku`, `brand`, `category`, and
+`additionalProperty` for attributes. **No `offers`, no `price`** — we have no public
+price and faking one risks a manual action.
+
+**Sitemap** — rewrite `app/sitemap.ts` (currently 4 static routes):
+
+- Static routes + every published product and category × locales with real content
+- **`lastModified` from the row's `updatedAt`** — never `new Date()`
+- `alternates.languages` per entry
+- `export const revalidate = 3600` so it's one query per hour, not per crawl
+- ~600 URLs — single file, no `generateSitemaps()` splitting needed under 50k
+
+**robots.ts** — `disallow: /` when `SITE_INDEXABLE !== 'true'`; otherwise allow, disallow
+`/admin` and `/api`, and point at the sitemap.
+
+**llms.txt / llms-full.txt** — the full catalogue as structured facts: names,
+categories, attributes, descriptions. No prices, no suppliers.
+
+**IndexNow** — on publish/unpublish of a product or category, POST the URL set with
+`INDEXNOW_API_KEY`. Serve the key file at `/{key}.txt`. Fire-and-forget via
+`ctx.waitUntil`; never block the response.
+
+**Internal linking** — every product reachable in ~3 clicks from home. Category pages
+link to their products and sibling categories. This matters more than the markup.
 
 ## 12. FX cron
 
-Port the Frankfurter fetch (fallback `open.er-api`, SAR/AED are USD-pegged and never
-fetched) into a `scheduled()` handler. The trigger is already in `wrangler.jsonc`
-(`0 6 * * *`). Wire Settings' "Refresh now" to a route handler running the same
-function; the run-history list reads `fx_rate_runs` unchanged.
+Port `currencies/fx-rates.service.ts`: fetch USD→TRY from **Frankfurter**, fall back to
+`open.er-api`, retry every 2h until it succeeds, SAR/AED are USD-pegged and never
+fetched. Rows land in `fx_rates` / `fx_rate_runs`.
+
+- Move the fetch into `scheduled()` — the trigger already exists (`0 6 * * *`)
+- `POST /api/admin/fx/refresh` runs the same function on demand (Settings' "Refresh now")
+- `GET /api/admin/fx/runs` reads `fx_rate_runs` unchanged
+- `pnpm fx:refresh` script for manual runs
+
+**Acceptance:** `pnpm fx:refresh` writes a row; Settings shows the run; USD and TRY both
+resolve in the admin.
 
 ## 13. Contact form
 
-Turnstile widget + server-side siteverify, then send via **Cloudflare Email Service**
-(Postmark was dropped). Rate-limit it. This is the only public write and the only
-conversion path — make the success state unambiguous.
+The only public write and the only conversion path.
 
-## 14. Verification — five passes, all of them
+1. Turnstile widget (`ui/captcha.tsx` is already ported) with
+   `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+2. `POST /api/contact` — verify the token server-side against Cloudflare siteverify
+   **before** anything else; reject on failure
+3. Zod-validate name, email, company, message, locale
+4. Send via **Cloudflare Email Service** (Postmark was dropped) to the Settings
+   inquiry-destination address
+5. Rate-limit per IP
+6. Unambiguous success state; inline field errors; never lose what the user typed on failure
+
+**Acceptance:** submit end-to-end on the deployed URL, email arrives, bot submissions
+without a valid token are rejected.
+
+## 14. Verification & hardening — eight passes, all of them
 
 Don't collapse these into "ran the tests". Each catches a different class of failure.
+Install what's missing first:
+
+```bash
+pnpm add -D @lhci/cli lighthouse
+```
 
 ### 14a. Automated — Vitest
 
@@ -308,12 +461,112 @@ Alongside it, check the house rules:
 - Loading and empty states exist on every list and form. A blank screen during fetch is a bug.
 - Focus states visible, forms keyboard-navigable, labels bound to inputs
 
-### 14e. Accessibility + performance
+### 14e. Accessibility
 
-- `@axe-core/playwright` on every public page — WCAG 2.1 AA, zero violations
-- Lighthouse via Chrome DevTools MCP on home, category, product: Core Web Vitals,
-  LCP under control, no CLS from images loading without dimensions
-- `pnpm exec wrangler deploy --dry-run` — bundle still well under 3 MB
+- `@axe-core/playwright` on all 6 public pages **and** the admin — WCAG 2.1 AA, **zero
+  violations**, not "few"
+- Keyboard-only pass: every interactive element reachable, visible focus ring, no traps,
+  dialogs return focus on close
+- Test in AR too — RTL breaks focus order and `aria-label` direction more often than people expect
+- Colour contrast ≥ 4.5:1 body, 3:1 large text, in both light and dark themes
+- Images have real `alt` from `altTranslations`, not filenames; decorative ones `alt=""`
+
+### 14f. Lighthouse CI — perf, SEO, best-practices
+
+Run against the **deployed** URL, on mobile emulation, for home / category / product:
+
+```bash
+pnpm exec lhci autorun --collect.url=https://tavkil.com/en \
+  --collect.url=https://tavkil.com/en/catalogue \
+  --collect.url=https://tavkil.com/en/product/<slug> \
+  --collect.settings.preset=desktop
+```
+
+Budgets — fail the run, don't just note them:
+
+| Category       | Min |
+| -------------- | --- |
+| Performance    | 90  |
+| Accessibility  | 100 |
+| Best Practices | 95  |
+| SEO            | 100 |
+
+Core Web Vitals: **LCP < 2.5s, CLS < 0.1, INP < 200ms**. The usual culprits here will be
+hero images without `width`/`height` (CLS), unoptimised R2 images (LCP), and missing
+`priority` on the above-fold image.
+
+Add `.lighthouserc.json` with these assertions so it's repeatable, and keep it in CI.
+
+### 14g. SEO validation — beyond the score
+
+Lighthouse's SEO 100 only means the basics are present. Verify the substance:
+
+- **Rich Results Test** (search.google.com/test/rich-results) on a product URL —
+  `Product` must validate **without** `offers`, and `BreadcrumbList` must parse
+- `curl` the rendered HTML and confirm JSON-LD is **in the source**, not injected client-side
+- `/sitemap.xml` — every URL 200s, `lastmod` matches the DB's `updatedAt` (not today's
+  date), `hreflang` alternates are reciprocal
+- `/robots.txt` — reflects `SITE_INDEXABLE`, points at the sitemap, disallows `/admin` and `/api`
+- Canonical on every page points at itself in its own locale — never cross-locale
+- `/llms.txt` and `/llms-full.txt` return 200, contain the catalogue, **no prices, no suppliers**
+- IndexNow: publish a product, confirm the POST fired and returned 200/202
+- Crawl depth: every product reachable within 3 clicks of home
+
+### 14h. Security
+
+**Implement, then verify.** Most of this is code that has to exist first.
+
+**Headers** — set in `middleware.ts` or `next.config.ts`, verify with
+`curl -I https://tavkil.com/en`:
+
+| Header                      | Value                                                  |
+| --------------------------- | ------------------------------------------------------ |
+| `Content-Security-Policy`   | no `unsafe-eval`; restrict `img-src` to self + R2 host |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains`                  |
+| `X-Content-Type-Options`    | `nosniff`                                              |
+| `X-Frame-Options`           | `DENY` (or CSP `frame-ancestors 'none'`)               |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`                      |
+| `Permissions-Policy`        | deny camera, microphone, geolocation                   |
+
+**Auth & authorisation:**
+
+- Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`. Never store session state in `localStorage`.
+- A signed-in but **non-allowlisted** Google account must be rejected — test it, don't assume
+- **IDOR:** for each `/api/admin/:id` route, call it while signed out and as a lower-privileged
+  role. 401/403, never 200.
+- Permission checks are the **first line** of each admin handler — grep to confirm none were missed
+- Auth endpoints rate-limited
+
+**Injection & input:**
+
+- Drizzle parameterises by default — but audit every `sql\`…\`` template for interpolated
+  user input. That's the one place SQL injection can still happen.
+- Zod-validate every request body and query param, server-side. Client validation is UX, not security.
+- **Reject SVG uploads.** SVG is an XSS vector — it can carry `<script>`. Allow only
+  JPEG/PNG/WebP, and sniff the actual bytes, not just the declared MIME type.
+- Enforce `MAX_UPLOAD_MB` server-side
+
+**Secrets & exposure:**
+
+- **Audit every `NEXT_PUBLIC_*` var** — that prefix means it is compiled into client
+  JavaScript and is public. Currently: site URL, R2 public URL, Turnstile _site_ key.
+  All three are meant to be public. Nothing else may ever get that prefix.
+- `gitleaks` in pre-commit is already wired — confirm it fires
+- Grep the built bundle for `DATABASE_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`:
+  ```bash
+  grep -rE "postgresql://|GOCSPX-|BETTER_AUTH_SECRET" .open-next/ && echo LEAK
+  ```
+- `.env`, `.env.production`, `.dev.vars` all gitignored — verify with `git check-ignore`
+
+**Infrastructure:**
+
+- `tavkil-images` is public-read but **not listable**; `tavkil-cache` stays fully private
+- No CORS headers on `/api/*` — same-origin only, there is no external consumer
+- Cloudflare WAF: enable managed rules, and a rate-limit rule on `/api/contact` and `/api/auth`
+- `pnpm audit` clean, or every exception written down with a reason
+
+**The one that matters most:** a price or supplier leak _is_ the security bug for this
+project. 14a's leak suite and 14c's view-source pass are the real security tests here.
 
 ## 15. Go live
 
@@ -322,8 +575,25 @@ Alongside it, check the house rules:
 3. Flip `SITE_INDEXABLE=true`
 4. Swap `NEXT_PUBLIC_R2_PUBLIC_URL` to `images.tavkil.com` (r2.dev is rate-limited and
    not for production traffic)
-5. Deploy, submit the sitemap in Search Console, verify Rich Results
-6. Full Playwright run + Lighthouse via Chrome DevTools MCP on the top pages
+5. Deploy, then re-run **all of step 14** against the real domain — Lighthouse budgets,
+   Rich Results, security headers, the full Playwright suite. Scores measured on
+   `workers.dev` don't carry over; the domain, caching, and CSP all change.
+6. Submit the sitemap in Google Search Console and Bing Webmaster Tools
+7. Confirm IndexNow fires on the first real publish
+
+### Definition of done
+
+- [ ] All 6 storefront routes live in EN/TR/AR, RTL correct in AR
+- [ ] Zero price or supplier occurrences in any public page's **source**
+- [ ] Admin reachable, Google-gated, products/categories/suppliers/media editable
+- [ ] Image upload → R2 → renders on the storefront
+- [ ] Lighthouse: Perf ≥90, A11y 100, Best Practices ≥95, SEO 100
+- [ ] axe: zero WCAG 2.1 AA violations
+- [ ] Sitemap has real `lastmod`; Rich Results validates `Product` without `offers`
+- [ ] Security headers present; no secrets in the bundle; SVG upload rejected
+- [ ] All 11 Playwright flows green against the deployed URL
+- [ ] Bundle under 3 MB gzipped
+- [ ] Contact form sends a real email end-to-end
 
 ---
 
