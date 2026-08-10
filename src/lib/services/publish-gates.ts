@@ -63,3 +63,52 @@ export function missingEnglishFields(translations: readonly AdminTranslation[]):
   if (!english.slug.trim()) missing.push('English slug');
   return missing;
 }
+
+/**
+ * What a product needs before it can go live.
+ *
+ * Ported from Tavkil unchanged in intent, and every clause earns its place —
+ * publishing is the last point at which any of these can be caught:
+ *
+ *   SKU            — the buyer quotes it back to us in an enquiry
+ *   base price     — admin-only, but a product we cannot price cannot be sold
+ *   an image       — a card with only the brand gradient reads as broken
+ *   English name+slug — no English translation means no URL and no label
+ *   published category — the product's only route in is its category page; under
+ *                        a draft category it would be an orphan, reachable only
+ *                        by direct link and never crawled
+ *   published supplier — we would be listing goods from a supplier we have not
+ *                        finished vetting
+ *
+ * The last two are the ones worth keeping despite being inconvenient: both
+ * produce a live page that looks fine and is quietly wrong.
+ */
+export interface PublishableProduct {
+  sku: string | null;
+  basePriceAmount: string | null;
+  basePriceCurrency: string | null;
+  imageCount: number;
+  translations: readonly AdminTranslation[];
+  categoryStatus: string | null;
+  supplierStatus: string | null;
+}
+
+export function assertProductPublishable(product: PublishableProduct): void {
+  const missing: string[] = [];
+  if (!product.sku?.trim()) missing.push('an SKU');
+  if (product.basePriceAmount == null || product.basePriceCurrency == null) {
+    missing.push('a base price');
+  }
+  if (product.imageCount === 0) missing.push('at least one image');
+
+  const english = product.translations.find((t) => t.locale === DEFAULT_LOCALE);
+  if (!english || !english.name.trim() || !english.slug.trim()) {
+    missing.push(`a complete '${DEFAULT_LOCALE}' translation (name + slug)`);
+  }
+  if (product.categoryStatus !== 'published') missing.push('a published category');
+  if (product.supplierStatus !== 'published') missing.push('a published supplier');
+
+  if (missing.length > 0) {
+    throw invalid(`Cannot publish: missing ${missing.join(', ')}.`);
+  }
+}
