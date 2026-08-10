@@ -41,7 +41,7 @@ Both are internal admin-only. They never appear in any anonymous response, sitem
 shape public pages may render, and that shape has no `price` and no `supplier` field
 at all. A leak becomes a **type error**, not a code-review catch.
 
-- Never `select: { ... price ... }` in a query reachable from a public page
+- Never select price or supplier columns in a query reachable from a public page
 - Never widen the public return type "just for this one page"
 - If a public page needs a new field, add it to the public shape deliberately
 
@@ -55,21 +55,32 @@ This replaces Tavkil's three-DTO discipline. Do not reintroduce `PublicProductDt
 | Sharp / native image libs             | Browser-side canvas → WebP before upload (`lib/image-resize.ts`) |
 | Long-lived background processes       | **Cron Triggers** in `wrangler.jsonc`                            |
 | `onApplicationBootstrap` / boot hooks | A script run on deploy (`pnpm sync:permissions`)                 |
-| Node TCP database drivers             | `@prisma/adapter-neon` over **HTTP**                             |
+| Node TCP database drivers             | `@neondatabase/serverless` over **HTTP**                         |
 | Anything pushing the bundle over 3 MB | Free plan limit; check after adding deps                         |
 
-**Prisma stays.** Prisma 7 is Rust-free and Workers is a first-class target. Generator
-must be `prisma-client` (not `prisma-client-js`), adapter must be
-`@prisma/adapter-neon`. **Do not rewrite to Drizzle.**
+**Drizzle, not Prisma — and this is measured, not preference.** Prisma 7 does run on
+Workers, but its client cost **1.85 MB gzipped**, putting the empty scaffold at 2.79 MB
+of the 3 MB free-plan limit before a single feature existed. Drizzle's whole DB layer
+costs **~88 KB**: the same scaffold measures **1.02 MB**.
+
+**Never migrate back to Prisma.** It means paying Cloudflare $5/month for headroom you
+currently get for free.
 
 ### 3. Neon: HTTP mode, always
 
 `DATABASE_URL` is the **pooled HTTP** connection so compute autosuspends and the free
 100 CU-hours last. WebSocket keeps compute awake and burns them.
 
-Consequence: **no interactive transactions** (`$transaction(async (tx) => …)`) on a
-request path. Array form `$transaction([...])` is fine. If you truly need interactive,
-it belongs in a script using `DIRECT_URL`, not in a route handler.
+Consequence: **no interactive transactions** on a request path. `neon-http` supports
+batching only:
+
+```ts
+await db.batch([q1, q2]); //  OK
+await db.transaction(async (tx) => …); //  NOT on a request path
+```
+
+If you genuinely need an interactive transaction, it belongs in a script using
+`DIRECT_URL` over TCP, not in a route handler.
 
 ### 4. SEO is not simplified — it's the one area we exceed Tavkil
 
@@ -105,12 +116,12 @@ has real consequences:
 
 - Tests create only `e2e-` prefixed rows and delete them in teardown, pass or fail
 - Never `deleteMany({})` or any broad-filter delete
-- `prisma migrate deploy` is a considered act — there is no staging to catch a mistake
+- `drizzle-kit migrate` is a considered act — there is no staging to catch a mistake
 - Always check what a destructive command targets before running it
 
 ### 8. Migrations are never automatic
 
-`prisma migrate deploy` is a deliberate step. Workers have no boot; nothing runs
+`drizzle-kit migrate` is a deliberate step. Workers have no boot; nothing runs
 migrations for you, and nothing should.
 
 ---
@@ -120,10 +131,12 @@ migrations for you, and nothing should.
 | Layer   | Choice                                                                 |
 | ------- | ---------------------------------------------------------------------- |
 | App     | Next.js 16 App Router — storefront + `/api` + `/admin`, one deployable |
-| DB      | Neon Postgres + **Prisma 7** (`@prisma/adapter-neon`, HTTP)            |
+| DB      | Neon Postgres + **Drizzle** (`@neondatabase/serverless`, HTTP)         |
 | Hosting | Cloudflare Workers via `@opennextjs/cloudflare`                        |
 | Storage | Cloudflare R2 (Worker binding — no S3 credentials)                     |
 | Auth    | Better Auth + Google, **admin only**, `ADMIN_ALLOWLIST`                |
+| Email   | TBD — Cloudflare Email Service. **Postmark dropped** 2026-08-10        |
+| Captcha | Cloudflare Turnstile, on the contact form                              |
 | UI      | shadcn/ui + Tailwind v4 + @base-ui/react + lucide-react                |
 | i18n    | next-intl — EN / TR / AR, localized slugs                              |
 | Admin   | Tavkil's Vite SPA, built and served under `/admin`                     |
@@ -133,7 +146,7 @@ migrations for you, and nothing should.
 
 ## Definition of done
 
-- [ ] Route handler + service function + Prisma query
+- [ ] Route handler + service function + Drizzle query
 - [ ] Public data goes through `publicProduct()` — no price, no supplier
 - [ ] Frontend: page/component + RHF + zod + i18n keys (all 3 locales) + a11y
 - [ ] Vitest unit test where logic is non-trivial; Playwright flow if user-facing
@@ -148,13 +161,13 @@ migrations for you, and nothing should.
 ## Never do
 
 - Put a price or supplier in anything a logged-out visitor can reach
-- Rewrite Prisma to Drizzle
+- Migrate back to Prisma — it costs 1.85 MB of a 3 MB budget
 - Use WebSocket/pooled-TCP Neon mode on a request path
 - Use TanStack Query on a public indexable page
 - `lastModified: new Date()` in the sitemap
 - Hardcode user-visible strings — they come from `messages/{locale}.json`
 - Write inline SVGs — use `lucide-react`
-- Hand-edit `prisma/migrations/*.sql`
+- Hand-edit generated files in `drizzle/` — let `drizzle-kit generate` produce them
 - Run migrations or permission-sync on boot
 - Copy anything from Temsan's schema or admin — architecture patterns only
 - `--no-verify`

@@ -1,4 +1,6 @@
-# mini-tavkil
+| `.env.example` | 14 env keys, with `[carry]` markers for values reusable from Tavkil || `pnpm db:studio` | Drizzle Studio |
+| `pnpm db:pull` | Re-introspect Neon into src/lib/db/schema.ts |
+| `pnpm db:generate` | Generate a migration from schema changes |# mini-tavkil
 
 Successor to [Tavkil](https://tavkil.com) — a public product showcase with a small
 admin dashboard. One Next.js app on Neon + Cloudflare.
@@ -29,11 +31,12 @@ app/
   admin/             Vite SPA build output, served as static assets
   api/               route handlers (replaces the Nest.js backend)
 lib/
-  queries/           Prisma access. public-product.ts is the leak-proof shape.
+  db/                generated Drizzle schema + relations + citext type
+  queries/           Drizzle access. public-product.ts is the leak-proof shape.
   services/          ported Nest services, minus the decorators
   image-resize.ts    browser-side canvas → WebP (Sharp can't run on Workers)
   seo/               metadata, JSON-LD, sitemap helpers
-prisma/              schema + migrations, copied from tavkil/backend
+drizzle/             generated SQL baseline + drizzle-kit metadata
 messages/            en.json · tr.json · ar.json
 e2e/                 Playwright
 scripts/             sync-permissions, seed, fx-refresh
@@ -49,7 +52,7 @@ pnpm install
 cp .env.example .env          # fill in; [carry] values come from tavkil/.env
 cp .env .dev.vars             # wrangler reads this for local Cloudflare runs
 
-pnpm prisma migrate deploy    # uses DIRECT_URL
+pnpm db:migrate               # drizzle-kit, uses DIRECT_URL
 pnpm seed
 pnpm sync:permissions         # fills the Permission table — no boot hook exists
 
@@ -93,9 +96,9 @@ client; it's the same domain.
 - **Sharp is not available.** Images are resized in the browser before upload.
 - **Nothing runs on boot.** Workers start per request. Permission sync and FX are a
   script and a Cron Trigger.
-- **No interactive transactions** on request paths — Neon HTTP mode doesn't support
-  them. Array-form `$transaction([...])` is fine.
-- **Bundle size is a hard gate.** Cloudflare's free plan caps at 3 MB and the Prisma
-  client grows with the schema.
+- **No interactive transactions** on request paths — Neon HTTP mode does not support
+  them. `db.batch([q1, q2])` is fine.
+- **Bundle size is a hard gate.** Cloudflare free plan caps at 3 MB gzipped. The
+  scaffold measures 1.02 MB. Prisma was rejected because its client alone cost 1.85 MB.
 - **The admin is still a Vite SPA.** It's built and served as static assets under
   `/admin`; it was never ported to Next.js routes, and probably shouldn't be.

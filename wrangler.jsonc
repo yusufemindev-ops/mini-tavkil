@@ -1,13 +1,16 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mini-tavkil",
+  // Pinned: wrangler was once authenticated to the temsan account, which made the
+  // R2 buckets look "not found". Pinning fails loudly instead of deploying elsewhere.
+  "account_id": "0b90963dada5e65530f075206f214362",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-10",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
 
   "observability": { "enabled": true },
@@ -20,27 +23,27 @@
     {
       "binding": "IMAGES",
       "bucket_name": "tavkil-images",
-      "remote": true
+      "remote": true,
     },
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "tavkil-cache"
-    }
+      "bucket_name": "tavkil-cache",
+    },
   ],
 
   // ─── Cron ──────────────────────────────────────────────────────────────────
   // Workers have no long-lived process. The FX refresh that was a Nest
   // WORKER_MODE loop runs here instead. Handler: src/app/api/cron/fx/route.ts
   "triggers": {
-    "crons": ["0 6 * * *"]
+    "crons": ["0 6 * * *"],
   },
 
   "vars": {
-    "SITE_INDEXABLE": "false"
-  }
+    "SITE_INDEXABLE": "false",
+  },
 
   // Secrets are NOT listed here. Local: .dev.vars. Production: `wrangler secret put`.
   // DATABASE_URL, DIRECT_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID,
   // GOOGLE_CLIENT_SECRET, ADMIN_ALLOWLIST, TURNSTILE_SECRET_KEY,
-  // POSTMARK_API_TOKEN, INDEXNOW_API_KEY
+  // INDEXNOW_API_KEY
 }

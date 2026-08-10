@@ -1,18 +1,18 @@
-import { prisma } from '@/lib/db';
+import { count } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { categories, products } from '@/lib/db/schema';
 
-// Block-0 smoke test: proves Prisma 7 + @prisma/adapter-neon actually runs on
-// Workers with our 32-model schema, and forces the client into the bundle so
-// `wrangler deploy` reports a truthful size against the 3 MB limit.
+// Smoke test: proves Drizzle + Neon HTTP runs on Workers against the real schema,
+// and forces the DB layer into the bundle so `wrangler deploy --dry-run` reports a
+// truthful size against the 3 MB free-plan limit.
 // Keep this route — it doubles as an uptime check.
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const [categories, products] = await Promise.all([
-      prisma.category.count(),
-      prisma.product.count(),
-    ]);
-    return Response.json({ ok: true, categories, products });
+    const [cat] = await db.select({ n: count() }).from(categories);
+    const [prod] = await db.select({ n: count() }).from(products);
+    return Response.json({ ok: true, categories: cat.n, products: prod.n });
   } catch (error) {
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : 'unknown' },

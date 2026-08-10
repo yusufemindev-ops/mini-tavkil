@@ -118,15 +118,15 @@ Do not use it for regression coverage. It leaves nothing behind; Playwright does
 
 ## 4. Gates
 
-| Gate                  | Runs                                                                                                 |
-| --------------------- | ---------------------------------------------------------------------------------------------------- |
-| pre-commit (lefthook) | prettier, eslint, locale parity, gitleaks                                                            |
-| pre-push              | `tsc --noEmit`, Vitest unit + component                                                              |
+| Gate                  | Runs                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| pre-commit (lefthook) | prettier, eslint, locale parity, gitleaks                                                                       |
+| pre-push              | `tsc --noEmit`, Vitest unit + component                                                                         |
 | PR CI                 | full Vitest incl. integration, Playwright, **public-leak suite**, `wrangler deploy --dry-run` bundle-size check |
-| Pre-release           | Lighthouse via DevTools MCP on the top 10 pages, AR/TR spot-check, all 11 flows                      |
+| Pre-release           | Lighthouse via DevTools MCP on the top 10 pages, AR/TR spot-check, all 11 flows                                 |
 
-**Bundle-size check is a real gate here**, not a nicety — Workers has a hard limit and
-Prisma's client grows with the schema.
+**Bundle-size check is a real gate here**, not a nicety — Workers caps at 3 MB gzipped
+and the scaffold already uses 1.02 MB.
 
 ---
 

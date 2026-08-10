@@ -1,27 +1,28 @@
-import { PrismaNeon } from '@prisma/adapter-neon';
-import { PrismaClient } from '@/generated/prisma/client';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from '@/lib/db/schema';
+import * as relations from '@/lib/db/relations';
 
-// Prisma 7 is Rust-free and runs on Cloudflare Workers via a driver adapter.
+// Drizzle over the Neon HTTP driver.
 //
-// DATABASE_URL must be the POOLED (-pooler) Neon URL, which uses HTTP. HTTP lets
-// Neon compute autosuspend between requests, which is what keeps the free tier's
-// 100 CU-hours viable. WebSocket mode holds the compute awake and burns them.
+// Chosen over Prisma for bundle size: Prisma's client cost 1.85 MB gzipped, which
+// alone would have pushed us past Cloudflare's 3 MB free-plan limit. Drizzle adds
+// roughly 50-100 KB. See PLAN.md §2.
 //
-// Consequence: no interactive transactions on request paths.
-//   OK    prisma.$transaction([a, b])
-//   NOT   prisma.$transaction(async (tx) => …)   <- use a script with DIRECT_URL
+// DATABASE_URL must be the POOLED (-pooler) Neon URL. HTTP lets Neon compute
+// autosuspend between requests, which is what keeps the free tier's 100 CU-hours
+// viable. WebSocket mode holds compute awake and burns them.
 //
-// See .claude/skills/cloudflare-constraints.md
-function createClient() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) throw new Error('DATABASE_URL is not set');
-  return new PrismaClient({ adapter: new PrismaNeon({ connectionString }) });
-}
+// Consequence: no interactive transactions on request paths. neon-http supports
+// batched transactions only:
+//   OK    db.batch([q1, q2])
+//   NOT   db.transaction(async (tx) => …)   <- use a script with DIRECT_URL
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error('DATABASE_URL is not set');
 
-// Workers create a fresh isolate per request, so this cache is a no-op there.
-// It exists to stop `next dev` from opening a new client on every hot reload.
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+export const db = drizzle(neon(connectionString), {
+  schema: { ...schema, ...relations },
+  casing: 'snake_case',
+});
 
-export const prisma = globalForPrisma.prisma ?? createClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export { schema };

@@ -20,15 +20,15 @@ deleting data models, and prefer fixed-in-code config over runtime editors.
 
 ## 2. Stack
 
-| Layer   | Choice                                          | Note                        |
-| ------- | ----------------------------------------------- | --------------------------- |
-| App     | Next.js 16 (App Router), single deployable      | No Nest.js backend          |
-| DB      | Neon Postgres + **Drizzle**                     | Prisma can't run on Workers |
-| Hosting | Cloudflare Workers via `@opennextjs/cloudflare` | `wrangler deploy`           |
-| Storage | Cloudflare R2                                   | product images              |
-| Auth    | Better Auth + Google — **admin only**           | allowlist-gated `/admin/*`  |
-| UI      | shadcn/ui + Tailwind v4 + @base-ui/react        | ported from Tavkil          |
-| i18n    | next-intl — EN / TR / AR                        | plumbing day 1, copy later  |
+| Layer   | Choice                                          | Note                                  |
+| ------- | ----------------------------------------------- | ------------------------------------- |
+| App     | Next.js 16 (App Router), single deployable      | No Nest.js backend                    |
+| DB      | Neon Postgres + **Drizzle**                     | Prisma costs 1.85 MB of a 3 MB bundle |
+| Hosting | Cloudflare Workers via `@opennextjs/cloudflare` | `wrangler deploy`                     |
+| Storage | Cloudflare R2                                   | product images                        |
+| Auth    | Better Auth + Google — **admin only**           | allowlist-gated `/admin/*`            |
+| UI      | shadcn/ui + Tailwind v4 + @base-ui/react        | ported from Tavkil                    |
+| i18n    | next-intl — EN / TR / AR                        | plumbing day 1, copy later            |
 
 Version parity between `tavkil/storefront` and `temsan` is near-identical
 (next 16.2.x, react 19.2.x, tailwind v4, next-intl 4.x, base-ui 1.x), so Tavkil's
@@ -182,13 +182,13 @@ Full build: **~3–4 weeks.** The UI on both sides already exists; the work is
 replacing the runtime under it. Three jobs:
 
 1. Drop Nest.js — 15 modules become server actions / route handlers _(biggest)_
-2. Prisma → Drizzle — ~15 tables
+2. Prisma → Drizzle — done: 32 tables introspected by `drizzle-kit pull`; queries still to rewrite
 3. Admin SPA → Next routes — Vite + react-router moves into `/admin`
 
 ## 6. Day 1 — see `DAY-1.md`
 
 The runbook below was written for a flat-catalog slice and is superseded by
-**`DAY-1.md`**, which keeps the full catalog by reusing Prisma + the admin SPA
+**`DAY-1.md`**, which keeps the full catalog and reuses the admin SPA
 as-is. Kept here for reference.
 
 ### (superseded) thin vertical slice
@@ -226,14 +226,14 @@ migration is a later job.
 
 ## 7. Resolved — 2026-08-10
 
-| #   | Question                        | Answer                                                                                                                                                                                |
-| --- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Variants / options / attributes | **Keep all.** Already built in Tavkil — admin forms and storefront filters come free. Cost is porting (Prisma→Drizzle relations, Nest catalog module → server actions), not building. |
-| Q2  | Multi-supplier                  | **Keep.** Deals with multiple factories are expected. Suppliers stay admin-only.                                                                                                      |
-| Q3  | Currencies                      | **USD + TRY only.** `Currency` / `FxRate` stay. FX worker moves from Nest `WORKER_MODE` → **Cloudflare Cron Trigger** in `wrangler.jsonc`.                                            |
-| Q4  | Dashboard tiles                 | Keep `/dashboard`. Two of its four stat tiles count buyers/orders — **just delete those two**. No replacements, no new pages.                                                         |
-| Q5  | Route naming                    | **English + localized slugs**, as Tavkil already does (TSC-50). No change.                                                                                                            |
-| Q6  | Repo                            | **New repo** — `mini-tavkil`.                                                                                                                                                         |
+| #   | Question                        | Answer                                                                                                                                                                                    |
+| --- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Variants / options / attributes | **Keep all.** Already built in Tavkil — admin forms and storefront filters come free. Cost is porting (Prisma→Drizzle query rewrite, Nest catalog module → route handlers), not building. |
+| Q2  | Multi-supplier                  | **Keep.** Deals with multiple factories are expected. Suppliers stay admin-only.                                                                                                          |
+| Q3  | Currencies                      | **USD + TRY only.** `Currency` / `FxRate` stay. FX worker moves from Nest `WORKER_MODE` → **Cloudflare Cron Trigger** in `wrangler.jsonc`.                                                |
+| Q4  | Dashboard tiles                 | Keep `/dashboard`. Two of its four stat tiles count buyers/orders — **just delete those two**. No replacements, no new pages.                                                             |
+| Q5  | Route naming                    | **English + localized slugs**, as Tavkil already does (TSC-50). No change.                                                                                                                |
+| Q6  | Repo                            | **New repo** — `mini-tavkil`.                                                                                                                                                             |
 
 ### Effect on scope
 
@@ -309,7 +309,7 @@ Category pages doing real linking work beat any sitemap trick.
 See **`.env.example`**. Tavkil has 42 keys, Temsan 9 — mini-tavkil lands near Temsan.
 The big cut: R2 is a **Worker binding** declared in `wrangler.jsonc`, so all `S3_*`
 credentials disappear. `DATABASE_URL` is Neon **pooled HTTP** (autosuspend, cheap CU-hours);
-`DIRECT_URL` is the direct connection, used only by `prisma migrate` and scripts.
+`DIRECT_URL` is the direct TCP connection, used only by `drizzle-kit` and scripts.
 
 Keys marked `[carry]` copy straight from Tavkil's `.env` — Google OAuth, Better Auth
 secret, allowlist, Turnstile, Postmark, IndexNow.

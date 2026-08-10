@@ -23,3 +23,4 @@ coverage/
 .playwright-mcp/
 
 .DS_Store
+.env.production

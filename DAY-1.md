@@ -7,58 +7,50 @@
 
 ## The two shortcuts this plan is built on
 
-**1. Keep Prisma. Do not rewrite to Drizzle.** — _verified against Prisma docs, 2026-08-10_
+**1. Drizzle, not Prisma — decided on measurement, 2026-08-10.**
 
-Prisma 7 is **Rust-free**: the Rust query engine is replaced by a WASM query planner
-plus a TypeScript driver layer, and **Cloudflare Workers is a first-class target**.
-`@prisma/adapter-neon` is explicitly supported over HTTP. Tavkil is already on
-Prisma 7 with `@prisma/adapter-pg`.
+Prisma 7 does run on Workers (Rust-free, first-class target). It was tried first and
+rejected on **bundle size**:
 
-So the 729-line schema, all 35 migrations, and every query in 19 services survive
-untouched. Two changes only:
+| Scaffold, no features | gzipped | of the 3 MB free limit |
+| --------------------- | ------- | ---------------------- |
+| Next.js alone         | 0.94 MB | 31%                    |
+| **+ Prisma client**   | 2.79 MB | **93%**                |
+| **+ Drizzle**         | 1.02 MB | **34%**                |
 
-- **Generator swap** — schema currently says `provider = "prisma-client-js"` (old
-  generator). Cloudflare needs the new one:
-  ```prisma
-  generator client {
-    provider = "prisma-client"
-    output   = "./generated"
-  }
-  ```
-- **Adapter swap** — `@prisma/adapter-pg` (TCP) → `@prisma/adapter-neon` (HTTP).
-  The HTTP transport is exactly why Neon works on Workers.
+Prisma's client alone costs **1.85 MB**. Drizzle's whole DB layer costs **~88 KB**.
+Staying on Prisma meant paying Cloudflare $5/month for headroom Drizzle gives free.
 
-**Watch:** Cloudflare's **3 MB bundle limit on the free plan**. Much less of a risk
-post-Rust (~90% smaller bundles), but it's the one thing that could still bite.
+**The schema converted itself.** Tavkil's 34 SQL migrations were applied to Neon
+directly over TCP, then `drizzle-kit pull` introspected the result: **32 tables, 324
+columns, 38 foreign keys, 51 indexes**, generated into `src/lib/db/schema.ts` (705
+lines) and `relations.ts` (290 lines). One manual fix — `citext` isn't recognised by
+introspection, so `src/lib/db/citext.ts` defines it.
+
+**What this costs:** queries no longer port verbatim. Tavkil's 19 services are full of
+Prisma calls that must be rewritten in Drizzle. Business logic survives; the data
+access doesn't. See §Blocks 2–3 — this is now the main work of the project.
 
 #### Use HTTP mode, not WebSocket — this is the Neon cost question
 
 Neon free tier = **100 CU-hours/month**. What burns them is keeping the compute
 _awake_. Persistent TCP/WebSocket connections hold it open; one-shot HTTP queries let
-it autosuspend almost immediately. This is why Temsan (Drizzle + Neon HTTP) is cheap.
-
-`@prisma/adapter-neon` uses **the same Neon serverless driver Drizzle does**, in either
-mode. So Prisma on HTTP ≈ Drizzle on HTTP for compute cost. Drizzle's real advantage is
-_bundle size_, not the Neon bill.
+it autosuspend almost immediately.
 
 | Mode                | Cost                | Transactions          |
 | ------------------- | ------------------- | --------------------- |
-| **HTTP** (use this) | autosuspends fast   | non-interactive only  |
+| **HTTP** (use this) | autosuspends fast   | `db.batch()` only     |
 | WebSocket Pool      | keeps compute awake | interactive supported |
 
 **Transaction audit — 15 uses in the Nest backend:**
 
-- `products`, `categories`, `rbac` → array form `$transaction([...])`, non-interactive,
-  **HTTP-safe**. These are the ones being ported.
-- `permissions-sync.service.ts` → callback form with `pg_advisory_xact_lock`, needs
-  WebSocket. It's a boot-time sync job, not a request path — **run it as a script
-  outside the Worker.**
+- `products`, `categories`, `rbac` → array form, non-interactive → becomes
+  `db.batch([...])`, **HTTP-safe**. These are the ones being ported.
+- `permissions-sync.service.ts` → callback form with `pg_advisory_xact_lock`, needs a
+  real transaction. It's a boot-time sync job, not a request path — **run it as a
+  script over `DIRECT_URL` (TCP), outside the Worker.**
 
-Refs: [Neon connection methods](https://neon.com/docs/connect/choose-connection) ·
-[Neon serverless driver](https://neon.com/docs/serverless/serverless-driver)
-
-Refs: [Deploy to Cloudflare](https://www.prisma.io/docs/orm/prisma-client/deployment/edge/deploy-to-cloudflare) ·
-[Prisma 7 release](https://www.prisma.io/blog/announcing-prisma-orm-7-0-0)
+Ref: [Neon connection methods](https://neon.com/docs/connect/choose-connection)
 
 **2. Do not port the admin SPA to Next.js routes.**
 It's a pure Vite SPA. Build it, serve the static output under `/admin`, point its API

@@ -47,7 +47,7 @@ Because the type has no such keys, a leak is a **compile error**.
   ask whether it's genuinely public.
 - Never `select` price or supplier in a query reachable from a public path
 - Never widen the return type "temporarily"
-- Never `as any` or spread a raw Prisma result into a public response
+- Never `as any` or spread a raw Drizzle row into a public response
 - Admin queries live in `lib/queries/admin-*.ts` and are only called from
   `/api/admin/*` handlers behind the session guard
 
