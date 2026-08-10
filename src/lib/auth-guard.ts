@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { authUser, authUserRoles, permissions, rolePermissions, roles } from '@/lib/db/schema';
+import { AuthError } from '@/lib/api/errors';
 import { adminAllowlist, isAllowlisted } from '@/lib/permissions/allowlist';
 import { OWNER_ROLE, roleGrants } from '@/lib/permissions/catalog';
 
@@ -25,15 +26,9 @@ export type AdminUser = {
   banned: boolean;
 };
 
-export class AuthError extends Error {
-  constructor(
-    readonly status: 401 | 403,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
+// Defined in lib/api/errors so that module can stay dependency-free; re-exported
+// here because this is where callers expect it.
+export { AuthError };
 
 // Re-exported so callers have one import for "the admin guard", while the policy
 // itself stays in a module that touches nothing.

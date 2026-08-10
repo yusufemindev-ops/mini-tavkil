@@ -64,6 +64,66 @@ function stripComments(source: string): string {
 }
 
 /**
+ * Modules that must stay reachable without a database.
+ *
+ * Each of these is pure policy, schema, or error shape. Every one of them ended up
+ * transitively importing `@/lib/db` at some point during step 8, and each time the
+ * symptom was the same: a unit test that touches none of this fails at import with
+ * `DATABASE_URL is not set`, because `lib/db` throws at module scope. Listing them
+ * turns "someone will notice" into a failing test.
+ */
+const MUST_STAY_PURE = [
+  'lib/api/errors.ts',
+  'lib/permissions/allowlist.ts',
+  'lib/permissions/catalog.ts',
+  'lib/catalog/product-sort.ts',
+  'lib/services/catalog-schemas.ts',
+  'lib/services/publish-gates.ts',
+  'i18n/routing.ts',
+];
+
+describe('dependency-free modules', () => {
+  it.each(MUST_STAY_PURE)('%s reaches no database module, even transitively', async (relative) => {
+    const seen = new Set<string>();
+    const banned: string[] = [];
+
+    const walk = (file: string) => {
+      if (seen.has(file)) return;
+      seen.add(file);
+      let source: string;
+      try {
+        source = readFileSync(file, 'utf8');
+      } catch {
+        return;
+      }
+      for (const match of stripComments(source).matchAll(
+        /(?:^|\n)\s*import\s+(?!type\b)[^;]*?from\s+['"]([^'"]+)['"]/g,
+      )) {
+        const spec = match[1];
+        if (/^(@\/lib\/db|drizzle-orm|@neondatabase\/serverless|better-auth)/.test(spec)) {
+          banned.push(`${file.replace(SRC, 'src')} → ${spec}`);
+          continue;
+        }
+        if (!spec.startsWith('@/')) continue; // node_modules — not ours to police
+        const resolved = join(SRC, spec.slice(2));
+        for (const candidate of [`${resolved}.ts`, `${resolved}.tsx`, join(resolved, 'index.ts')]) {
+          try {
+            statSync(candidate);
+            walk(candidate);
+            break;
+          } catch {
+            /* try the next extension */
+          }
+        }
+      }
+    };
+
+    walk(join(SRC, relative));
+    expect(banned).toEqual([]);
+  });
+});
+
+/**
  * A Client Component that imports a module which imports `@/lib/db` drags Drizzle,
  * the whole schema, and `throw new Error('DATABASE_URL is not set')` into the
  * browser bundle — where that throw fires on load and blanks the page.
