@@ -528,6 +528,18 @@ Lighthouse's SEO 100 only means the basics are present. Verify the substance:
 - IndexNow: publish a product, confirm the POST fired and returned 200/202
 - Crawl depth: every product reachable within 3 clicks of home
 
+### 14g-bis. Post-deploy stale-cache probe
+
+Found during step 4: for a few minutes after a deploy, `/en` intermittently returned
+the **previous** build's 404 with `x-nextjs-cache: HIT` and `x-nextjs-stale-time: 300`.
+The R2 incremental cache had the scaffold build's (legitimate, at the time) 404 for a
+route the new build serves, and kept handing it out until revalidation replaced it.
+
+So after every deploy, probe each public route ~20× before calling it verified — a
+single 200 proves nothing. If a route that changed shape between builds is still
+serving the old entry after the 300 s stale window, scope the cache per build with
+`NEXT_INC_CACHE_R2_PREFIX` instead of relying on the build id alone.
+
 ### 14h. Security
 
 **Implement, then verify.** Most of this is code that has to exist first.
