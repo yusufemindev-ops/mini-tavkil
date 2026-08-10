@@ -1,0 +1,5 @@
+# The admin is a Vite SPA in its own package: it ships as static assets under
+# /admin and its dependencies (TanStack Table, dnd-kit, react-router) never enter
+# the Worker bundle. Keeping it a separate package is what keeps that true.
+packages:
+  - 'admin'
