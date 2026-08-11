@@ -341,7 +341,12 @@ export async function publicDetailsFor(
       options.set(row.productId, list);
     }
     if (row.label !== null) {
-      option.values.push({ label: row.label, imageUrl: row.imageUrl, colorHex: row.colorHex });
+      option.values.push({
+        label: row.label,
+        // A swatch image is an R2 key too — same resolution as category images.
+        imageUrl: row.imageUrl ? resolveImageUrl(row.imageUrl) : null,
+        colorHex: row.colorHex,
+      });
     }
   }
 
@@ -369,7 +374,12 @@ async function optionsFor(productId: string): Promise<PublicOption[]> {
   for (const row of rows) {
     const option = byOption.get(row.optionId) ?? { name: row.name, type: row.type, values: [] };
     if (row.label !== null) {
-      option.values.push({ label: row.label, imageUrl: row.imageUrl, colorHex: row.colorHex });
+      option.values.push({
+        label: row.label,
+        // A swatch image is an R2 key too — same resolution as category images.
+        imageUrl: row.imageUrl ? resolveImageUrl(row.imageUrl) : null,
+        colorHex: row.colorHex,
+      });
     }
     byOption.set(row.optionId, option);
   }
@@ -513,6 +523,20 @@ export async function publicProducts(
 
 // ─── Categories ──────────────────────────────────────────────────────────────
 
+/**
+ * Category images are stored as bare R2 keys, exactly like product images, and
+ * so have to be resolved the same way.
+ *
+ * Product images went through `resolveImageUrl` from the start; categories did
+ * not, and nothing revealed it because no category had ever had an image — every
+ * card fell through to the gradient placeholder. The moment the Temsan import
+ * gave all sixteen of them a photograph, every card and every rail pill rendered
+ * a broken image instead.
+ */
+function categoryImage(reference: string | null): string | null {
+  return reference ? resolveImageUrl(reference) : null;
+}
+
 export async function publicCategory(slug: string, locale: Locale): Promise<PublicCategory | null> {
   const [row] = await db
     .select({
@@ -547,7 +571,7 @@ export async function publicCategory(slug: string, locale: Locale): Promise<Publ
     slug: row.slug,
     name: row.name,
     description: row.description,
-    imageUrl: row.imageUrl,
+    imageUrl: categoryImage(row.imageUrl),
     parent: row.parentId ? (parentById.get(row.parentId) ?? null) : null,
     localizedSlugs: slugs.get(row.id) ?? {},
     updatedAt: new Date(row.updatedAt),
@@ -584,7 +608,7 @@ export async function publicCategories(locale: Locale): Promise<PublicCategory[]
     slug: row.slug,
     name: row.name,
     description: row.description,
-    imageUrl: row.imageUrl,
+    imageUrl: categoryImage(row.imageUrl),
     parent: row.parentId ? (parentById.get(row.parentId) ?? null) : null,
     localizedSlugs: slugs.get(row.id) ?? {},
     updatedAt: new Date(row.updatedAt),

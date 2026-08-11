@@ -1,0 +1,3654 @@
+[
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "AMBALAJ İPLERİ",
+    "baseNameTr": "AMBALAJ İPİ 2 KG'LIK TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-210",
+        "trName": "AMBALAJ İPİ 2 KG'LIK TESA",
+        "tryPrice": 327.5,
+        "barcode": "8680445152100",
+        "boxQuantity": 12,
+        "unit": "KG",
+        "cbm": 0.066,
+        "weightKg": 24,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-210-1.webp",
+            "file": "tm-210-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "AMBALAJ İPLERİ",
+    "baseNameTr": "PAKET İPİ 500 GR'LIK TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-205",
+        "trName": "PAKET İPİ 500 GR'LIK TESA",
+        "tryPrice": 327.5,
+        "barcode": "8680445152056",
+        "boxQuantity": 40,
+        "unit": "KG",
+        "cbm": 0.059,
+        "weightKg": 20,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-205-1.webp",
+            "file": "tm-205-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "AMBALAJ İPLERİ",
+    "baseNameTr": "ÇUVAL AĞZI İPİ 1 KG'LIK TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-204",
+        "trName": "ÇUVAL AĞZI İPİ 1 KG'LIK TESA",
+        "tryPrice": 327.5,
+        "barcode": "8680445152049",
+        "boxQuantity": 20,
+        "unit": "KG",
+        "cbm": 0.066,
+        "weightKg": 20,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-204-1.webp",
+            "file": "tm-204-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-204-2.webp",
+            "file": "tm-204-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "HORTUMLAR",
+    "baseNameTr": "BAHÇE HORTUMU 20 MT TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-420",
+        "trName": "BAHÇE HORTUMU 20 MT TESA",
+        "tryPrice": 500.0,
+        "barcode": "8680445154203",
+        "boxQuantity": 5,
+        "unit": "AD",
+        "cbm": 0.054,
+        "weightKg": 9,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-420-1.webp",
+            "file": "tm-420-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-420-2.webp",
+            "file": "tm-420-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "JÜT İPLERİ",
+    "baseNameTr": "10 MT ÇOK AMAÇLI JÜT KIRNAP İPİ (12'Lİ) TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-135",
+        "trName": "10 MT ÇOK AMAÇLI JÜT KIRNAP İPİ (12'Lİ) TESA",
+        "tryPrice": 300.0,
+        "barcode": "8680445151356",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.0372,
+        "weightKg": 12,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-135-1.webp",
+            "file": "tm-135-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-135-2.webp",
+            "file": "tm-135-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "JÜT İPLERİ",
+    "baseNameTr": "JÜT KIRNAP İPİ (10'LU) TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-131",
+        "trName": "JÜT KIRNAP İPİ (10'LU) TEMSAN",
+        "tryPrice": 218.0,
+        "barcode": "8680445151318",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.055352,
+        "weightKg": 9.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-131-1.webp",
+            "file": "tm-131-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-131-2.webp",
+            "file": "tm-131-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-131-3.webp",
+            "file": "tm-131-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-131-4.webp",
+            "file": "tm-131-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "SIVA SÜNGERLERİ",
+    "baseNameTr": "BEYAZ SIVA SÜNGERİ (24'LÜ) VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-515",
+        "trName": "BEYAZ SIVA SÜNGERİ (24'LÜ) VİOMAX",
+        "tryPrice": 277.0,
+        "barcode": "8680445155156",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.2801,
+        "weightKg": 4.2,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-515-1.webp",
+            "file": "tm-515-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-515-2.webp",
+            "file": "tm-515-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "SIVA SÜNGERLERİ",
+    "baseNameTr": "KARMA SIVA SÜNGERİ (24'LÜ) VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-520",
+        "trName": "KARMA SIVA SÜNGERİ (24'LÜ) VİOMAX",
+        "tryPrice": 388.0,
+        "barcode": "8680445155209",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.40950000000000003,
+        "weightKg": 5.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-520-1.webp",
+            "file": "tm-520-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-520-2.webp",
+            "file": "tm-520-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "SIVA SÜNGERLERİ",
+    "baseNameTr": "RENKLİ TEMİZLİK SÜNGERİ (12'Lİ) VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-185",
+        "trName": "RENKLİ TEMİZLİK SÜNGERİ (12'Lİ) VİOMAX",
+        "tryPrice": 205.0,
+        "barcode": "8680445155101",
+        "boxQuantity": 25,
+        "unit": "PK",
+        "cbm": 0.2294,
+        "weightKg": 3.6,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-185-1.webp",
+            "file": "tm-185-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-185-2.webp",
+            "file": "tm-185-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "UÇURTMA İPLERİ",
+    "baseNameTr": "UÇURTMA İPİ (20'Lİ) TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-130",
+        "trName": "UÇURTMA İPİ (20'Lİ) TEMSAN",
+        "tryPrice": 362.0,
+        "barcode": "8680445151301",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.060996,
+        "weightKg": 9.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-130-1.webp",
+            "file": "tm-130-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-130-2.webp",
+            "file": "tm-130-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-130-3.webp",
+            "file": "tm-130-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "HIRDAVAT",
+    "subTr": "ÇAMAŞIR ASMA VE KURUTMA İPLERİ",
+    "baseNameTr": "NAYLON ÇAMAŞIR İPİ (24'LÜ) TESA",
+    "optionUnit": "MT",
+    "variants": [
+      {
+        "code": "TM-012",
+        "trName": "6 MT NAYLON ÇAMAŞIR İPİ (24'LÜ) TESA",
+        "tryPrice": 235.9,
+        "barcode": "8680445150120",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.0268,
+        "weightKg": 7.3,
+        "measure": "6",
+        "measureUnit": "MT",
+        "images": [
+          {
+            "key": "products/temsan/tm-012-1.webp",
+            "file": "tm-012-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-012-2.webp",
+            "file": "tm-012-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-080",
+        "trName": "8 MT NAYLON ÇAMAŞIR İPİ (24'LÜ) TESA",
+        "tryPrice": 286.0,
+        "barcode": "8680445150809",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.03675,
+        "weightKg": 8,
+        "measure": "8",
+        "measureUnit": "MT",
+        "images": [
+          {
+            "key": "products/temsan/tm-080-1.webp",
+            "file": "tm-080-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-080-2.webp",
+            "file": "tm-080-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-415",
+        "trName": "20 MT NAYLON ÇAMAŞIR İPİ (24'LÜ) TESA",
+        "tryPrice": 663.0,
+        "barcode": "8680445154166",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.06762,
+        "weightKg": 19.5,
+        "measure": "20",
+        "measureUnit": "MT",
+        "images": [
+          {
+            "key": "products/temsan/tm-415-1.webp",
+            "file": "tm-415-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-415-2.webp",
+            "file": "tm-415-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "HIRDAVAT",
+    "subTr": "ÇAMAŞIR ASMA VE KURUTMA İPLERİ",
+    "baseNameTr": "PVC KAPLI POLYESTER ÇAMAŞIR İPİ (12'Lİ) TESA",
+    "optionUnit": "MT",
+    "variants": [
+      {
+        "code": "TM-412",
+        "trName": "10 MT PVC KAPLI POLYESTER ÇAMAŞIR İPİ (12'Lİ) TESA",
+        "tryPrice": 210.0,
+        "barcode": "8680445154128",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.020201999999999998,
+        "weightKg": 6.3,
+        "measure": "10",
+        "measureUnit": "MT",
+        "images": [
+          {
+            "key": "products/temsan/tm-412-1.webp",
+            "file": "tm-412-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-412-2.webp",
+            "file": "tm-412-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-417",
+        "trName": "20 MT PVC KAPLI POLYESTER ÇAMAŞIR İPİ (12'Lİ) TESA",
+        "tryPrice": 410.0,
+        "barcode": "8680445154173",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.0361,
+        "weightKg": 12.25,
+        "measure": "20",
+        "measureUnit": "MT",
+        "images": [
+          {
+            "key": "products/temsan/tm-417-1.webp",
+            "file": "tm-417-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-417-2.webp",
+            "file": "tm-417-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "HIRDAVAT",
+    "subTr": "ÇAMAŞIR ASMA VE KURUTMA İPLERİ",
+    "baseNameTr": "PVC KAPLI ÇELİK ÇAMAŞIR İPİ (12'Lİ) TESA",
+    "optionUnit": "MT",
+    "variants": [
+      {
+        "code": "TM-010",
+        "trName": "10 MT PVC KAPLI ÇELİK ÇAMAŞIR İPİ (12'Lİ) TESA",
+        "tryPrice": 210.0,
+        "barcode": "8680445150106",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.020202,
+        "weightKg": 7,
+        "measure": "10",
+        "measureUnit": "MT",
+        "images": [
+          {
+            "key": "products/temsan/tm-010-1.webp",
+            "file": "tm-010-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-010-2.webp",
+            "file": "tm-010-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-011",
+        "trName": "20 MT PVC KAPLI ÇELİK ÇAMAŞIR İPİ (12'Lİ) TESA",
+        "tryPrice": 410.0,
+        "barcode": "8680445150113",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.0361,
+        "weightKg": 13.5,
+        "measure": "20",
+        "measureUnit": "MT",
+        "images": [
+          {
+            "key": "products/temsan/tm-011-1.webp",
+            "file": "tm-011-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-011-2.webp",
+            "file": "tm-011-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "ÇOK AMAÇLI İPLER",
+    "baseNameTr": "10 MT YASSI ÇOK AMAÇLI İP TESA (12'Lİ) TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-134",
+        "trName": "10 MT YASSI ÇOK AMAÇLI İP TESA (12'Lİ) TESA",
+        "tryPrice": 414.0,
+        "barcode": "8680445151349",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.0672,
+        "weightKg": 30,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-134-1.webp",
+            "file": "tm-134-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-134-2.webp",
+            "file": "tm-134-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-134-3.webp",
+            "file": "tm-134-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "ÇOK AMAÇLI İPLER",
+    "baseNameTr": "10 MT ÇOK AMAÇLI İP (12'Lİ) TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-132",
+        "trName": "10 MT ÇOK AMAÇLI İP (12'Lİ) TEMSAN",
+        "tryPrice": 215.5,
+        "barcode": "8680445151325",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.045,
+        "weightKg": 12.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-132-1.webp",
+            "file": "tm-132-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-132-2.webp",
+            "file": "tm-132-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "HIRDAVAT",
+    "subTr": "ÇOK AMAÇLI İPLER",
+    "baseNameTr": "20 MT ÇOK AMAÇLI İP (12'Lİ) TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-133",
+        "trName": "20 MT ÇOK AMAÇLI İP (12'Lİ) TESA",
+        "tryPrice": 417.0,
+        "barcode": "8680445151332",
+        "boxQuantity": 10,
+        "unit": "PK",
+        "cbm": 0.0889,
+        "weightKg": 25.2,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-133-1.webp",
+            "file": "tm-133-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-133-2.webp",
+            "file": "tm-133-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "HIRDAVAT",
+    "subTr": "İZOLELİ ÇELİK HALATLAR",
+    "baseNameTr": "İZOLELİ ÇELİK HALAT (200 MT'LİK)",
+    "optionUnit": "MM",
+    "variants": [
+      {
+        "code": "TM-211",
+        "trName": "2 MM İZOLELİ ÇELİK HALAT (200 MT'LİK)",
+        "tryPrice": 2.1,
+        "barcode": "8680445152117",
+        "boxQuantity": 200,
+        "unit": "MT",
+        "cbm": 0.0013,
+        "weightKg": 1.7,
+        "measure": "2",
+        "measureUnit": "MM",
+        "images": [
+          {
+            "key": "products/temsan/tm-211-1.webp",
+            "file": "tm-211-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-211-2.webp",
+            "file": "tm-211-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-212",
+        "trName": "3 MM İZOLELİ ÇELİK HALAT (200 MT'LİK)",
+        "tryPrice": 3.4,
+        "barcode": "8680445152124",
+        "boxQuantity": 200,
+        "unit": "MT",
+        "cbm": 0.0032,
+        "weightKg": 2.75,
+        "measure": "3",
+        "measureUnit": "MM",
+        "images": [
+          {
+            "key": "products/temsan/tm-212-1.webp",
+            "file": "tm-212-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-212-2.webp",
+            "file": "tm-212-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-213",
+        "trName": "4 MM İZOLELİ ÇELİK HALAT (200 MT'LİK)",
+        "tryPrice": 6.0,
+        "barcode": "8680445152131",
+        "boxQuantity": 200,
+        "unit": "MT",
+        "cbm": 0.0051,
+        "weightKg": 5.3,
+        "measure": "4",
+        "measureUnit": "MM",
+        "images": [
+          {
+            "key": "products/temsan/tm-213-1.webp",
+            "file": "tm-213-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-214",
+        "trName": "5 MM İZOLELİ ÇELİK HALAT (200 MT'LİK)",
+        "tryPrice": 8.9,
+        "barcode": "8680445152148",
+        "boxQuantity": 200,
+        "unit": "MT",
+        "cbm": 0.008,
+        "weightKg": 7.85,
+        "measure": "5",
+        "measureUnit": "MM",
+        "images": [
+          {
+            "key": "products/temsan/tm-214-1.webp",
+            "file": "tm-214-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-214-2.webp",
+            "file": "tm-214-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-217",
+        "trName": "8 MM İZOLELİ ÇELİK HALAT (200 MT'LİK)",
+        "tryPrice": 20.8,
+        "barcode": "8680445152179",
+        "boxQuantity": 200,
+        "unit": "MT",
+        "cbm": 0.0212,
+        "weightKg": 20.1,
+        "measure": "8",
+        "measureUnit": "MM",
+        "images": [
+          {
+            "key": "products/temsan/tm-217-1.webp",
+            "file": "tm-217-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-217-2.webp",
+            "file": "tm-217-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      },
+      {
+        "code": "TM-218",
+        "trName": "10 MM İZOLELİ ÇELİK HALAT (200 MT'LİK)",
+        "tryPrice": 29.1,
+        "barcode": "8680445152186",
+        "boxQuantity": 200,
+        "unit": "MT",
+        "cbm": 0.0325,
+        "weightKg": 27.65,
+        "measure": "10",
+        "measureUnit": "MM",
+        "images": [
+          {
+            "key": "products/temsan/tm-218-1.webp",
+            "file": "tm-218-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-218-2.webp",
+            "file": "tm-218-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BANYO",
+    "baseNameTr": "BANYO LİFİ EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-772",
+        "trName": "BANYO LİFİ EVİMA",
+        "tryPrice": 17.7,
+        "barcode": "8680445157723",
+        "boxQuantity": 150,
+        "unit": "AD",
+        "cbm": 0.0527,
+        "weightKg": 5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-772-1.webp",
+            "file": "tm-772-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-772-2.webp",
+            "file": "tm-772-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-772-3.webp",
+            "file": "tm-772-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-772-4.webp",
+            "file": "tm-772-4.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BANYO",
+    "baseNameTr": "BANYO LİFİ LÜX VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-773",
+        "trName": "BANYO LİFİ LÜX VİOMAX",
+        "tryPrice": 31.9,
+        "barcode": "8680445157730",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.0527,
+        "weightKg": 5.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-773-1.webp",
+            "file": "tm-773-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BANYO",
+    "baseNameTr": "BANYO SÜNGERİ KÜÇÜK",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "RM-775",
+        "trName": "BANYO SÜNGERİ KÜÇÜK",
+        "tryPrice": 12.6,
+        "barcode": "8682134007753",
+        "boxQuantity": 504,
+        "unit": "AD",
+        "cbm": 0.3254,
+        "weightKg": 5.8,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/rm-775-1.webp",
+            "file": "rm-775-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/rm-775-2.webp",
+            "file": "rm-775-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "10'LU KLASİK BULAŞIK SÜNGERİ",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "RM-753",
+        "trName": "10'LU KLASİK BULAŞIK SÜNGERİ",
+        "tryPrice": 32.5,
+        "barcode": "8682134007531",
+        "boxQuantity": 180,
+        "unit": "PK",
+        "cbm": 0.26208000000000004,
+        "weightKg": 6.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/rm-753-1.webp",
+            "file": "rm-753-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/rm-753-2.webp",
+            "file": "rm-753-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "4'LÜ ENDÜSTRİYEL BULAŞIK SÜNGERİ VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-750",
+        "trName": "4'LÜ ENDÜSTRİYEL BULAŞIK SÜNGERİ VİOMAX",
+        "tryPrice": 38.0,
+        "barcode": "8680445157501",
+        "boxQuantity": 15,
+        "unit": "AD",
+        "cbm": 0.0355,
+        "weightKg": 0.9,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-750-1.webp",
+            "file": "tm-750-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-750-2.webp",
+            "file": "tm-750-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-750-3.webp",
+            "file": "tm-750-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "5'Lİ KLASİK BULAŞIK SÜNGER BÜYÜK",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "RM-755",
+        "trName": "5'Lİ KLASİK BULAŞIK SÜNGER BÜYÜK",
+        "tryPrice": 32.5,
+        "barcode": "8682134007555",
+        "boxQuantity": 240,
+        "unit": "AD",
+        "cbm": 0.34579999999999994,
+        "weightKg": 8.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/rm-755-1.webp",
+            "file": "rm-755-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/rm-755-2.webp",
+            "file": "rm-755-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "5'Lİ OLUKLU BULAŞIK SÜNGERİ VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-751",
+        "trName": "5'Lİ OLUKLU BULAŞIK SÜNGERİ VİOMAX",
+        "tryPrice": 22.5,
+        "barcode": "8680445157518",
+        "boxQuantity": 216,
+        "unit": "AD",
+        "cbm": 0.2094,
+        "weightKg": 4.65,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-751-1.webp",
+            "file": "tm-751-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-751-2.webp",
+            "file": "tm-751-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "BULAŞIK ALTLIĞI EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-620",
+        "trName": "BULAŞIK ALTLIĞI EVİMA",
+        "tryPrice": 74.0,
+        "barcode": "8680445156207",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.13823999999999997,
+        "weightKg": 10,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-620-1.webp",
+            "file": "tm-620-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-620-2.webp",
+            "file": "tm-620-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-620-3.webp",
+            "file": "tm-620-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-620-4.webp",
+            "file": "tm-620-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "BULAŞIK ALTLIĞI LÜX VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-740",
+        "trName": "BULAŞIK ALTLIĞI LÜX VİOMAX",
+        "tryPrice": 91.0,
+        "barcode": "8680445157402",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.1652,
+        "weightKg": 12.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-740-1.webp",
+            "file": "tm-740-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-740-2.webp",
+            "file": "tm-740-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-740-3.webp",
+            "file": "tm-740-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "EXTRA İNOX TEMİZLİK SÜNGER 2'Lİ {STANTLI KOLİLİ} VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-785",
+        "trName": "EXTRA İNOX TEMİZLİK SÜNGER 2'Lİ {STANTLI KOLİLİ} VİOMAX",
+        "tryPrice": 28.0,
+        "barcode": "8680445157853",
+        "boxQuantity": 48,
+        "unit": "AD",
+        "cbm": 0.0303,
+        "weightKg": 1.45,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-785-1.webp",
+            "file": "tm-785-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-785-2.webp",
+            "file": "tm-785-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-785-3.webp",
+            "file": "tm-785-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-785-4.webp",
+            "file": "tm-785-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          },
+          {
+            "key": "products/temsan/tm-785-5.webp",
+            "file": "tm-785-5.webp",
+            "isPrimary": false,
+            "sortOrder": 5
+          },
+          {
+            "key": "products/temsan/tm-785-6.webp",
+            "file": "tm-785-6.webp",
+            "isPrimary": false,
+            "sortOrder": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "FİLELİ BULAŞIK SÜNGERİ 3'LÜ {EKO} EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-624",
+        "trName": "FİLELİ BULAŞIK SÜNGERİ 3'LÜ {EKO} EVİMA",
+        "tryPrice": 21.0,
+        "barcode": "8680445156245",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.1092,
+        "weightKg": 3.35,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-624-1.webp",
+            "file": "tm-624-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-624-2.webp",
+            "file": "tm-624-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-624-3.webp",
+            "file": "tm-624-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "FİLELİ BULAŞIK SÜNGERİ 3'LÜ {STANTLI KOLİLİ} TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-460",
+        "trName": "FİLELİ BULAŞIK SÜNGERİ 3'LÜ {STANTLI KOLİLİ} TESA",
+        "tryPrice": 26.0,
+        "barcode": "8680445154609",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.1209,
+        "weightKg": 4.25,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-460-1.webp",
+            "file": "tm-460-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-460-2.webp",
+            "file": "tm-460-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-460-3.webp",
+            "file": "tm-460-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-460-4.webp",
+            "file": "tm-460-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          },
+          {
+            "key": "products/temsan/tm-460-5.webp",
+            "file": "tm-460-5.webp",
+            "isPrimary": false,
+            "sortOrder": 5
+          },
+          {
+            "key": "products/temsan/tm-460-6.webp",
+            "file": "tm-460-6.webp",
+            "isPrimary": false,
+            "sortOrder": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "BULAŞIK",
+    "baseNameTr": "İNOX SİYAH TEMİZLİK SÜNGERİ 2'Lİ {STANTLI KOLİLİ} VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-782",
+        "trName": "İNOX SİYAH TEMİZLİK SÜNGERİ 2'Lİ {STANTLI KOLİLİ} VİOMAX",
+        "tryPrice": 48.0,
+        "barcode": "8680445157822",
+        "boxQuantity": 48,
+        "unit": "AD",
+        "cbm": 0.027,
+        "weightKg": 1.75,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-782-1.webp",
+            "file": "tm-782-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-782-2.webp",
+            "file": "tm-782-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "CAM TEMİZLİĞİ",
+    "baseNameTr": "4'LÜ BAKLAVA DESENLİ CAM BEZİ KARTELALI 30*40 CM KARTELALI EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-612",
+        "trName": "4'LÜ BAKLAVA DESENLİ CAM BEZİ KARTELALI 30*40 CM KARTELALI EVİMA",
+        "tryPrice": 97.5,
+        "barcode": "8680445156122",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.0635,
+        "weightKg": 15,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-612-1.webp",
+            "file": "tm-612-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "TEMİZLİK",
+    "subTr": "CAM TEMİZLİĞİ",
+    "baseNameTr": "BAKLAVA DESENLİ CAM BEZİ EVİMA {20'Lİ}",
+    "optionUnit": "CM",
+    "variants": [
+      {
+        "code": "TM-611",
+        "trName": "BAKLAVA DESENLİ CAM BEZİ 30*40 CM EVİMA {20'Lİ}",
+        "tryPrice": 24.3,
+        "barcode": "8680445156115",
+        "boxQuantity": 400,
+        "unit": "AD",
+        "cbm": 0.058,
+        "weightKg": 11.5,
+        "measure": "30x40",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-611-1.webp",
+            "file": "tm-611-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-611-2.webp",
+            "file": "tm-611-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-616",
+        "trName": "BAKLAVA DESENLİ CAM BEZİ 40*40 CM EVİMA {20'Lİ}",
+        "tryPrice": 29.0,
+        "barcode": "8680445156160",
+        "boxQuantity": 400,
+        "unit": "AD",
+        "cbm": 0.06350399999999999,
+        "weightKg": 17,
+        "measure": "40x40",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-616-1.webp",
+            "file": "tm-616-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "CAM TEMİZLİĞİ",
+    "baseNameTr": "LACOST AMBALAJLI BEZ 40*50 CM VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-712",
+        "trName": "LACOST AMBALAJLI BEZ 40*50 CM VİOMAX",
+        "tryPrice": 38.5,
+        "barcode": "8680445157129",
+        "boxQuantity": 250,
+        "unit": "AD",
+        "cbm": 0.06350399999999999,
+        "weightKg": 15.3,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-712-1.webp",
+            "file": "tm-712-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-712-2.webp",
+            "file": "tm-712-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "CAM TEMİZLİĞİ",
+    "baseNameTr": "LACOST DÖKME BEZ 40*50 CM",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-713",
+        "trName": "LACOST DÖKME BEZ 40*50 CM",
+        "tryPrice": 29.0,
+        "barcode": "8680445157136",
+        "boxQuantity": 500,
+        "unit": "AD",
+        "cbm": 0.06350399999999999,
+        "weightKg": 17.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-713-1.webp",
+            "file": "tm-713-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "4'LÜ MİKROFİBER BEZ 25*35 CM TEMSAN {ULTRASONİK}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-475",
+        "trName": "4'LÜ MİKROFİBER BEZ 25*35 CM TEMSAN {ULTRASONİK}",
+        "tryPrice": 51.0,
+        "barcode": "8680445154753",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.0827,
+        "weightKg": 8,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-475-1.webp",
+            "file": "tm-475-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-475-2.webp",
+            "file": "tm-475-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "4'LÜ MİKROFİBER TEMİZLİK BEZİ KARTELALI 30*40 CM EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-600",
+        "trName": "4'LÜ MİKROFİBER TEMİZLİK BEZİ KARTELALI 30*40 CM EVİMA",
+        "tryPrice": 74.5,
+        "barcode": "8680445156009",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.08996399999999999,
+        "weightKg": 11.2,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-600-1.webp",
+            "file": "tm-600-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-600-2.webp",
+            "file": "tm-600-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-600-3.webp",
+            "file": "tm-600-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "9 LU TEMİZLİK BEZİ VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-720",
+        "trName": "9 LU TEMİZLİK BEZİ VİOMAX",
+        "tryPrice": 54.9,
+        "barcode": "8680445157204",
+        "boxQuantity": 90,
+        "unit": "AD",
+        "cbm": 0.1209,
+        "weightKg": 9.2,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-720-1.webp",
+            "file": "tm-720-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-720-2.webp",
+            "file": "tm-720-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "MİKRO PELUŞ BEZ 3'LÜ SET EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-163",
+        "trName": "MİKRO PELUŞ BEZ 3'LÜ SET EVİMA",
+        "tryPrice": 67.5,
+        "barcode": "8680445151639",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 11.2,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-163-1.webp",
+            "file": "tm-163-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-163-2.webp",
+            "file": "tm-163-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-163-3.webp",
+            "file": "tm-163-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-163-4.webp",
+            "file": "tm-163-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "MİKRO PELUŞ BEZ 4'LÜ SET TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-164",
+        "trName": "MİKRO PELUŞ BEZ 4'LÜ SET TESA",
+        "tryPrice": 74.5,
+        "barcode": "8680445151646",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.133,
+        "weightKg": 13.9,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-164-1.webp",
+            "file": "tm-164-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-164-2.webp",
+            "file": "tm-164-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-164-3.webp",
+            "file": "tm-164-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "MİKRO PELUŞ TEMİZLİK BEZİ 40*40 CM EVİMA {12'Lİ}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-618",
+        "trName": "MİKRO PELUŞ TEMİZLİK BEZİ 40*40 CM EVİMA {12'Lİ}",
+        "tryPrice": 29.5,
+        "barcode": "8680445156184",
+        "boxQuantity": 144,
+        "unit": "AD",
+        "cbm": 0.0882,
+        "weightKg": 6.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-618-1.webp",
+            "file": "tm-618-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-618-2.webp",
+            "file": "tm-618-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "MİKROFİBER BEZ 4'LÜ EKO {OVERLOKLU} VİOMAX {12'Lİ}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-715",
+        "trName": "MİKROFİBER BEZ 4'LÜ EKO {OVERLOKLU} VİOMAX {12'Lİ}",
+        "tryPrice": 41.0,
+        "barcode": "8680445157150",
+        "boxQuantity": 240,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 13,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-715-1.webp",
+            "file": "tm-715-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-715-2.webp",
+            "file": "tm-715-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-715-3.webp",
+            "file": "tm-715-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "MİKROFİBER BEZ 4'LÜ {OVERLOKLU} EVİMA {12'Lİ} {30*30 CM}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-465",
+        "trName": "MİKROFİBER BEZ 4'LÜ {OVERLOKLU} EVİMA {12'Lİ} {30*30 CM}",
+        "tryPrice": 47.5,
+        "barcode": "8680445154654",
+        "boxQuantity": 240,
+        "unit": "AD",
+        "cbm": 0.1348,
+        "weightKg": 16.1,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-465-1.webp",
+            "file": "tm-465-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-465-2.webp",
+            "file": "tm-465-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-465-3.webp",
+            "file": "tm-465-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "MİKROFİBER BEZ 4'LÜ {ULTRASONİK} TESA {12'Lİ} {30*30 CM}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-468",
+        "trName": "MİKROFİBER BEZ 4'LÜ {ULTRASONİK} TESA {12'Lİ} {30*30 CM}",
+        "tryPrice": 38.0,
+        "barcode": "8680445154685",
+        "boxQuantity": 240,
+        "unit": "AD",
+        "cbm": 0.1348,
+        "weightKg": 16.1,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-468-1.webp",
+            "file": "tm-468-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-468-2.webp",
+            "file": "tm-468-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-468-3.webp",
+            "file": "tm-468-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "MİKROFİBER TEMİZLİK BEZİ 30*40 CM EVİMA {20'Lİ}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-605",
+        "trName": "MİKROFİBER TEMİZLİK BEZİ 30*40 CM EVİMA {20'Lİ}",
+        "tryPrice": 16.7,
+        "barcode": "8680445156054",
+        "boxQuantity": 400,
+        "unit": "AD",
+        "cbm": 0.04687199999999999,
+        "weightKg": 9,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-605-1.webp",
+            "file": "tm-605-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-605-2.webp",
+            "file": "tm-605-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-605-3.webp",
+            "file": "tm-605-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-605-4.webp",
+            "file": "tm-605-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "PREMİUM TEMİZLİK BEZİ 3'LÜ TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-058",
+        "trName": "PREMİUM TEMİZLİK BEZİ 3'LÜ TEMSAN",
+        "tryPrice": 188.0,
+        "barcode": "8680445150588",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.0564,
+        "weightKg": 9.75,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-058-1.webp",
+            "file": "tm-058-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-058-2.webp",
+            "file": "tm-058-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "RULO PERFORE TEMİZLİK BEZİ 15 YAPRAK VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-721",
+        "trName": "RULO PERFORE TEMİZLİK BEZİ 15 YAPRAK VİOMAX",
+        "tryPrice": 66.7,
+        "barcode": "8680445157211",
+        "boxQuantity": 15,
+        "unit": "AD",
+        "cbm": 0.0322,
+        "weightKg": 2.6,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-721-1.webp",
+            "file": "tm-721-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-721-2.webp",
+            "file": "tm-721-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "RULO PERFORE TEMİZLİK BEZİ 20 YAPRAK TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-051",
+        "trName": "RULO PERFORE TEMİZLİK BEZİ 20 YAPRAK TESA",
+        "tryPrice": 84.5,
+        "barcode": "8680445150519",
+        "boxQuantity": 15,
+        "unit": "AD",
+        "cbm": 0.0354,
+        "weightKg": 3.35,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-051-1.webp",
+            "file": "tm-051-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-051-2.webp",
+            "file": "tm-051-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "TEMİZLİK BEZİ 3'LÜ TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-050",
+        "trName": "TEMİZLİK BEZİ 3'LÜ TEMSAN",
+        "tryPrice": 19.5,
+        "barcode": "8680445150502",
+        "boxQuantity": 200,
+        "unit": "AD",
+        "cbm": 0.0957,
+        "weightKg": 7.8,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-050-1.webp",
+            "file": "tm-050-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-050-2.webp",
+            "file": "tm-050-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-050-3.webp",
+            "file": "tm-050-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "GENEL TEMİZLİK",
+    "baseNameTr": "İNOX TEMİZLİK BEZİ",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-790",
+        "trName": "İNOX TEMİZLİK BEZİ",
+        "tryPrice": 19.5,
+        "barcode": "8680445157907",
+        "boxQuantity": 800,
+        "unit": "AD",
+        "cbm": 0.1,
+        "weightKg": 7,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-790-1.webp",
+            "file": "tm-790-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-790-2.webp",
+            "file": "tm-790-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "OTOMOBİL TEMİZLİĞİ",
+    "baseNameTr": "BAKLAVA DESENLİ CAM BEZİ 50*70 CM KARTELALI VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-710",
+        "trName": "BAKLAVA DESENLİ CAM BEZİ 50*70 CM KARTELALI VİOMAX",
+        "tryPrice": 68.25,
+        "barcode": "8680445157105",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.04687199999999999,
+        "weightKg": 10.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-710-1.webp",
+            "file": "tm-710-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "OTOMOBİL TEMİZLİĞİ",
+    "baseNameTr": "BAKLAVA DESENLİ CAM BEZİ 50*70 CM VİOMAX {20'Lİ}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-709",
+        "trName": "BAKLAVA DESENLİ CAM BEZİ 50*70 CM VİOMAX {20'Lİ}",
+        "tryPrice": 58.6,
+        "barcode": "8680445157099",
+        "boxQuantity": 200,
+        "unit": "AD",
+        "cbm": 0.0689,
+        "weightKg": 17.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-709-1.webp",
+            "file": "tm-709-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-709-2.webp",
+            "file": "tm-709-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "OTOMOBİL TEMİZLİĞİ",
+    "baseNameTr": "MİKROFİBER TANK BEZİ 50*70 CM VİOMAX {20'Lİ}",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-706",
+        "trName": "MİKROFİBER TANK BEZİ 50*70 CM VİOMAX {20'Lİ}",
+        "tryPrice": 75.5,
+        "barcode": "8680445157068",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.138,
+        "weightKg": 16.75,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-706-1.webp",
+            "file": "tm-706-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "OTOMOBİL TEMİZLİĞİ",
+    "baseNameTr": "OTO KURULAMA BEZİ KARTELALI 50*70 CM VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-700",
+        "trName": "OTO KURULAMA BEZİ KARTELALI 50*70 CM VİOMAX",
+        "tryPrice": 84.5,
+        "barcode": "8680445157006",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.138,
+        "weightKg": 16.75,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-700-1.webp",
+            "file": "tm-700-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-700-2.webp",
+            "file": "tm-700-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "OTOMOBİL TEMİZLİĞİ",
+    "baseNameTr": "OTO KURULAMA BEZİ RULO 50*70 CM VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-701",
+        "trName": "OTO KURULAMA BEZİ RULO 50*70 CM VİOMAX",
+        "tryPrice": 89.0,
+        "barcode": "8680445157013",
+        "boxQuantity": 96,
+        "unit": "AD",
+        "cbm": 0.0152,
+        "weightKg": 1.95,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-701-1.webp",
+            "file": "tm-701-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-701-2.webp",
+            "file": "tm-701-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "OTOMOBİL TEMİZLİĞİ",
+    "baseNameTr": "OTO KURULAMA ELDİVENİ EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-653",
+        "trName": "OTO KURULAMA ELDİVENİ EVİMA",
+        "tryPrice": 55.0,
+        "barcode": "8680445156535",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.1023,
+        "weightKg": 7.2,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-653-1.webp",
+            "file": "tm-653-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "OTOMOBİL TEMİZLİĞİ",
+    "baseNameTr": "OTO YIKAMA SÜNGERİ {12*18PK} VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-752",
+        "trName": "OTO YIKAMA SÜNGERİ {12*18PK} VİOMAX",
+        "tryPrice": 27.7,
+        "barcode": "8680445157525",
+        "boxQuantity": 216,
+        "unit": "AD",
+        "cbm": 0.3019,
+        "weightKg": 4.75,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-752-1.webp",
+            "file": "tm-752-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-752-2.webp",
+            "file": "tm-752-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "40 CM'LİK MİKRO NEMLİ MOP APARATLI EKO TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-087",
+        "trName": "40 CM'LİK MİKRO NEMLİ MOP APARATLI EKO TEMSAN",
+        "tryPrice": 110.0,
+        "barcode": "8680445150878",
+        "boxQuantity": 50,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 9.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-087-1.webp",
+            "file": "tm-087-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "BADEM MOP TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-170",
+        "trName": "BADEM MOP TEMSAN",
+        "tryPrice": 49.0,
+        "barcode": "8680445151707",
+        "boxQuantity": 50,
+        "unit": "AD",
+        "cbm": 0.1056,
+        "weightKg": 7.35,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-170-1.webp",
+            "file": "tm-170-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-170-2.webp",
+            "file": "tm-170-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-170-3.webp",
+            "file": "tm-170-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "DÖNER BAŞLIKLI HAVLU MOP TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-078",
+        "trName": "DÖNER BAŞLIKLI HAVLU MOP TEMSAN",
+        "tryPrice": 65.5,
+        "barcode": "8680445150786",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.0562,
+        "weightKg": 6.65,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-078-1.webp",
+            "file": "tm-078-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-078-2.webp",
+            "file": "tm-078-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-078-3.webp",
+            "file": "tm-078-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-078-4.webp",
+            "file": "tm-078-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          },
+          {
+            "key": "products/temsan/tm-078-5.webp",
+            "file": "tm-078-5.webp",
+            "isPrimary": false,
+            "sortOrder": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "DÖNER BAŞLIKLI İPLİ MOP LÜX TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-175",
+        "trName": "DÖNER BAŞLIKLI İPLİ MOP LÜX TEMSAN",
+        "tryPrice": 41.0,
+        "barcode": "8680445151752",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.072,
+        "weightKg": 8.65,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-175-1.webp",
+            "file": "tm-175-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-175-2.webp",
+            "file": "tm-175-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "DÖNER BAŞLIKLI İPLİ MOP VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-764",
+        "trName": "DÖNER BAŞLIKLI İPLİ MOP VİOMAX",
+        "tryPrice": 36.5,
+        "barcode": "8680445157648",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.066,
+        "weightKg": 7.3,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-764-1.webp",
+            "file": "tm-764-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-764-2.webp",
+            "file": "tm-764-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-764-3.webp",
+            "file": "tm-764-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "EKO MİKROFİBER MOP EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-664",
+        "trName": "EKO MİKROFİBER MOP EVİMA",
+        "tryPrice": 64.0,
+        "barcode": "8680445156641",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.0804,
+        "weightKg": 10.5,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-664-1.webp",
+            "file": "tm-664-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-664-2.webp",
+            "file": "tm-664-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "EKO WELSOFT RENKLİ KARTELALI MOP TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-432",
+        "trName": "EKO WELSOFT RENKLİ KARTELALI MOP TESA",
+        "tryPrice": 59.0,
+        "barcode": "8680445154326",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.107,
+        "weightKg": 9.25,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-432-1.webp",
+            "file": "tm-432-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-432-2.webp",
+            "file": "tm-432-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-432-3.webp",
+            "file": "tm-432-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-432-4.webp",
+            "file": "tm-432-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          },
+          {
+            "key": "products/temsan/tm-432-5.webp",
+            "file": "tm-432-5.webp",
+            "isPrimary": false,
+            "sortOrder": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "EKO WELSOFT ÇİZGİLİ MOP EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-662",
+        "trName": "EKO WELSOFT ÇİZGİLİ MOP EVİMA",
+        "tryPrice": 55.0,
+        "barcode": "8680445156627",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.1007,
+        "weightKg": 9.25,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-662-1.webp",
+            "file": "tm-662-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-662-2.webp",
+            "file": "tm-662-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "GENİŞ APARATLI MOP TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-155",
+        "trName": "GENİŞ APARATLI MOP TEMSAN",
+        "tryPrice": 76.5,
+        "barcode": "8680445151554",
+        "boxQuantity": 40,
+        "unit": "AD",
+        "cbm": 0.0736,
+        "weightKg": 11.1,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-155-1.webp",
+            "file": "tm-155-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-155-2.webp",
+            "file": "tm-155-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-155-3.webp",
+            "file": "tm-155-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "GOLD İPLİ MOP TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-145",
+        "trName": "GOLD İPLİ MOP TEMSAN",
+        "tryPrice": 39.5,
+        "barcode": "8680445151455",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.0818,
+        "weightKg": 12.24,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-145-1.webp",
+            "file": "tm-145-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-145-2.webp",
+            "file": "tm-145-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-145-3.webp",
+            "file": "tm-145-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "JUMBO İPLİ MOP TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-148",
+        "trName": "JUMBO İPLİ MOP TEMSAN",
+        "tryPrice": 44.5,
+        "barcode": "8680445151486",
+        "boxQuantity": 50,
+        "unit": "AD",
+        "cbm": 0.0818,
+        "weightKg": 12.24,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-148-1.webp",
+            "file": "tm-148-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-148-2.webp",
+            "file": "tm-148-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-148-3.webp",
+            "file": "tm-148-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-148-4.webp",
+            "file": "tm-148-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MAKARNA MOP TEMSAN",
+    "optionUnit": "CM",
+    "variants": [
+      {
+        "code": "TM-482",
+        "trName": "40 CM'LİK MAKARNA MOP TEMSAN",
+        "tryPrice": 86.5,
+        "barcode": "8680445154821",
+        "boxQuantity": 150,
+        "unit": "AD",
+        "cbm": 0.147,
+        "weightKg": 10.95,
+        "measure": "40",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-482-1.webp",
+            "file": "tm-482-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-483",
+        "trName": "50 CM'LİK MAKARNA MOP TEMSAN",
+        "tryPrice": 89.0,
+        "barcode": "8680445154838",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.147,
+        "weightKg": 13.2,
+        "measure": "50",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-483-1.webp",
+            "file": "tm-483-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-484",
+        "trName": "60 CM'LİK MAKARNA MOP TEMSAN",
+        "tryPrice": 92.0,
+        "barcode": "8680445154845",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.147,
+        "weightKg": 13.2,
+        "measure": "60",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-484-1.webp",
+            "file": "tm-484-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MANDALLI MOP SETİ EVİMA (SAPSIZ)",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-680",
+        "trName": "MANDALLI MOP SETİ EVİMA (SAPSIZ)",
+        "tryPrice": 173.5,
+        "barcode": "8680445156801",
+        "boxQuantity": 50,
+        "unit": "AD",
+        "cbm": 0.0917,
+        "weightKg": 14.9,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-680-1.webp",
+            "file": "tm-680-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-680-2.webp",
+            "file": "tm-680-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MANDALLI MOP YEDEĞİ 2'Lİ TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-250",
+        "trName": "MANDALLI MOP YEDEĞİ 2'Lİ TEMSAN",
+        "tryPrice": 54.5,
+        "barcode": "8680445152506",
+        "boxQuantity": 120,
+        "unit": "AD",
+        "cbm": 0.0917,
+        "weightKg": 11.65,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-250-1.webp",
+            "file": "tm-250-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-250-2.webp",
+            "file": "tm-250-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-250-3.webp",
+            "file": "tm-250-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MİKRO NEMLİ MOP APARATLI EVİMA",
+    "optionUnit": "CM",
+    "variants": [
+      {
+        "code": "TM-088",
+        "trName": "40 CM'LİK MİKRO NEMLİ MOP APARATLI EVİMA",
+        "tryPrice": 146.0,
+        "barcode": "8680445150885",
+        "boxQuantity": 50,
+        "unit": "AD",
+        "cbm": 0.1381,
+        "weightKg": 17,
+        "measure": "40",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-088-1.webp",
+            "file": "tm-088-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-088-2.webp",
+            "file": "tm-088-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-092",
+        "trName": "50 CM'LİK MİKRO NEMLİ MOP APARATLI EVİMA",
+        "tryPrice": 160.0,
+        "barcode": "8680445150922",
+        "boxQuantity": 25,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 12,
+        "measure": "50",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-092-1.webp",
+            "file": "tm-092-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-092-2.webp",
+            "file": "tm-092-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-096",
+        "trName": "60 CM'LİK MİKRO NEMLİ MOP APARATLI EVİMA",
+        "tryPrice": 161.0,
+        "barcode": "8680445150960",
+        "boxQuantity": 25,
+        "unit": "AD",
+        "cbm": 0.1106,
+        "weightKg": 12,
+        "measure": "60",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-096-1.webp",
+            "file": "tm-096-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-096-2.webp",
+            "file": "tm-096-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MİKRO NEMLİ MOP {25'Lİ} TEMSAN",
+    "optionUnit": "CM",
+    "variants": [
+      {
+        "code": "TM-084",
+        "trName": "25 CM'LİK MİKRO NEMLİ MOP {25'Lİ} TEMSAN",
+        "tryPrice": 41.5,
+        "barcode": "8680445150847",
+        "boxQuantity": 300,
+        "unit": "AD",
+        "cbm": 0.1636,
+        "weightKg": 12.6,
+        "measure": "25",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-084-1.webp",
+            "file": "tm-084-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-085",
+        "trName": "40 CM'LİK MİKRO NEMLİ MOP {25'Lİ} TEMSAN",
+        "tryPrice": 52.0,
+        "barcode": "8680445150854",
+        "boxQuantity": 300,
+        "unit": "AD",
+        "cbm": 0.2333,
+        "weightKg": 16.65,
+        "measure": "40",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-085-1.webp",
+            "file": "tm-085-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-090",
+        "trName": "50 CM'LİK MİKRO NEMLİ MOP {25'Lİ} TEMSAN",
+        "tryPrice": 60.5,
+        "barcode": "8680445150908",
+        "boxQuantity": 300,
+        "unit": "AD",
+        "cbm": 0.3742,
+        "weightKg": 22.35,
+        "measure": "50",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-090-1.webp",
+            "file": "tm-090-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-095",
+        "trName": "60 CM'LİK MİKRO NEMLİ MOP {25'Lİ} TEMSAN",
+        "tryPrice": 63.0,
+        "barcode": "8680445150953",
+        "boxQuantity": 300,
+        "unit": "AD",
+        "cbm": 0.3515,
+        "weightKg": 22.2,
+        "measure": "60",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-095-1.webp",
+            "file": "tm-095-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-098",
+        "trName": "80 CM'LİK MİKRO NEMLİ MOP {25'Lİ} TEMSAN",
+        "tryPrice": 75.0,
+        "barcode": "8680445150984",
+        "boxQuantity": 300,
+        "unit": "AD",
+        "cbm": 0.459,
+        "weightKg": 28.5,
+        "measure": "80",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-098-1.webp",
+            "file": "tm-098-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MİKROFİBER 3'LÜ SAPSET VİOMAX",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-778",
+        "trName": "MİKROFİBER 3'LÜ SAPSET VİOMAX",
+        "tryPrice": 200.0,
+        "barcode": "8680445157785",
+        "boxQuantity": 25,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 12.65,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-778-1.webp",
+            "file": "tm-778-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-778-2.webp",
+            "file": "tm-778-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-778-3.webp",
+            "file": "tm-778-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MİKROFİBER MOP LÜX EVİMA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-665",
+        "trName": "MİKROFİBER MOP LÜX EVİMA",
+        "tryPrice": 99.0,
+        "barcode": "8680445156658",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 10.65,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-665-1.webp",
+            "file": "tm-665-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-665-2.webp",
+            "file": "tm-665-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-665-3.webp",
+            "file": "tm-665-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-665-4.webp",
+            "file": "tm-665-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "MİKROFİBER MOP TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-435",
+        "trName": "MİKROFİBER MOP TESA",
+        "tryPrice": 71.0,
+        "barcode": "8680445154357",
+        "boxQuantity": 100,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 12.3,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-435-1.webp",
+            "file": "tm-435-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-435-2.webp",
+            "file": "tm-435-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-435-3.webp",
+            "file": "tm-435-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-435-4.webp",
+            "file": "tm-435-4.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-435-5.webp",
+            "file": "tm-435-5.webp",
+            "isPrimary": false,
+            "sortOrder": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "family",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "PLASTİK PALET APARAT TESA",
+    "optionUnit": "CM",
+    "variants": [
+      {
+        "code": "TM-550",
+        "trName": "25 CM PLASTİK PALET APARAT TESA",
+        "tryPrice": 75.5,
+        "barcode": "8680445155507",
+        "boxQuantity": 50,
+        "unit": "AD",
+        "cbm": 0.0539,
+        "weightKg": 6.9,
+        "measure": "25",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-550-1.webp",
+            "file": "tm-550-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-555",
+        "trName": "40 CM PLASTİK PALET APARAT TESA",
+        "tryPrice": 94.0,
+        "barcode": "8680445155552",
+        "boxQuantity": 25,
+        "unit": "AD",
+        "cbm": 0.0509,
+        "weightKg": 7.45,
+        "measure": "40",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-555-1.webp",
+            "file": "tm-555-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-560",
+        "trName": "50 CM PLASTİK PALET APARAT TESA",
+        "tryPrice": 94.0,
+        "barcode": "8680445155606",
+        "boxQuantity": 25,
+        "unit": "AD",
+        "cbm": 0.0729,
+        "weightKg": 9.7,
+        "measure": "50",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-560-1.webp",
+            "file": "tm-560-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-565",
+        "trName": "60 CM PLASTİK PALET APARAT TESA",
+        "tryPrice": 94.0,
+        "barcode": "8680445155651",
+        "boxQuantity": 25,
+        "unit": "AD",
+        "cbm": 0.0722,
+        "weightKg": 9.9,
+        "measure": "60",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-565-1.webp",
+            "file": "tm-565-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      },
+      {
+        "code": "TM-570",
+        "trName": "80 CM PLASTİK PALET APARAT TESA",
+        "tryPrice": 122.5,
+        "barcode": "8680445155705",
+        "boxQuantity": 25,
+        "unit": "AD",
+        "cbm": 0.081,
+        "weightKg": 10.2,
+        "measure": "80",
+        "measureUnit": "CM",
+        "images": [
+          {
+            "key": "products/temsan/tm-570-1.webp",
+            "file": "tm-570-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "SPREY MOP YEDEĞİ TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-471",
+        "trName": "SPREY MOP YEDEĞİ TESA",
+        "tryPrice": 50.5,
+        "barcode": "8680445154715",
+        "boxQuantity": 300,
+        "unit": "AD",
+        "cbm": 0.1584,
+        "weightKg": 12.6,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-471-1.webp",
+            "file": "tm-471-1.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "TABLET MOP YEDEĞİ TEKLİ TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-470",
+        "trName": "TABLET MOP YEDEĞİ TEKLİ TESA",
+        "tryPrice": 39.0,
+        "barcode": "8680445154708",
+        "boxQuantity": 300,
+        "unit": "AD",
+        "cbm": 0.103,
+        "weightKg": 8.8,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-470-1.webp",
+            "file": "tm-470-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-470-2.webp",
+            "file": "tm-470-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "TEMSAN PASPAS YER BEZİ 50*70 CM TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-165",
+        "trName": "TEMSAN PASPAS YER BEZİ 50*70 CM TEMSAN",
+        "tryPrice": 29.6,
+        "barcode": "8680445151653",
+        "boxQuantity": 144,
+        "unit": "AD",
+        "cbm": 0.1227,
+        "weightKg": 13.2,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-165-1.webp",
+            "file": "tm-165-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-165-2.webp",
+            "file": "tm-165-2.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-165-3.webp",
+            "file": "tm-165-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "WELSOFT RENKLİ KARTELALI MOP TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-076",
+        "trName": "WELSOFT RENKLİ KARTELALI MOP TEMSAN",
+        "tryPrice": 68.5,
+        "barcode": "8680445150762",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 7.4,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-076-1.webp",
+            "file": "tm-076-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-076-2.webp",
+            "file": "tm-076-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-076-3.webp",
+            "file": "tm-076-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-076-4.webp",
+            "file": "tm-076-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          },
+          {
+            "key": "products/temsan/tm-076-5.webp",
+            "file": "tm-076-5.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-076-6.webp",
+            "file": "tm-076-6.webp",
+            "isPrimary": false,
+            "sortOrder": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "WELSOFT RENKLİ POŞETLİ MOP TEMSAN",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-075",
+        "trName": "WELSOFT RENKLİ POŞETLİ MOP TEMSAN",
+        "tryPrice": 68.5,
+        "barcode": "8680445150755",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 7.4,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-075-1.webp",
+            "file": "tm-075-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-075-2.webp",
+            "file": "tm-075-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-075-3.webp",
+            "file": "tm-075-3.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          },
+          {
+            "key": "products/temsan/tm-075-4.webp",
+            "file": "tm-075-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          },
+          {
+            "key": "products/temsan/tm-075-5.webp",
+            "file": "tm-075-5.webp",
+            "isPrimary": false,
+            "sortOrder": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "single",
+    "mainTr": "TEMİZLİK",
+    "subTr": "YER TEMİZLİĞİ",
+    "baseNameTr": "WELSOFT ÇİZGİLİ KARTELALI MOP TESA",
+    "optionUnit": null,
+    "variants": [
+      {
+        "code": "TM-430",
+        "trName": "WELSOFT ÇİZGİLİ KARTELALI MOP TESA",
+        "tryPrice": 64.0,
+        "barcode": "8680445154302",
+        "boxQuantity": 60,
+        "unit": "AD",
+        "cbm": 0.0972,
+        "weightKg": 7.4,
+        "measure": null,
+        "measureUnit": null,
+        "images": [
+          {
+            "key": "products/temsan/tm-430-1.webp",
+            "file": "tm-430-1.webp",
+            "isPrimary": false,
+            "sortOrder": 1
+          },
+          {
+            "key": "products/temsan/tm-430-2.webp",
+            "file": "tm-430-2.webp",
+            "isPrimary": false,
+            "sortOrder": 2
+          },
+          {
+            "key": "products/temsan/tm-430-3.webp",
+            "file": "tm-430-3.webp",
+            "isPrimary": false,
+            "sortOrder": 3
+          },
+          {
+            "key": "products/temsan/tm-430-4.webp",
+            "file": "tm-430-4.webp",
+            "isPrimary": false,
+            "sortOrder": 4
+          },
+          {
+            "key": "products/temsan/tm-430-5.webp",
+            "file": "tm-430-5.webp",
+            "isPrimary": false,
+            "sortOrder": 5
+          },
+          {
+            "key": "products/temsan/tm-430-6.webp",
+            "file": "tm-430-6.webp",
+            "isPrimary": true,
+            "sortOrder": 0
+          }
+        ]
+      }
+    ]
+  }
+]

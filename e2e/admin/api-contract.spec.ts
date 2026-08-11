@@ -28,6 +28,46 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
  */
 const E2E = `e2e-contract-${Date.now().toString(36)}`;
 
+/**
+ * Every id this run creates, so teardown can delete by id rather than by name.
+ *
+ * Name-based cleanup only finds rows the test MEANT to create. The rows that
+ * actually leaked were the ones it did not: an earlier revision of the bad-input
+ * test posted `{}`, and because create is draft-first, the server correctly
+ * answered 200 and made a row with no name at all — invisible to an `e2e-`
+ * filter. Twelve nameless suppliers and two nameless categories accumulated in
+ * the production database before anyone noticed them in the admin's supplier
+ * list.
+ *
+ * So: anything that comes back with an id gets recorded, whatever the test
+ * expected to happen, and the sweep at the end removes it.
+ */
+const createdRows: { resource: string; id: string }[] = [];
+
+/** Record a row for teardown if the response produced one. */
+async function trackIfCreated(resource: string, response: { json(): Promise<unknown> }) {
+  try {
+    const body = (await response.json()) as { data?: { id?: unknown } };
+    const id = body?.data?.id;
+    if (typeof id === 'string' && id) createdRows.push({ resource, id });
+  } catch {
+    // A non-JSON or error body created nothing to clean up.
+  }
+}
+
+test.afterAll(async ({ playwright }) => {
+  if (createdRows.length === 0) return;
+  const request = await playwright.request.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: test.info().project.use.storageState as string | undefined,
+  });
+  // Reverse order: a child row is removed before whatever it points at.
+  for (const { resource, id } of [...createdRows].reverse()) {
+    await request.delete(`/api/admin/${resource}/${id}`).catch(() => undefined);
+  }
+  await request.dispose();
+});
+
 /** Unwrap and assert the envelope in one step. */
 async function get<T = unknown>(request: APIRequestContext, path: string): Promise<T> {
   const response = await request.get(path);
@@ -203,6 +243,8 @@ test.describe('admin API contract', () => {
     ];
     for (const { path, body } of cases) {
       const response = await request.post(path, { data: body });
+      // If the server disagrees and creates something, teardown still gets it.
+      await trackIfCreated(path.replace('/api/admin/', ''), response);
       expect(response.status(), `POST ${path} with an invalid body`).toBeGreaterThanOrEqual(400);
       expect(response.status(), `POST ${path} must not 500`).toBeLessThan(500);
       const payload = await response.json();
@@ -222,6 +264,7 @@ test.describe('admin API contract', () => {
             ],
           },
         });
+        await trackIfCreated('categories', response);
         expect(response.status(), 'create category').toBe(200);
         return (await response.json()).data as { id: string; status: string };
       })();
@@ -276,10 +319,12 @@ test.describe('admin API contract', () => {
     let id: string | undefined;
     try {
       const first = await request.post('/api/admin/suppliers', { data: body });
+      await trackIfCreated('suppliers', first);
       expect(first.status()).toBe(200);
       id = ((await first.json()).data as { id: string }).id;
 
       const second = await request.post('/api/admin/suppliers', { data: body });
+      await trackIfCreated('suppliers', second);
       expect(second.status(), 'a taken slug must not 500').toBeLessThan(500);
       expect(second.status(), 'a taken slug is a conflict').toBe(409);
       const payload = await second.json();
@@ -300,6 +345,7 @@ test.describe('admin API contract', () => {
           ],
         },
       });
+      await trackIfCreated('suppliers', response);
       expect(response.status(), 'create supplier').toBe(200);
       id = ((await response.json()).data as { id: string }).id;
 

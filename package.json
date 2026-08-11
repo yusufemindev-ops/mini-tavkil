@@ -27,7 +27,9 @@
     "db:studio": "drizzle-kit studio",
     "admin:build": "pnpm --dir admin build && node scripts/bundle-admin-shell.mjs",
     "admin:typecheck": "pnpm --dir admin exec tsc -b --noEmit",
-    "admin:install": "pnpm --dir admin install --ignore-workspace"
+    "admin:install": "pnpm --dir admin install --ignore-workspace",
+    "import:temsan": "tsx scripts/temsan/import.ts",
+    "import:temsan:images": "node scripts/temsan/upload-images.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

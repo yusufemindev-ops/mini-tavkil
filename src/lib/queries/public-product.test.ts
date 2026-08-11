@@ -106,3 +106,34 @@ describe('findLeaks', () => {
     expect(findLeaks({ updatedAt: new Date('2026-01-01') })).toEqual([]);
   });
 });
+
+/**
+ * Every image reference stored in this database is a bare R2 key, so every one
+ * of them has to be resolved before it reaches a page.
+ *
+ * Product images always were. Category images and option swatches were not, and
+ * nothing caught it because no row had ever had one — the storefront fell
+ * through to a gradient placeholder and looked deliberate. Populating those
+ * columns turned all sixteen category cards and every rail pill into a broken
+ * image at once.
+ *
+ * A source check rather than a behavioural one, matching the leak guard above:
+ * the mistake is *returning the column*, and that is visible in the text.
+ */
+describe('image references reaching a public shape', () => {
+  it('never returns a stored image column straight from a row', () => {
+    // A bare hand-off ends the property: `imageUrl: row.imageUrl,`. Requiring the
+    // comma is what separates it from `row.imageUrl ? resolveImageUrl(...) : null`,
+    // where the same text appears as the ternary's condition.
+    const raw = [...code.matchAll(/imageUrl:\s*(?:row|image)\.imageUrl\s*,/g)].map((m) => m[0]);
+    expect(raw, 'resolve these through resolveImageUrl()').toEqual([]);
+  });
+
+  it('resolves the image columns it does select', () => {
+    // Selecting the column is fine; every select must have a matching resolve.
+    const selects = [...code.matchAll(/imageUrl:\s*\w+\.imageUrl,/g)].length;
+    const resolves = [...code.matchAll(/resolveImageUrl\(/g)].length;
+    expect(selects, 'a selected image column with nothing resolving it').toBeGreaterThan(0);
+    expect(resolves).toBeGreaterThanOrEqual(2);
+  });
+});
