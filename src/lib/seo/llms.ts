@@ -35,20 +35,30 @@ function siteHeader(base: string): string {
   ].join('\n');
 }
 
+/** One catalogue line: name, URL, and the category's own description if it has one. */
+function line(base: string, category: { name: string; slug: string; description: string | null }) {
+  const description = category.description ? `: ${category.description}` : '';
+  return `- [${category.name}](${base}/en/catalogue/${category.slug})${description}`;
+}
+
 /** The short index: what the site is, and where the catalogue lives. */
 export async function buildLlmsTxt(): Promise<string> {
   const base = env.baseUrl.replace(/\/+$/, '');
   const categories = await publicCategories('en' as Locale);
   const roots = categories.filter((category) => category.parent === null);
+  const childrenOf = (slug: string) => categories.filter((c) => c.parent?.slug === slug);
 
   const lines = [
     siteHeader(base),
     '## Catalogue',
     '',
-    ...roots.map((category) => {
-      const description = category.description ? `: ${category.description}` : '';
-      return `- [${category.name}](${base}/en/catalogue/${category.slug})${description}`;
-    }),
+    // Roots *and* their children. The catalogue is one root over fourteen
+    // subcategories, so listing roots alone offered a model exactly one link and
+    // hid every page a sourcing question would actually be answered by.
+    ...roots.flatMap((root) => [
+      line(base, root),
+      ...childrenOf(root.slug).map((child) => `  ${line(base, child)}`),
+    ]),
     '',
     '## Pages',
     '',

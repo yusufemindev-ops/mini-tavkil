@@ -9,6 +9,7 @@ import { SubcategoryTile } from '@/components/catalog/subcategory-tile';
 import { ProductCard } from '@/components/catalog/product-card';
 import { Link } from '@/i18n/navigation';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { breadcrumbSchema, collectionSchema, JsonLd } from '@/lib/seo/json-ld';
 import {
   publicCategories,
   publicProducts,
@@ -83,8 +84,29 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
     slug: category.slug,
   }));
 
+  const trail = [{ name: t('nav_home'), path: '' }, { name: t('nav_catalog') }];
+
   return (
     <>
+      {/* The one public page type that carried no structured data. It lists
+          categories rather than products, so `itemBase` points at /catalogue —
+          the default would advertise /product/<category-slug>, which 404s. */}
+      <JsonLd
+        schema={[
+          collectionSchema({
+            locale,
+            path: '/catalogue',
+            name: t('cat_title'),
+            description: t('cat_meta'),
+            items: roots.flatMap((root) => [
+              { name: root.name, slug: root.slug },
+              ...childrenOf(root.slug).map((child) => ({ name: child.name, slug: child.slug })),
+            ]),
+            itemBase: '/catalogue',
+          }),
+          breadcrumbSchema(locale, trail),
+        ]}
+      />
       <SiteHeader />
       <main id="main" className="mx-auto w-full max-w-[1520px] flex-1 px-5 py-10 sm:px-6">
         <header className="max-w-2xl">
