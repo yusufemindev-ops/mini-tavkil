@@ -29,3 +29,6 @@ coverage/
 /public/admin/
 /admin/node_modules/
 src/generated/
+e2e/.auth/
+test-results/
+playwright-report/

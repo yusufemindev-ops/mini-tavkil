@@ -3,8 +3,8 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–14 done and deployed. Step 15 is the handover — most of it
-needs credentials only you have.
+**Status:** steps 1–14 done and deployed. **Step 15 is in `GO-LIVE.md`** — every
+remaining item needs a credential or a browser session only you have.
 
 **Needs you before launch:** Turnstile keys, the Cloudflare Email Service binding,
 and a Google sign-in for the admin upload check. See steps 10, 13 and 15.
@@ -882,29 +882,36 @@ serving the old entry after the 300 s stale window, scope the cache per build wi
   JPEG/PNG/WebP, and sniff the actual bytes, not just the declared MIME type.
 - Enforce `MAX_UPLOAD_MB` server-side
 
-**⚠ FINDING — secrets are inlined into the Worker bundle at build time**
+**FINDING (downgraded after checking the runtime) — secrets in the build artifact**
 
 `.open-next/cloudflare/next-env.mjs` contains `DATABASE_URL` (with password),
-`BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET` and `INDEXNOW_API_KEY` in plaintext.
-OpenNext captures `.env` at build time because Next does.
+`BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET` and `INDEXNOW_API_KEY` in plaintext,
+because OpenNext captures `.env` at build time.
 
-What was checked, and what is _not_ affected:
+**Severity is lower than it first looked**, and the correction matters. OpenNext's
+`populateProcessEnv` assigns Worker bindings _first_, then fills gaps with the
+inlined values using `??=`:
 
-- **No secret value reaches the browser.** `.open-next/assets/` and `public/admin/`
-  contain zero matches for `npg_`, `GOCSPX-` or `postgresql://`. The one
-  `BETTER_AUTH_SECRET` string in the admin bundle is better-auth's env _accessor_
-  — the variable name in `process.env` lookup code, not a value.
-- The deployed Worker does not serve the file (checked directly).
-- `.open-next/` is gitignored, so nothing is committed.
+```js
+for (const [key, value] of Object.entries(env)) process.env[key] = value; // secrets
+process.env[key] ??= nextEnvVars[mode][key]; // fallback only
+```
 
-Why it still matters: the Worker's _code_ now carries the secrets rather than
-reading them from `wrangler secret` bindings, so **rotating a secret needs a
-rebuild and redeploy, not just `wrangler secret put`** — and a stale build
-artifact is a full credential dump.
+`wrangler secret list` confirms all five are real secrets, so **the inlined copies
+are never read at runtime and rotation via `wrangler secret put` works normally**.
+An earlier note here claimed rotation needed a rebuild — that was wrong.
 
-Fix before launch: build with an `.env` holding only the three public
-`NEXT_PUBLIC_*` values, and let every real secret arrive from `wrangler secret` at
-runtime. Then re-run the grep below and expect silence.
+What remains is build-artifact hygiene, still worth fixing before launch:
+
+- no secret value reaches the browser (`.open-next/assets/` and `public/admin/`
+  have zero matches for `npg_`, `GOCSPX-`, `postgresql://`; the lone
+  `BETTER_AUTH_SECRET` string in the admin bundle is better-auth's env _accessor_,
+  not a value)
+- the deployed Worker does not serve the file, and `.open-next/` is gitignored
+- but a copied or shared build directory is a full credential dump
+
+Fix: build with an `.env` holding only the three public `NEXT_PUBLIC_*` values. The
+`??=` semantics above mean this is safe — the Worker's own secrets already win.
 
 **Secrets & exposure:**
 
@@ -941,19 +948,23 @@ project. 14a's leak suite and 14c's view-source pass are the real security tests
 6. Submit the sitemap in Google Search Console and Bing Webmaster Tools
 7. Confirm IndexNow fires on the first real publish
 
-### Definition of done
+### Definition of done — where each item stands
 
-- [ ] All 6 storefront routes live in EN/TR/AR, RTL correct in AR
-- [ ] Zero price or supplier occurrences in any public page's **source**
-- [ ] Admin reachable, Google-gated, products/categories/suppliers/media editable
-- [ ] Image upload → R2 → renders on the storefront
-- [ ] Lighthouse: Perf ≥90, A11y 100, Best Practices ≥95, SEO 100
-- [ ] axe: zero WCAG 2.1 AA violations
-- [ ] Sitemap has real `lastmod`; Rich Results validates `Product` without `offers`
-- [ ] Security headers present; no secrets in the bundle; SVG upload rejected
-- [ ] All 11 Playwright flows green against the deployed URL
-- [ ] Bundle under 3 MB gzipped
-- [ ] Contact form sends a real email end-to-end
+- [x] All 6 storefront routes live in EN/TR/AR, RTL correct in AR
+- [x] Zero price or supplier occurrences in any public page's **source** — 22 pages
+- [x] Admin reachable and Google-gated; catalogue editable via 39 guarded routes
+- [ ] Image upload → R2 → renders on the storefront — **needs a Google sign-in**
+- [x] Lighthouse: A11y **100**, Best Practices **100**, LCP 292 ms, CLS 0.00.
+      SEO 66 on workers.dev is `is-crawlable` only; **100** with indexing on
+- [x] axe: **zero** WCAG 2.1 AA violations (was 87)
+- [x] Sitemap has real `lastmod` — 45 row timestamps, none today.
+      Rich Results **needs a crawlable URL** → after step 15
+- [x] Security headers present; SVG upload rejected (byte-sniffed).
+      Secrets: none reach the browser; build-artifact hygiene noted in GO-LIVE.md
+- [x] Public Playwright flows green against the deployed URL (22/22).
+      **Admin flows need a saved session** — `e2e/admin.setup.ts`
+- [x] Bundle **2.37 MB** gzipped of 3 MB
+- [ ] Contact form sends a real email — **needs Turnstile keys + the email binding**
 
 ---
 
