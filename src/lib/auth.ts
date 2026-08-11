@@ -11,6 +11,7 @@ import {
   roles,
 } from '@/lib/db/schema';
 import { isAllowlisted } from '@/lib/permissions/allowlist';
+import { invitedRoleFor } from '@/lib/services/team';
 import { OWNER_ROLE } from '@/lib/permissions/catalog';
 
 /**
@@ -77,9 +78,13 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user) => ({
-          data: { ...user, userType: isAllowlisted(user.email) ? 'admin' : 'buyer' },
-        }),
+        before: async (user) => {
+          // Invited from the dashboard counts as staff too, not just the env
+          // allowlist — otherwise a colleague added in the UI signs in as a
+          // 'buyer' and the dashboard turns them away.
+          const staff = isAllowlisted(user.email) || (await invitedRoleFor(user.email)) !== null;
+          return { data: { ...user, userType: staff ? 'admin' : 'buyer' } };
+        },
         /**
          * Give an allowlisted admin the Owner role on first sign-in.
          *
@@ -96,16 +101,21 @@ export const auth = betterAuth({
          * role row.
          */
         after: async (user) => {
-          if (!isAllowlisted(user.email)) return;
-          const [owner] = await db
+          // Env-allowlisted accounts are Owners (the bootstrap); an invited
+          // colleague gets whatever role they were invited with.
+          const invited = await invitedRoleFor(user.email);
+          const code = isAllowlisted(user.email) ? OWNER_ROLE : invited;
+          if (!code) return;
+
+          const [row] = await db
             .select({ id: roles.id })
             .from(roles)
-            .where(eq(roles.code, OWNER_ROLE))
+            .where(eq(roles.code, code))
             .limit(1);
-          if (!owner) return; // `pnpm sync:permissions` has not run yet.
+          if (!row) return; // `pnpm sync:permissions` has not run yet.
           await db
             .insert(authUserRoles)
-            .values({ authUserId: user.id, roleId: owner.id })
+            .values({ authUserId: user.id, roleId: row.id })
             .onConflictDoNothing();
         },
       },

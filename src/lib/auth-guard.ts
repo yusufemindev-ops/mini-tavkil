@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { authUser, authUserRoles, permissions, rolePermissions, roles } from '@/lib/db/schema';
 import { AuthError } from '@/lib/api/errors';
 import { adminAllowlist, isAllowlisted } from '@/lib/permissions/allowlist';
+import { allowedEmails } from '@/lib/services/team';
 import { OWNER_ROLE, roleGrants } from '@/lib/permissions/catalog';
 
 /**
@@ -39,7 +40,12 @@ export async function getAdmin(request: Request): Promise<AdminUser | null> {
   const session = await auth.api.getSession({ headers: request.headers });
   const user = session?.user;
   if (!user?.email) return null;
-  if (!isAllowlisted(user.email)) return null;
+  // The env allowlist bootstraps the first owner; everyone after that is invited
+  // from the dashboard by an admin holding `users:assign_role`. Re-read on every
+  // request, so revoking access takes effect immediately rather than whenever
+  // their session happens to expire.
+  const allowed = await allowedEmails();
+  if (!allowed.has(user.email.trim().toLowerCase())) return null;
 
   // A banned user keeps a valid cookie until it expires; check the row.
   const [row] = await db

@@ -208,6 +208,16 @@ export const ROLE_LABELS = {
   member: 'Viewer',
 } as const;
 
+/**
+ * Shown under each role in the admin's Roles tab and beside the picker when
+ * adding a member. Without them the three roles are indistinguishable names.
+ */
+export const ROLE_DESCRIPTIONS: Record<keyof typeof ROLE_LABELS, string> = {
+  super_admin: 'Full access, including settings and team management.',
+  catalog_manager: 'Create and publish products, categories, suppliers and media.',
+  member: 'Read-only access to the catalogue.',
+};
+
 export type RoleCode = keyof typeof ROLE_LABELS;
 
 export const ASSIGNABLE_ROLES = Object.keys(ROLE_LABELS) as RoleCode[];

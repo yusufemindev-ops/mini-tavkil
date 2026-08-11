@@ -1,13 +1,15 @@
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authAccount, authUser, authUserRoles, roles } from '@/lib/db/schema';
 import { invalid, notFound } from '@/lib/api/errors';
 import { adminAllowlist } from '@/lib/permissions/allowlist';
+import { listInvites } from '@/lib/services/team';
 import {
   ASSIGNABLE_ROLES,
   OWNER_ROLE,
   PERMISSION_CATALOG,
+  ROLE_DESCRIPTIONS,
   ROLE_LABELS,
   roleGrants,
   type RoleCode,
@@ -27,9 +29,17 @@ import {
  * was a large surface guarding a decision nobody makes twice.
  */
 
-export const assignRoleSchema = z.object({
-  role: z.enum(ASSIGNABLE_ROLES as [RoleCode, ...RoleCode[]]),
-});
+/**
+ * The SPA sends `{ roleId }` — the role's database id — while a human calling the
+ * API by hand naturally sends `{ role: 'catalog_manager' }`. Accept both and
+ * resolve to a code, rather than making the dashboard wrong or the API awkward.
+ */
+export const assignRoleSchema = z
+  .object({
+    role: z.enum(ASSIGNABLE_ROLES as [RoleCode, ...RoleCode[]]).optional(),
+    roleId: z.string().trim().min(1).optional(),
+  })
+  .refine((value) => value.role || value.roleId, { message: 'Pick a role.' });
 export type AssignRoleInput = z.infer<typeof assignRoleSchema>;
 
 /**
@@ -71,7 +81,11 @@ export interface AdminUserRow {
  * allowlist is what is actually blocking them beats wondering where they went.
  */
 export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]> {
-  const allowed = new Set(adminAllowlist());
+  const invites = await listInvites();
+  // Both sources of access: the env allowlist that bootstraps owners, and people
+  // invited from this very page. Listing only the former meant a colleague you
+  // had just added did not appear at all.
+  const allowed = new Set([...adminAllowlist(), ...invites.map((i) => i.email.toLowerCase())]);
 
   const rows = await db
     .select({
@@ -117,7 +131,29 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
         ).map((row) => row.userId),
   );
 
-  return staff.map((row) => {
+  // Invited but not yet signed in — no authUser row exists, so synthesise one.
+  // Otherwise "Add member" appeared to do nothing until they logged in.
+  const signedInEmails = new Set(staff.map((row) => row.email.toLowerCase()));
+  const pending: AdminUserRow[] = invites
+    .filter((invite) => !signedInEmails.has(invite.email.toLowerCase()))
+    .map((invite) => ({
+      id: `invite:${invite.email}`,
+      email: invite.email,
+      name: `${invite.firstName} ${invite.lastName}`.trim() || invite.email,
+      firstName: invite.firstName || null,
+      lastName: invite.lastName || null,
+      image: null,
+      banned: false,
+      role: { id: invite.role, code: invite.role, name: ROLE_LABELS[invite.role] ?? invite.role },
+      status: 'invited' as const,
+      googleConnected: false,
+      allowlisted: true,
+      isYou: false,
+      lastSeenAt: null,
+      createdAt: invite.invitedAt,
+    }));
+
+  const existing = staff.map((row) => {
     const code = roleByUser.get(row.id);
     return {
       id: row.id,
@@ -142,6 +178,8 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
       createdAt: row.createdAt,
     };
   });
+
+  return [...existing, ...pending];
 }
 
 /**
@@ -226,13 +264,51 @@ export async function removeRole(userId: string): Promise<AdminUserRow> {
 }
 
 /** The three fixed roles and what each holds. Read-only — there is no editor. */
-export function listRoles() {
-  return ASSIGNABLE_ROLES.map((code) => ({
-    code,
-    label: ROLE_LABELS[code],
-    isOwner: code === OWNER_ROLE,
-    permissions: [...roleGrants(code)].sort(),
-  }));
+/**
+ * Tavkil's `AdminRole` shape — see `admin/src/features/users/queries.ts`.
+ *
+ * The users page renders each option as `role.name` keyed on `role.id`. We were
+ * returning `{ code, label, isOwner }`, so every entry in the "Add member" Role
+ * dropdown rendered blank: the list was the right length and completely unusable.
+ *
+ * `id` is the database row id where one exists, because assigning a role writes
+ * `auth_user_roles.role_id`. `type` is always 'system': roles are fixed in code
+ * here and there is no role editor (CLAUDE.md §6), so none of them are custom.
+ */
+export async function listRoles(): Promise<AdminRole[]> {
+  const [rows, counts] = await Promise.all([
+    db.select({ id: roles.id, code: roles.code }).from(roles),
+    db
+      .select({ roleId: authUserRoles.roleId, n: count() })
+      .from(authUserRoles)
+      .groupBy(authUserRoles.roleId),
+  ]);
+  cacheRoleIds(rows);
+  const idByCode = new Map(rows.map((row) => [row.code, row.id]));
+  const countById = new Map(counts.map((row) => [row.roleId, Number(row.n)]));
+
+  return ASSIGNABLE_ROLES.map((code) => {
+    const id = idByCode.get(code) ?? code;
+    return {
+      id,
+      code,
+      name: ROLE_LABELS[code],
+      description: ROLE_DESCRIPTIONS[code] ?? null,
+      type: 'system' as const,
+      memberCount: countById.get(id) ?? 0,
+      permissions: [...roleGrants(code)].sort(),
+    };
+  });
+}
+
+export interface AdminRole {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  type: 'system';
+  memberCount: number;
+  permissions: string[];
 }
 
 /** The permission catalog, grouped by domain, for the admin's roles screen. */
@@ -242,4 +318,27 @@ export function permissionCatalog() {
     byDomain.set(permission.domain, [...(byDomain.get(permission.domain) ?? []), permission]);
   }
   return [...byDomain.entries()].map(([domain, permissions]) => ({ domain, permissions }));
+}
+
+/**
+ * Resolve a role's database id OR its code to a code.
+ *
+ * Populated on first use from the roles table; the set is three rows fixed in
+ * code, so a module-level cache is safe and saves a query per call.
+ */
+let roleIdCache: Map<string, RoleCode> | null = null;
+export function roleCodeFromIdOrCode(value: string): RoleCode | null {
+  if ((ASSIGNABLE_ROLES as string[]).includes(value)) return value as RoleCode;
+  return roleIdCache?.get(value) ?? null;
+}
+
+/** Warm the id→code map. Called by listRoles, which every role UI loads first. */
+export function cacheRoleIds(rows: { id: string; code: string }[]): void {
+  roleIdCache = new Map(
+    rows
+      .filter((row): row is { id: string; code: RoleCode } =>
+        (ASSIGNABLE_ROLES as string[]).includes(row.code),
+      )
+      .map((row) => [row.id, row.code]),
+  );
 }
