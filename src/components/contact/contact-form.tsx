@@ -198,7 +198,13 @@ export function ContactForm({
         </p>
       )}
 
-      <div ref={widgetRef} className="min-h-[65px]" />
+      {/*
+        Reserved height stops the layout jumping when Turnstile mounts — but only
+        when there is a widget coming. With no site key configured, an empty 65px
+        gap sits between the message box and a disabled button and reads as
+        something that failed to load.
+      */}
+      {siteKey && <div ref={widgetRef} className="min-h-[65px]" />}
 
       {formError && (
         <p

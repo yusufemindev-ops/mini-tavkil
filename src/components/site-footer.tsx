@@ -3,6 +3,7 @@ import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '@/compone
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Link } from '@/i18n/navigation';
 import { getSiteSettings, waUrl } from '@/lib/settings';
+import { BrandLogo } from '@/components/brand-logo';
 
 // Tavkil's footer had a fourth "Account" column (sign in / my orders). Buyers
 // never sign in here, so the grid drops to three columns and the catalogue takes
@@ -33,23 +34,7 @@ export async function SiteFooter() {
         <div className="grid gap-9 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
           {/* Brand */}
           <div>
-            <Link href="/" className="flex items-center gap-2.5">
-              {settings.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- admin-supplied absolute URL
-                <img
-                  src={settings.logoUrl}
-                  alt={siteName}
-                  className="size-8 rounded-[9px] object-cover"
-                />
-              ) : (
-                <span className="bg-primary text-primary-foreground grid size-8 place-items-center rounded-[9px] text-base font-extrabold">
-                  {siteName.charAt(0)}
-                </span>
-              )}
-              <span className="text-[1.2rem] font-extrabold tracking-tight text-white">
-                {siteName}
-              </span>
-            </Link>
+            <BrandLogo siteName={siteName} logoUrl={settings.logoUrl} size="md" tone="onDark" />
             <p className="mt-4 max-w-[38ch] text-[0.88rem] leading-relaxed">{t('foot_about')}</p>
           </div>
 

@@ -9,6 +9,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Link, usePathname } from '@/i18n/navigation';
+import { BrandLogo } from '@/components/brand-logo';
 
 const NAV_LINKS = [
   { href: '/', key: 'nav_home' },
@@ -19,7 +20,7 @@ const NAV_LINKS = [
 
 // Interactive nav bar (client). Brand comes from admin-managed settings,
 // resolved server-side by the `SiteHeader` wrapper and passed in as props.
-// `logoUrl` unset → letter fallback from `siteName`.
+// `logoUrl` unset → the CSS lockup in `BrandLogo`.
 //
 // Tavkil's version also carried a session chip, notification bell, cart, and
 // currency switcher. Buyers never sign in here and prices are never public, so
@@ -39,26 +40,7 @@ export function SiteHeaderNav({
   return (
     <header className="border-border bg-background/90 sticky top-0 z-30 border-b backdrop-blur-md backdrop-saturate-150">
       <div className="mx-auto flex h-[var(--height-nav)] max-w-[var(--width-container)] items-center gap-6 px-5 sm:px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          {logoUrl ? (
-            // Admin-supplied absolute URL of unknown dimensions; next/image would
-            // need a remotePattern per deployment, and the logo is ~32px anyway.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt={brandName}
-              className="size-8 rounded-[9px] object-cover shadow-[0_6px_14px_-6px_var(--primary)]"
-            />
-          ) : (
-            <span className="bg-primary text-primary-foreground grid size-8 place-items-center rounded-[9px] text-base font-extrabold shadow-[0_6px_14px_-6px_var(--primary)]">
-              {brandName.charAt(0)}
-            </span>
-          )}
-          <span className="text-foreground text-[1.2rem] font-extrabold tracking-tight">
-            {brandName}
-          </span>
-        </Link>
+        <BrandLogo siteName={brandName} logoUrl={logoUrl} onNavigate={() => setOpen(false)} />
 
         {/* Desktop nav */}
         <nav className="ms-1.5 hidden items-center gap-1 lg:flex">

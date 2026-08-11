@@ -96,12 +96,27 @@ function ContactNote({
   );
 }
 
-function ContactInfo({ email }: { email: string }) {
+/**
+ * `showAddress` covers the case where there is an address but no map.
+ *
+ * Tavkil only ever printed the address inside the map panel, and that panel
+ * hides itself when no embed URL is set — so a configured address was simply
+ * invisible. Showing it here when the map is absent keeps Tavkil's layout
+ * wherever the map exists and stops the address disappearing where it does not.
+ */
+function ContactInfo({ email, address }: { email: string; address?: string }) {
   const t = useTranslations('store');
   return (
     <aside className="border-border bg-card flex flex-col gap-[18px] rounded-lg border p-[22px]">
       {email && (
         <InfoRow icon={<Mail className="size-[18px]" />} label={t('con_email_l')} value={email} />
+      )}
+      {address && (
+        <InfoRow
+          icon={<MapPin className="size-[18px]" />}
+          label={t('con_address_l')}
+          value={address}
+        />
       )}
       <InfoRow
         icon={<Clock className="size-[18px]" />}
@@ -119,11 +134,17 @@ function ContactInfo({ email }: { email: string }) {
 
 // The map is hidden entirely when there's no configured location; the address
 // line only shows when an address is set.
+/**
+ * Only Google's official embed URLs are ever rendered — never an arbitrary src.
+ * Defence in depth; the backend already validates this on save.
+ */
+function hasMap(mapsEmbedUrl: string): boolean {
+  return mapsEmbedUrl.startsWith('https://www.google.com/maps/embed');
+}
+
 function ContactMap({ mapsEmbedUrl, address }: { mapsEmbedUrl: string; address: string }) {
   const t = useTranslations('store');
-  // Only render Google's official embed URLs — never arbitrary src (defence in
-  // depth; the backend already validates this on save).
-  if (!mapsEmbedUrl.startsWith('https://www.google.com/maps/embed')) return null;
+  if (!hasMap(mapsEmbedUrl)) return null;
   return (
     <div className="border-border bg-card mt-6 overflow-hidden rounded-lg border">
       <div className="border-border text-foreground flex items-center gap-2.5 border-b px-[18px] py-3.5 font-semibold">
@@ -182,7 +203,11 @@ export default async function ContactPage({
 
         <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr] lg:items-start">
           <ContactNote email={settings.contactEmail} waHref={waHref} product={product} />
-          <ContactInfo email={settings.contactEmail} />
+          <ContactInfo
+            email={settings.contactEmail}
+            // Only when the map will not print it, so it never appears twice.
+            address={hasMap(settings.mapsEmbedUrl) ? undefined : settings.address}
+          />
         </div>
 
         <ContactMap mapsEmbedUrl={settings.mapsEmbedUrl} address={settings.address} />

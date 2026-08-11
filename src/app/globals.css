@@ -391,3 +391,93 @@ input[type='submit'],
 label {
   touch-action: manipulation;
 }
+
+/*
+ * The brand lockup — see components/brand-logo.tsx.
+ *
+ * There is no logo file, so the mark is drawn in CSS. Depth comes from three
+ * things a flat orange square lacks: a gradient running to the darker brand ink,
+ * a hairline highlight along the top edge where light would catch a machined
+ * face, and a shadow tinted with the brand hue rather than neutral black — a grey
+ * shadow under a saturated colour always reads as dirt.
+ *
+ * The hover sheen is a single translateX on a pseudo-element, so it stays on the
+ * compositor. It is a transform and an opacity, nothing that triggers layout.
+ */
+.brand-tile {
+  position: relative;
+  overflow: hidden;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--primary-foreground);
+  background-image: linear-gradient(145deg, var(--primary) 0%, var(--primary-ink) 100%);
+  box-shadow:
+    0 6px 14px -6px var(--primary),
+    inset 0 1px 0 rgb(255 255 255 / 0.28);
+  transition:
+    transform 240ms var(--ease),
+    box-shadow 240ms var(--ease);
+}
+
+/* Centred by the grid, then nudged: a capital's mass sits above the box's
+   midline, so geometric centring looks high. */
+.brand-tile-letter {
+  transform: translateY(0.5px);
+}
+
+.brand-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 38%,
+    rgb(255 255 255 / 0.42) 50%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  transition: transform 620ms var(--ease);
+}
+
+.brand-logo:hover .brand-tile,
+.brand-logo:focus-visible .brand-tile {
+  transform: translateY(-1px);
+  box-shadow:
+    0 10px 20px -8px var(--primary),
+    inset 0 1px 0 rgb(255 255 255 / 0.34);
+}
+
+.brand-logo:hover .brand-tile::after,
+.brand-logo:focus-visible .brand-tile::after {
+  transform: translateX(120%);
+}
+
+/*
+ * Inter is fitted for running text. At 1.2rem in a lockup it needs closing up, or
+ * the wordmark drifts away from the tile and the two stop reading as one object.
+ */
+.brand-word {
+  letter-spacing: -0.035em;
+  transition: opacity 240ms var(--ease);
+}
+
+.brand-logo:hover .brand-word {
+  opacity: 0.86;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-tile,
+  .brand-tile::after,
+  .brand-word {
+    transition: none;
+  }
+  /* The sheen is decorative; with motion suppressed it simply never runs. */
+  .brand-logo:hover .brand-tile::after,
+  .brand-logo:focus-visible .brand-tile::after {
+    transform: translateX(-120%);
+  }
+  .brand-logo:hover .brand-tile,
+  .brand-logo:focus-visible .brand-tile {
+    transform: none;
+  }
+}
