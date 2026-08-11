@@ -63,7 +63,11 @@ export function ProductOptions({ options }: { options: PublicOption[] }) {
               {/* Option names and values are admin data, not UI copy — a
                   measurement like "2 mm" reorders to "mm 2" in an RTL page
                   unless its direction comes from the string itself. */}
-              <BidiText className="text-muted-foreground">{option.name}</BidiText>:{' '}
+              {/* The colon lives inside the isolate so it stays attached to the
+                  label. Left outside, it is a neutral between two isolates and
+                  resolves against the page, drifting to the far side of the
+                  label in Arabic. */}
+              <BidiText className="text-muted-foreground">{option.name}:</BidiText>{' '}
               <BidiText className="text-foreground font-medium">{selectedLabel}</BidiText>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
