@@ -10,22 +10,18 @@ import { getGeneralSettings } from '@/lib/services/settings';
  *
  * The order of the checks below is the design, not an accident. Each step is
  * cheaper than the one after it, so an abusive request is dropped as early as
- * possible:
+ * possible: Turnstile before parsing and before touching the database, then
+ * validation, then one settings read, then the send. Verifying the captcha
+ * *after* reading settings would mean a bot still costs a Neon query per attempt.
  *
- *   1. rate limit   — at the edge, before any CPU is spent
- *   2. Turnstile    — before parsing, before touching the database
- *   3. validation   — bounded fields, server-side
- *   4. settings     — one database read
- *   5. send         — the expensive bit
- *
- * Verifying the captcha *after* reading settings would mean a bot still costs us
- * a Neon query on every attempt.
+ * **Rate limiting is a WAF rule, not code here.** An in-Worker limiter using
+ * Cloudflare's ratelimit binding was tried and removed: it never returned a 429
+ * across repeated bursts and produced no diagnostic, so it was a control that
+ * looked present in review while doing nothing — worse than none at all. The
+ * limit belongs at the edge anyway, where a flood never reaches this handler.
+ * See GO-LIVE.md.
  */
 export const dynamic = 'force-dynamic';
-
-interface RateLimiter {
-  limit: (options: { key: string }) => Promise<{ success: boolean }>;
-}
 
 interface EmailBinding {
   send: (message: unknown) => Promise<void>;
@@ -37,27 +33,9 @@ function clientIp(request: Request): string | null {
 
 export async function POST(request: Request) {
   try {
-    const env = getCloudflareContext().env as unknown as {
-      CONTACT_RATE_LIMIT?: RateLimiter;
-      CONTACT_EMAIL?: EmailBinding;
-    };
+    const env = getCloudflareContext().env as unknown as { CONTACT_EMAIL?: EmailBinding };
 
     const ip = clientIp(request);
-
-    // 1. Rate limit first — nothing below this line runs for a flood.
-    //
-    // Deliberately not `if (limiter && ip)`. A security control that silently
-    // does nothing when a binding or header is missing is worse than none, since
-    // it looks present in code review; if the IP is unknown every such request
-    // shares one bucket, which is the conservative reading.
-    if (env.CONTACT_RATE_LIMIT) {
-      const { success } = await env.CONTACT_RATE_LIMIT.limit({ key: ip ?? 'unknown-ip' });
-      if (!success) {
-        throw new AppError('rate_limited', 'Too many messages. Please try again in a minute.');
-      }
-    } else {
-      console.error('CONTACT_RATE_LIMIT binding is missing — the contact form is unthrottled.');
-    }
 
     const raw = await request.json().catch(() => null);
     if (!raw || typeof raw !== 'object') {

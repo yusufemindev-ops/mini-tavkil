@@ -123,7 +123,6 @@ Budgets are in `.lighthouserc.json` and fail the run rather than being noted.
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
 | **Upload → R2 → storefront** | needs a Google sign-in                                                                                                                                                                                                                                                               | step 10  |
 | **Admin Playwright flows**   | needs a saved session; see `e2e/admin.setup.ts`                                                                                                                                                                                                                                      | step 14b |
-| **In-Worker rate limit**     | never returned a 429 across 12 rapid requests, and `wrangler tail` caught no diagnostic. It may be that OpenNext doesn't surface ratelimit bindings. **Do not assume it works.** Either confirm it or delete it and rely on a WAF rate-limit rule on `/api/contact` and `/api/auth`. | step 13  |
 | **Rich Results Test**        | needs a crawlable URL                                                                                                                                                                                                                                                                | §14g     |
 
 ## Worth doing, not blocking
@@ -136,8 +135,15 @@ inlined copies are never read, and rotation works normally. But a copied build
 directory is a credential dump. Fix by building with an `.env` holding only the
 three public `NEXT_PUBLIC_*` values.
 
-**WAF.** Enable managed rules, and add a rate-limit rule on `/api/contact` and
-`/api/auth`.
+**WAF rate limiting — now required, not optional.** The in-Worker limiter was
+removed: it never returned a 429 and produced no diagnostic, so it was a control
+that looked present in review while doing nothing. Add a Cloudflare rate-limit
+rule instead:
+
+- `/api/contact` — 5 requests / minute per IP
+- `/api/auth/*` — 20 requests / minute per IP
+
+Also enable the WAF managed rules while you are there.
 
 **R2.** `tavkil-images` should be public-read but **not listable**; `tavkil-cache`
 stays fully private.
