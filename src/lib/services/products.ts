@@ -68,10 +68,20 @@ export interface AdminProduct {
   mpn: string | null;
   weightKg: string | null;
   cbm: string | null;
-  basePriceAmount: string | null;
-  basePriceCurrency: string | null;
-  categoryId: string | null;
-  supplierId: string | null;
+  /**
+   * Tavkil's DTO shape, matched deliberately — `admin/src/features/products/
+   * queries.ts` is the consumer and it is Tavkil's file. It reads
+   * `p.basePrice.amount.toFixed(2)` and `p.category?.name`, so returning bare
+   * `basePriceAmount` / `categoryId` rendered "—" in every row.
+   */
+  basePrice: {
+    amount: number;
+    currency: string | null;
+    updatedAt: string | null;
+    updatedBy: string | null;
+  } | null;
+  category: { id: string; name: string | null } | null;
+  supplier: { id: string; name: string | null } | null;
   createdAt: string;
   updatedAt: string;
   translations: AdminTranslation[];
@@ -175,11 +185,16 @@ export async function productStatusCounts(
     .where(and(...adminFilters(query, true)))
     .groupBy(products.status);
 
-  const counts: Record<string, number> = { draft: 0, published: 0, archived: 0, total: 0 };
+  // `all`, not `total`. The products page reads `counts?.all` for its subtitle and
+  // its "All" filter tab (admin/src/features/products/products-page.tsx), so the
+  // header said "0 total" while the table below it listed twelve. `total` is kept
+  // as an alias so nothing that already reads it breaks.
+  const counts: Record<string, number> = { draft: 0, published: 0, archived: 0, all: 0 };
   for (const row of rows) {
     counts[row.status] = Number(row.n);
-    counts.total += Number(row.n);
+    counts.all += Number(row.n);
   }
+  counts.total = counts.all;
   return counts;
 }
 
@@ -699,6 +714,39 @@ async function hydrate(ids: string[]): Promise<AdminProduct[]> {
         .where(inArray(productVariants.productId, ids)),
     ]);
 
+  // The admin table shows category and supplier by NAME, and Tavkil's DTO carries
+  // them as `{ id, name }` objects rather than bare ids — see
+  // admin/src/features/products/queries.ts. Names come from the English
+  // translation: the dashboard is English-only (there is no locale switcher in it).
+  const categoryIdList = [...new Set(rows.map((r) => r.categoryId).filter(Boolean))] as string[];
+  const supplierIdList = [...new Set(rows.map((r) => r.supplierId).filter(Boolean))] as string[];
+  const [categoryNames, supplierNames] = await Promise.all([
+    categoryIdList.length
+      ? db
+          .select({ id: categoryTranslations.categoryId, name: categoryTranslations.name })
+          .from(categoryTranslations)
+          .where(
+            and(
+              inArray(categoryTranslations.categoryId, categoryIdList),
+              eq(categoryTranslations.locale, 'en'),
+            ),
+          )
+      : Promise.resolve([]),
+    supplierIdList.length
+      ? db
+          .select({ id: supplierTranslations.supplierId, name: supplierTranslations.name })
+          .from(supplierTranslations)
+          .where(
+            and(
+              inArray(supplierTranslations.supplierId, supplierIdList),
+              eq(supplierTranslations.locale, 'en'),
+            ),
+          )
+      : Promise.resolve([]),
+  ]);
+  const categoryNameById = new Map(categoryNames.map((r) => [r.id, r.name]));
+  const supplierNameById = new Map(supplierNames.map((r) => [r.id, r.name]));
+
   const group = <T, K extends keyof T>(list: T[], key: K) => {
     const out = new Map<string, T[]>();
     for (const item of list) {
@@ -737,10 +785,24 @@ async function hydrate(ids: string[]): Promise<AdminProduct[]> {
       mpn: row.mpn,
       weightKg: row.weightKg,
       cbm: row.cbm,
-      basePriceAmount: row.basePriceAmount,
-      basePriceCurrency: row.basePriceCurrency,
-      categoryId: row.categoryId,
-      supplierId: row.supplierId,
+      // Tavkil's DTO shape. The admin SPA reads `p.basePrice.amount.toFixed(2)`
+      // and `p.category?.name`; bare `basePriceAmount` / `categoryId` rendered as
+      // "—" in every row of the products table.
+      basePrice:
+        row.basePriceAmount == null
+          ? null
+          : {
+              amount: Number(row.basePriceAmount),
+              currency: row.basePriceCurrency,
+              updatedAt: row.basePriceUpdatedAt ?? null,
+              updatedBy: row.basePriceUpdatedBy ?? null,
+            },
+      category: row.categoryId
+        ? { id: row.categoryId, name: categoryNameById.get(row.categoryId) ?? null }
+        : null,
+      supplier: row.supplierId
+        ? { id: row.supplierId, name: supplierNameById.get(row.supplierId) ?? null }
+        : null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       translations: (translationsBy.get(row.id) ?? []).map(toAdminTranslation),
