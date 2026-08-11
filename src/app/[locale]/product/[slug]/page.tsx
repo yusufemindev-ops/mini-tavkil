@@ -80,9 +80,26 @@ export default async function ProductPage({
       : []),
   ];
 
-  const packagingFacts = product.boxQuantity
-    ? [{ label: t('pd_lbl_box'), value: String(product.boxQuantity) }]
-    : [];
+  /**
+   * What a buyer needs to cost a shipment.
+   *
+   * All four come from the supplier's own price list and were imported from day
+   * one; only the carton quantity was ever rendered, so the specification table
+   * read as a single row and looked like missing data. Numeric columns arrive
+   * from pg as strings, so trailing zeros are trimmed rather than printed —
+   * "7.30" reads as a decision, "7.3" reads as a measurement.
+   */
+  const trim = (value: string) => String(Number(value));
+  const packagingFacts = [
+    ...(product.boxQuantity
+      ? [{ label: t('pd_lbl_box'), value: String(product.boxQuantity) }]
+      : []),
+    ...(product.weightKg
+      ? [{ label: t('pd_lbl_weight'), value: `${trim(product.weightKg)} kg` }]
+      : []),
+    ...(product.cbm ? [{ label: t('pd_lbl_cbm'), value: `${trim(product.cbm)} m³` }] : []),
+    ...(product.gtin13 ? [{ label: t('pd_lbl_barcode'), value: product.gtin13 }] : []),
+  ];
 
   return (
     <>
@@ -95,6 +112,7 @@ export default async function ProductPage({
             name: product.name,
             description: product.description,
             sku: product.sku,
+            gtin13: product.gtin13,
             brandName: product.brandName,
             categoryName: product.category?.name ?? null,
             countryOfOrigin: product.countryOfOrigin,

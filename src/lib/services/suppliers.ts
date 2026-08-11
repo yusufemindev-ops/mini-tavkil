@@ -87,6 +87,32 @@ export async function getSupplier(id: string): Promise<AdminSupplier> {
   return toAdminSupplier(row, translations.get(id) ?? []);
 }
 
+/**
+ * A create is two writes — the row, then its translations — and Neon over HTTP
+ * has no interactive transactions on a request path (CLAUDE.md §3). So when the
+ * second write fails, the first is already committed.
+ *
+ * That is not theoretical. A duplicate slug is the most ordinary mistake an
+ * admin makes: the API correctly answered 409, and left a nameless draft row
+ * behind every single time. Ten of them accumulated in production before anyone
+ * looked at the suppliers list and asked what they were.
+ *
+ * Without a transaction the fix is a compensating delete: undo the row, then let
+ * the original error surface unchanged, so the caller still sees the 409 that
+ * actually describes what went wrong.
+ */
+async function withRollback<T>(id: string, remove: () => Promise<unknown>, work: () => Promise<T>) {
+  try {
+    return await work();
+  } catch (error) {
+    // Best effort. If the cleanup itself fails the original error still wins —
+    // reporting a delete failure instead of the duplicate slug would hide the
+    // thing the admin needs to fix.
+    await remove().catch(() => undefined);
+    throw error;
+  }
+}
+
 export async function createSupplier(input: CreateSupplierInput): Promise<AdminSupplier> {
   const [row] = await db
     .insert(suppliers)
@@ -103,8 +129,14 @@ export async function createSupplier(input: CreateSupplierInput): Promise<AdminS
     })
     .returning();
 
-  if (input.translations?.length) await upsertTranslations(row.id, input.translations);
-  return getSupplier(row.id);
+  return withRollback(
+    row.id,
+    () => db.delete(suppliers).where(eq(suppliers.id, row.id)),
+    async () => {
+      if (input.translations?.length) await upsertTranslations(row.id, input.translations);
+      return getSupplier(row.id);
+    },
+  );
 }
 
 export async function updateSupplier(

@@ -143,8 +143,8 @@
     "pd_pack_pcs": "{count} pcs",
     "pd_lbl_brand": "Brand",
     "pd_lbl_box": "Units per box",
-    "pd_lbl_weight": "Weight (KG)",
-    "pd_lbl_cbm": "Volume (CBM)",
+    "pd_lbl_weight": "Gross weight",
+    "pd_lbl_cbm": "Carton volume",
     "pd_packaging": "Packaging & logistics",
     "pd_specs": "Specifications",
     "pd_lbl_lead": "Lead time",
@@ -435,6 +435,7 @@
     "con_unconfigured": "The form is not available right now — please use the email or WhatsApp links above.",
     "opt_size": "Size",
     "opt_length": "Length",
-    "opt_diameter": "Diameter"
+    "opt_diameter": "Diameter",
+    "pd_lbl_barcode": "Barcode"
   }
 }

@@ -204,6 +204,21 @@ export async function getProduct(id: string): Promise<AdminProduct> {
 
 // ── Mutations ────────────────────────────────────────────────────────────────
 
+/**
+ * See `withRollback` in services/suppliers.ts for why this exists: a create is
+ * two writes, Neon over HTTP has no interactive transaction on a request path,
+ * and a failing second write used to leave the first committed as a nameless
+ * row.
+ */
+async function withRollback<T>(remove: () => Promise<unknown>, work: () => Promise<T>) {
+  try {
+    return await work();
+  } catch (error) {
+    await remove().catch(() => undefined);
+    throw error;
+  }
+}
+
 export async function createProduct(
   input: CreateProductInput,
   actorId: string,
@@ -237,12 +252,19 @@ export async function createProduct(
     })
     .returning();
 
-  await applyChildren(row.id, input, actorId);
-  const revalidated = await getProduct(row.id);
-  // Push it onto the storefront now. Without this the change waits out the
-  // page's revalidate window — up to an hour — before a visitor sees it.
-  revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
-  return revalidated;
+  return withRollback(
+    () => db.delete(products).where(eq(products.id, row.id)),
+    async () => {
+      await applyChildren(row.id, input, actorId);
+      const revalidated = await getProduct(row.id);
+      // Push it onto the storefront now. Without this the change waits out the
+      // page's revalidate window — up to an hour — before a visitor sees it.
+      revalidateProduct(
+        Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])),
+      );
+      return revalidated;
+    },
+  );
 }
 
 export async function updateProduct(

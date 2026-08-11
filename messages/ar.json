@@ -143,8 +143,8 @@
     "pd_pack_pcs": "{count} قطعة",
     "pd_lbl_brand": "العلامة التجارية",
     "pd_lbl_box": "الوحدات في الصندوق",
-    "pd_lbl_weight": "الوزن (كجم)",
-    "pd_lbl_cbm": "الحجم (متر مكعب)",
+    "pd_lbl_weight": "الوزن الإجمالي",
+    "pd_lbl_cbm": "حجم الكرتون",
     "pd_packaging": "التغليف والشحن",
     "pd_specs": "المواصفات",
     "pd_lbl_lead": "مدة التوريد",
@@ -435,6 +435,7 @@
     "con_unconfigured": "النموذج غير متاح حاليًا — يرجى استخدام روابط البريد الإلكتروني أو واتساب أعلاه.",
     "opt_size": "المقاس",
     "opt_length": "الطول",
-    "opt_diameter": "القطر"
+    "opt_diameter": "القطر",
+    "pd_lbl_barcode": "الباركود"
   }
 }

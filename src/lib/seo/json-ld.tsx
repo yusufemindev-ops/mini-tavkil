@@ -72,6 +72,7 @@ export function productSchema({
   name,
   description,
   sku,
+  gtin13,
   brandName,
   categoryName,
   countryOfOrigin,
@@ -83,6 +84,8 @@ export function productSchema({
   name: string;
   description: string;
   sku: string | null;
+  /** EAN-13. Google matches products across the web on it, so it is worth emitting. */
+  gtin13?: string | null;
   brandName: string | null;
   categoryName: string | null;
   countryOfOrigin: string | null;
@@ -96,6 +99,7 @@ export function productSchema({
     url: `${BASE_URL}/${locale}/product/${slug}`,
     ...(description ? { description } : {}),
     ...(sku ? { sku } : {}),
+    ...(gtin13 ? { gtin13 } : {}),
     ...(brandName ? { brand: { '@type': 'Brand', name: brandName } } : {}),
     ...(categoryName ? { category: categoryName } : {}),
     ...(countryOfOrigin ? { countryOfOrigin } : {}),
@@ -119,12 +123,19 @@ export function collectionSchema({
   name,
   description,
   items,
+  itemBase = '/product',
 }: {
   locale: string;
   path: string;
   name: string;
   description: string | null;
   items: { name: string; slug: string }[];
+  /**
+   * Where a listed item lives. A category page lists products; the catalogue
+   * index lists categories, and pointing those at `/product/<category-slug>`
+   * would advertise a page that 404s.
+   */
+  itemBase?: string;
 }): Schema {
   return {
     '@context': 'https://schema.org',
@@ -140,7 +151,7 @@ export function collectionSchema({
         '@type': 'ListItem',
         position: index + 1,
         name: item.name,
-        url: `${BASE_URL}/${locale}/product/${item.slug}`,
+        url: `${BASE_URL}/${locale}${itemBase}/${item.slug}`,
       })),
     },
   };

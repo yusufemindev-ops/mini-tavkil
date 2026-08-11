@@ -59,6 +59,21 @@ export async function getCategory(id: string): Promise<AdminCategory> {
 
 // ── Mutations ────────────────────────────────────────────────────────────────
 
+/**
+ * See `withRollback` in services/suppliers.ts for why this exists: a create is
+ * two writes, Neon over HTTP has no interactive transaction on a request path,
+ * and a failing second write used to leave the first committed as a nameless
+ * row.
+ */
+async function withRollback<T>(remove: () => Promise<unknown>, work: () => Promise<T>) {
+  try {
+    return await work();
+  } catch (error) {
+    await remove().catch(() => undefined);
+    throw error;
+  }
+}
+
 export async function createCategory(input: CreateCategoryInput): Promise<AdminCategory> {
   const [row] = await db
     .insert(categories)
@@ -69,14 +84,21 @@ export async function createCategory(input: CreateCategoryInput): Promise<AdminC
     })
     .returning();
 
-  if (input.translations?.length) {
-    await upsertTranslations(row.id, input.translations);
-  }
-  const revalidated = await getCategory(row.id);
-  // Straight onto the storefront; otherwise the catalogue shows the old tree
-  // until the revalidate window expires.
-  revalidateCategory(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
-  return revalidated;
+  return withRollback(
+    () => db.delete(categories).where(eq(categories.id, row.id)),
+    async () => {
+      if (input.translations?.length) {
+        await upsertTranslations(row.id, input.translations);
+      }
+      const revalidated = await getCategory(row.id);
+      // Straight onto the storefront; otherwise the catalogue shows the old tree
+      // until the revalidate window expires.
+      revalidateCategory(
+        Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])),
+      );
+      return revalidated;
+    },
+  );
 }
 
 export async function updateCategory(

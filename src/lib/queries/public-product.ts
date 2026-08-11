@@ -69,6 +69,12 @@ export type PublicProduct = {
   unit: string;
   boxQuantity: number | null;
   packSize: number | null;
+  /** Gross carton weight, kg. Numeric columns arrive as strings from pg. */
+  weightKg: string | null;
+  /** Carton volume, m³. */
+  cbm: string | null;
+  /** EAN-13 barcode — a public product identifier, and Google's `gtin13`. */
+  gtin13: string | null;
   isFeatured: boolean;
   images: PublicImage[];
   category: { slug: string; name: string } | null;
@@ -137,6 +143,21 @@ const productColumns = {
   unit: products.unit,
   boxQuantity: products.boxQuantity,
   packSize: products.packSize,
+  /**
+   * Carton logistics, published deliberately.
+   *
+   * A wholesale buyer costs a shipment from these three: how many fit a carton,
+   * what it weighs and what volume it occupies. They were imported from the
+   * supplier's price list and then never selected here, so the specification
+   * table showed "Units per box" and nothing else.
+   *
+   * None of them is a price or a supplier, which is the only thing this shape
+   * refuses to carry (CLAUDE.md §1). A barcode is a public product identifier —
+   * it is what a buyer scans — and Google reads it as `gtin13`.
+   */
+  weightKg: products.weightKg,
+  cbm: products.cbm,
+  gtin13: products.gtin13,
   sku: products.sku,
   brandName: products.brandName,
   countryOfOrigin: products.countryOfOrigin,
@@ -421,6 +442,9 @@ function toPublicProduct(
     unit: row.unit,
     boxQuantity: row.boxQuantity,
     packSize: row.packSize,
+    weightKg: row.weightKg,
+    cbm: row.cbm,
+    gtin13: row.gtin13,
     isFeatured: row.isFeatured,
     images: extra.images,
     category: extra.category,

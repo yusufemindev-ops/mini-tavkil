@@ -16,12 +16,11 @@ const buttonVariants = cva(
         ink: 'bg-foreground text-background hover:shadow-card',
         outline: 'border-border bg-card text-foreground hover:border-foreground',
         ghost: 'px-3 text-foreground-soft hover:text-foreground',
-        // A fixed shade rather than a token: this variant sits on the always-orange
-        // CTA panel in both themes, and --primary-ink flips to pale peach in dark
-        // mode. The value is the light-mode --primary-ink, so it is the same brand
-        // orange Tavkil uses here — just the text-safe shade of it (5.00:1 on
-        // white, where the brand #f2640c is 3.18:1 and fails AA for a button label).
-        light: 'bg-white text-[#bd4c06] hover:bg-footer hover:text-white',
+        // Sits on the always-orange CTA panel in both themes, so it takes the
+        // brand orange directly rather than a theme token. It used to be a
+        // text-safe #bd4c06 (5.00:1 on white against #f2640c's 3.18:1); that was
+        // the second orange the owner spotted, so it is the brand value now.
+        light: 'bg-white text-[var(--primary)] hover:bg-footer hover:text-white',
         line: 'border-white/50 bg-transparent text-white hover:bg-white/15',
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive/20',

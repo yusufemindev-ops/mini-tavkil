@@ -429,3 +429,72 @@ test.describe('admin API contract', () => {
     }
   });
 });
+
+/**
+ * A failed create must leave nothing behind.
+ *
+ * A create is two writes — the row, then its translations — and Neon over HTTP
+ * has no interactive transaction on a request path. When the second failed, the
+ * first stayed committed: the API correctly answered 409 for a duplicate slug and
+ * silently kept a nameless draft. Ten of them accumulated in production before
+ * the owner saw the supplier list and asked what they were.
+ *
+ * This counts rows either side of a deliberate conflict, so a regression shows up
+ * as an increase rather than as junk somebody notices weeks later.
+ */
+test.describe('a rejected create leaves no orphan row', () => {
+  test('a duplicate supplier slug does not add a nameless supplier', async ({ request }) => {
+    const count = async () =>
+      ((await (await request.get('/api/admin/suppliers')).json()).data as unknown[]).length;
+
+    const slug = `${E2E}-orphan`;
+    const body = {
+      countryCode: 'TR',
+      translations: [{ locale: 'en', name: `${E2E} orphan`, slug, isComplete: true }],
+    };
+
+    let id: string | undefined;
+    try {
+      const first = await request.post('/api/admin/suppliers', { data: body });
+      await trackIfCreated('suppliers', first);
+      expect(first.status()).toBe(200);
+      id = ((await first.json()).data as { id: string }).id;
+
+      const before = await count();
+      const second = await request.post('/api/admin/suppliers', { data: body });
+      await trackIfCreated('suppliers', second);
+      expect(second.status(), 'a taken slug is a conflict').toBe(409);
+
+      expect(await count(), 'the rejected create left a row behind').toBe(before);
+    } finally {
+      if (id) await request.delete(`/api/admin/suppliers/${id}`);
+    }
+  });
+
+  test('a duplicate category slug does not add a nameless category', async ({ request }) => {
+    const count = async () =>
+      ((await (await request.get('/api/admin/categories')).json()).data as unknown[]).length;
+
+    const slug = `${E2E}-cat-orphan`;
+    const body = {
+      translations: [{ locale: 'en', name: `${E2E} cat orphan`, slug, isComplete: true }],
+    };
+
+    let id: string | undefined;
+    try {
+      const first = await request.post('/api/admin/categories', { data: body });
+      await trackIfCreated('categories', first);
+      expect(first.status()).toBe(200);
+      id = ((await first.json()).data as { id: string }).id;
+
+      const before = await count();
+      const second = await request.post('/api/admin/categories', { data: body });
+      await trackIfCreated('categories', second);
+      expect(second.status(), 'a taken slug is a conflict').toBe(409);
+
+      expect(await count(), 'the rejected create left a row behind').toBe(before);
+    } finally {
+      if (id) await request.delete(`/api/admin/categories/${id}`);
+    }
+  });
+});

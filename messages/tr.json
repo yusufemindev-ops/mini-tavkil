@@ -143,8 +143,8 @@
     "pd_pack_pcs": "{count} adet",
     "pd_lbl_brand": "Marka",
     "pd_lbl_box": "Kutu başına adet",
-    "pd_lbl_weight": "Ağırlık (KG)",
-    "pd_lbl_cbm": "Hacim (CBM)",
+    "pd_lbl_weight": "Brüt ağırlık",
+    "pd_lbl_cbm": "Koli hacmi",
     "pd_packaging": "Paketleme ve lojistik",
     "pd_specs": "Teknik özellikler",
     "pd_lbl_lead": "Termin",
@@ -435,6 +435,7 @@
     "con_unconfigured": "Form şu anda kullanılamıyor — lütfen yukarıdaki e-posta veya WhatsApp bağlantılarını kullanın.",
     "opt_size": "Ebat",
     "opt_length": "Uzunluk",
-    "opt_diameter": "Çap"
+    "opt_diameter": "Çap",
+    "pd_lbl_barcode": "Barkod"
   }
 }

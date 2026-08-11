@@ -228,7 +228,10 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--primary-hover);
+  /* The brand orange, not --primary-hover. A hover shade used as a resting
+     colour is a third orange on the page, which is what the owner spotted. It
+     sits on the caption's dark gradient, where #f2640c reads at 6.06:1. */
+  color: var(--primary);
 }
 .tvCap h3 {
   color: #fff;

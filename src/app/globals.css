@@ -37,12 +37,15 @@
      lives in one line rather than being spread across ten components. */
   --primary-button: var(--primary);
   --primary-button-foreground: var(--primary-foreground);
-  /* Tavkil's ink is #c24e06. Five points darker, because #c24e06 measures
-     4.33:1 on --primary-soft and 4.43:1 on --background-2 — both just under the
-     4.5 AA needs for normal text, and both are real surfaces this sits on (chips,
-     the section eyebrow). #bd4c06 clears 4.5 on white, soft AND background-2, and
-     the shift is imperceptible next to the fill it accompanies. */
-  --primary-ink: #bd4c06;
+  /* Orange used as TEXT — links, the active nav item, the section eyebrow.
+     It is the same orange as the fill, on purpose: a page showing #f2640c on a
+     button and #bd4c06 on the link beside it reads as two brands, and that is
+     what the owner saw and rejected. One orange per theme.
+
+     The cost is legibility, and it is real: #f2640c on white is 3.18:1 against
+     the 4.5 AA wants for normal text, where #bd4c06 was 5.00. Same decision as
+     the buttons and recorded in the same place — see GO-LIVE.md. */
+  --primary-ink: var(--primary);
   --primary-hover: #ff7a1a;
   --secondary: #f5f6f8;
   --secondary-foreground: #15181d;
@@ -107,7 +110,9 @@
   --primary-button: var(--primary);
   --primary-button-foreground: var(--primary-foreground);
   --primary-soft: #2a1c12;
-  --primary-ink: #ffb37a;
+  /* One orange in dark mode too. This one costs nothing: #ff7a1a on the dark
+     background is 7.39:1, comfortably past AA. */
+  --primary-ink: var(--primary);
   --primary-hover: #ff8c38;
   --secondary: #171a20;
   --secondary-foreground: #f3f5f8;

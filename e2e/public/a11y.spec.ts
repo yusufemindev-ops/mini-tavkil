@@ -41,14 +41,25 @@ const ACCEPTED_FILLS = [
   '#25d366', // WhatsApp green — same decision, same reasoning
 ];
 
+/** The brand orange used as text — the same value as the fill since the merge. */
+const BRAND_TEXT = ['#f2640c', '#ff7a1a'];
+
 function isAcceptedBrandContrast(node: { any: { id: string; data?: unknown }[] }): boolean {
   const data = node.any.find((check) => check.id === 'color-contrast')?.data as
     { fgColor?: string; bgColor?: string } | undefined;
   if (!data) return false;
-  return (
-    data.fgColor?.toLowerCase() === '#ffffff' &&
-    ACCEPTED_FILLS.includes(data.bgColor?.toLowerCase() ?? '')
-  );
+  const fg = data.fgColor?.toLowerCase() ?? '';
+  const bg = data.bgColor?.toLowerCase() ?? '';
+
+  // White on a brand fill — buttons, the active language pill, WhatsApp.
+  if (fg === '#ffffff' && ACCEPTED_FILLS.includes(bg)) return true;
+
+  // The brand orange used as TEXT. `--primary-ink` used to be a darker orange
+  // (#bd4c06, 5.00:1) so that orange text would clear AA on its own. The owner
+  // saw the two oranges together on one page, called it two brands, and chose
+  // one — so link and nav text is now #f2640c at 3.18:1. Same trade as the
+  // fills, made knowingly, recorded in GO-LIVE.md.
+  return BRAND_TEXT.includes(fg);
 }
 
 async function scan(page: import('@playwright/test').Page, path: string) {
