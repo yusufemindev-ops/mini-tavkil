@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { authUser, authUserRoles, roles } from '@/lib/db/schema';
+import { authAccount, authUser, authUserRoles, roles } from '@/lib/db/schema';
 import { invalid, notFound } from '@/lib/api/errors';
 import { adminAllowlist } from '@/lib/permissions/allowlist';
 import {
@@ -32,16 +32,33 @@ export const assignRoleSchema = z.object({
 });
 export type AssignRoleInput = z.infer<typeof assignRoleSchema>;
 
+/**
+ * Tavkil's `AdminTeamMember`, matched field for field — see
+ * `admin/src/features/users/queries.ts`. The users page is Tavkil's and indexes
+ * `STATUS_BADGE[member.status]`, so a row without `status` produced
+ * `undefined.variant` and the whole page rendered blank with an uncaught
+ * TypeError. `role.name` is read directly too; we were sending `role.label`.
+ */
 export interface AdminUserRow {
   id: string;
   email: string;
   name: string;
+  firstName: string | null;
+  lastName: string | null;
   image: string | null;
   banned: boolean;
   /** Null when allowlisted but never assigned a role — they can do nothing. */
-  role: { code: string; label: string } | null;
+  role: { id: string; code: string; name: string } | null;
+  /**
+   * `suspended` when banned, `invited` when allowlisted but never signed in, else
+   * `active`. There is no invitation flow here (access is the allowlist), so
+   * `invited` means "cleared to sign in but has not yet".
+   */
+  status: 'active' | 'invited' | 'suspended';
+  googleConnected: boolean;
   /** False when the row exists but the address is no longer on the allowlist. */
   allowlisted: boolean;
+  isYou: boolean;
   lastSeenAt: string | null;
   createdAt: string;
 }
@@ -53,7 +70,7 @@ export interface AdminUserRow {
  * flagged rather than hidden: they still have a row and a role, and knowing the
  * allowlist is what is actually blocking them beats wondering where they went.
  */
-export async function listAdminUsers(): Promise<AdminUserRow[]> {
+export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]> {
   const allowed = new Set(adminAllowlist());
 
   const rows = await db
@@ -78,12 +95,27 @@ export async function listAdminUsers(): Promise<AdminUserRow[]> {
     ids.length === 0
       ? []
       : await db
-          .select({ userId: authUserRoles.authUserId, code: roles.code })
+          .select({ userId: authUserRoles.authUserId, code: roles.code, roleId: roles.id })
           .from(authUserRoles)
           .innerJoin(roles, eq(roles.id, authUserRoles.roleId))
           .where(inArray(authUserRoles.authUserId, ids));
 
   const roleByUser = new Map(assignments.map((row) => [row.userId, row.code]));
+  const roleIdByCode = new Map(assignments.map((row) => [row.code, row.roleId]));
+
+  // Which accounts have a Google identity linked. The users table shows this as a
+  // column, and it is the only sign-in method here, so it doubles as "can this
+  // person actually get in".
+  const googleLinked = new Set(
+    ids.length === 0
+      ? []
+      : (
+          await db
+            .select({ userId: authAccount.userId })
+            .from(authAccount)
+            .where(and(inArray(authAccount.userId, ids), eq(authAccount.providerId, 'google')))
+        ).map((row) => row.userId),
+  );
 
   return staff.map((row) => {
     const code = roleByUser.get(row.id);
@@ -92,9 +124,20 @@ export async function listAdminUsers(): Promise<AdminUserRow[]> {
       email: row.email,
       name: row.name,
       image: row.image,
+      firstName: row.name?.split(/\s+/)[0] ?? null,
+      lastName: row.name?.split(/\s+/).slice(1).join(' ') || null,
       banned: row.banned ?? false,
-      role: code ? { code, label: ROLE_LABELS[code as RoleCode] ?? code } : null,
+      role: code
+        ? { id: roleIdByCode.get(code) ?? code, code, name: ROLE_LABELS[code as RoleCode] ?? code }
+        : null,
+      status: row.banned
+        ? ('suspended' as const)
+        : row.lastSeenAt
+          ? ('active' as const)
+          : ('invited' as const),
+      googleConnected: googleLinked.has(row.id),
       allowlisted: allowed.has(row.email.toLowerCase()),
+      isYou: row.id === viewerId,
       lastSeenAt: row.lastSeenAt,
       createdAt: row.createdAt,
     };
