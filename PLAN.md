@@ -3,7 +3,8 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–13 done and deployed. Start at step 14.
+**Status:** steps 1–14 done and deployed. Step 15 is the handover — most of it
+needs credentials only you have.
 
 **Needs you before launch:** Turnstile keys, the Cloudflare Email Service binding,
 and a Google sign-in for the admin upload check. See steps 10, 13 and 15.
@@ -688,7 +689,41 @@ without a valid token are rejected.
 
 </details>
 
-## 14. Verification & hardening — eight passes, all of them
+## ✅ 14. Verification & hardening — DONE (results below)
+
+| Pass              | Result                                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------- |
+| 14a Vitest        | 360 unit + 32 integration, green. Leak walker runs every public query in 3 locales.                       |
+| 14b Playwright    | 22/22 against the **deployed** URL. Admin flows still need a Google session — see below.                  |
+| 14c Browser sweep | 22 pages × view-source: zero price/supplier occurrences. Console clean, no overflow at 375px.             |
+| 14d UI rules      | No inline SVG except 4 brand marks lucide doesn't ship; no hardcoded strings; empty states on every list. |
+| 14e Accessibility | **axe: 0 violations**, WCAG 2.1 AA, six pages × three locales including Arabic. Was 87.                   |
+| 14f Lighthouse    | A11y **100**, Best Practices **100**, SEO 66→**100** with indexing on. LCP **292 ms**, CLS **0.00**.      |
+| 14g SEO substance | JSON-LD server-rendered; canonical per-locale; hreflang reciprocal + x-default; real `lastmod`.           |
+| 14h Security      | 7 headers live. Secrets-in-bundle finding recorded below.                                                 |
+
+**The a11y pass earned its place.** 87 contrast violations, all from the brand
+orange: white on it measured 2.61–3.18:1 where 4.5 is required. Fixed by deepening
+light-mode `--primary` and flipping dark-mode's foreground to near-black — the
+brand survives, the glare doesn't.
+
+**Two of my own checks were wrong before the code was.** A leak sweep appeared to
+cover 20 pages but ran three times, because zsh doesn't word-split unquoted
+variables. And an hreflang check reported nothing because Next serialises the
+attribute as `hrefLang` and the grep was case-sensitive. Both re-run correctly.
+
+**Still needs a human:**
+
+- **Rich Results Test** — needs a crawlable public URL, so it can only run after
+  step 15 flips `SITE_INDEXABLE`.
+- **Admin Playwright flows** — need a Google sign-in. `admin.setup.ts` is where
+  that session gets saved.
+- **In-Worker rate limit** — never returned a 429 (step 13). Confirm or drop it in
+  favour of the WAF rule.
+
+<details><summary>Original step-14 instructions</summary>
+
+### Eight passes, all of them
 
 Don't collapse these into "ran the tests". Each catches a different class of failure.
 Install what's missing first:
