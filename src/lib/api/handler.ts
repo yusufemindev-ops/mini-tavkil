@@ -65,10 +65,21 @@ export function adminRoute<P, B>(
       const result = await handler({ request, params, body, admin });
 
       if (result instanceof Response) return result;
-      return Response.json(result, {
-        // Admin responses carry price and supplier data. Nothing may cache them.
-        headers: { 'Cache-Control': 'private, no-store' },
-      });
+      // `{ data: … }`, not the bare value. The admin SPA is Tavkil's, and its
+      // `lib/api/client.ts` ends with `return (payload as SuccessEnvelope<T>).data`
+      // — Tavkil's Nest backend wrapped every success in that envelope. Returning
+      // the bare object made EVERY admin call resolve to `undefined`: the
+      // dashboard rendered its empty state, `/admin/me` yielded no permissions so
+      // the sidebar hid every entry, and products, categories, suppliers, users
+      // and settings would all have come back blank. The whole dashboard was
+      // non-functional for this one line.
+      return Response.json(
+        { data: result },
+        {
+          // Admin responses carry price and supplier data. Nothing may cache them.
+          headers: { 'Cache-Control': 'private, no-store' },
+        },
+      );
     } catch (error) {
       return toErrorResponse(error);
     }

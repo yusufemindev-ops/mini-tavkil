@@ -79,8 +79,9 @@ export async function POST(request: Request) {
 
     // `url` is what the admin renders and stores; `key` is what it should persist
     // once the product form is taught to. Both are returned so neither is a guess.
+    // `{ data: … }` — the SPA's api client unwraps `.data` (see lib/api/handler.ts).
     return Response.json(
-      { key, url: resolveImageUrl(key), filename: key.split('/').pop() },
+      { data: { key, url: resolveImageUrl(key), filename: key.split('/').pop() } },
       { headers: { 'Cache-Control': 'private, no-store' } },
     );
   } catch (error) {
