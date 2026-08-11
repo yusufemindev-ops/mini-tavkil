@@ -1,3 +1,4 @@
+import type { Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
@@ -28,6 +29,20 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
 });
+
+/**
+ * Browser chrome colour.
+ *
+ * Two values, because a single `theme_color` in the manifest cannot follow the
+ * theme toggle: on a phone in dark mode the address bar was painting brand
+ * orange over a near-black page. The dark value matches `--background`.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f1115' },
+  ],
+};
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
