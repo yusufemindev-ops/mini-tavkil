@@ -32,6 +32,7 @@ import {
 } from '@/lib/db/schema';
 import { routing } from '@/i18n/routing';
 import { DEFAULT_PRODUCT_SORT, type ProductSort } from '@/lib/catalog/product-sort';
+import { resolveImageUrl } from '@/lib/media/image-url';
 
 export type Locale = (typeof routing.locales)[number];
 
@@ -203,7 +204,8 @@ async function imagesFor(
   for (const row of rows) {
     const list = out.get(row.productId) ?? [];
     list.push({
-      url: row.url,
+      // Stored as a bare R2 key so step 15's host swap needs no migration.
+      url: resolveImageUrl(row.url),
       alt: altFor(row.altTranslations, locale),
       isPrimary: row.isPrimary,
     });

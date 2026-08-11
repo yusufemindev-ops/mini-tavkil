@@ -15,6 +15,7 @@ import {
   supplierTranslations,
 } from '@/lib/db/schema';
 import { conflict, invalid, isUniqueViolation, notFound } from '@/lib/api/errors';
+import { resolveImageUrl } from '@/lib/media/image-url';
 import {
   assertProductPublishable,
   DEFAULT_LOCALE,
@@ -730,7 +731,7 @@ async function hydrate(ids: string[]): Promise<AdminProduct[]> {
       updatedAt: row.updatedAt,
       translations: (translationsBy.get(row.id) ?? []).map(toAdminTranslation),
       images: (imagesBy.get(row.id) ?? []).map((image) => ({
-        url: image.url,
+        url: resolveImageUrl(image.url),
         alt: (image.altTranslations ?? {}) as Record<string, string>,
         isPrimary: image.isPrimary,
         sortOrder: image.sortOrder,

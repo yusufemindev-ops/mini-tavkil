@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ApiError, uploadFile } from '@/lib/api/client';
+import { resizeToWebp } from '@/lib/image-resize';
 
 interface UploadedMedia {
   url: string;
@@ -14,14 +15,26 @@ interface UploadedMedia {
 // (MAX_UPLOAD_MB), so we don't hard-code a number that could drift.
 const UPLOAD_ERROR = 'Upload failed — use a supported image within the size limit.';
 
-// Shared upload routine: POST each selected file to /admin/media, surface a toast
-// on failure, and hand back the resulting URLs. Errors from one file don't abort
-// the others.
+// Shared upload routine: downscale to WebP in the browser, POST each file to
+// /admin/media, surface a toast on failure, and hand back the resulting URLs.
+// One file's error doesn't abort the others.
+//
+// The resize is not an optimisation here, it is the whole pipeline: the Worker
+// cannot run Sharp, so if the browser doesn't do this nothing does, and a 6 MB
+// phone photo goes to R2 and then to every visitor.
 async function uploadFiles(files: File[]): Promise<string[]> {
   const urls: string[] = [];
   for (const file of files) {
     try {
-      const media = await uploadFile<UploadedMedia>('/admin/media', file);
+      let payload = file;
+      try {
+        payload = await resizeToWebp(file);
+      } catch {
+        // A format the browser can't decode (or a canvas failure) shouldn't lose
+        // the upload — send the original and let the server's sniff decide.
+        payload = file;
+      }
+      const media = await uploadFile<UploadedMedia>('/admin/media', payload);
       urls.push(media.url);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : UPLOAD_ERROR);
@@ -51,7 +64,7 @@ export function ImageDropzone({
   multiple = false,
   onUploaded,
   title = 'Drag & drop or click to upload',
-  subtitle = 'PNG or JPG, up to 5 MB',
+  subtitle = 'JPEG, PNG or WebP — resized to 1600px before upload',
   className,
   compact = false,
   iconOnly = false,

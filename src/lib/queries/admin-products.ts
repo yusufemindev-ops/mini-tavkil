@@ -24,6 +24,7 @@ import {
   suppliers,
   supplierTranslations,
 } from '@/lib/db/schema';
+import { resolveImageUrl } from '@/lib/media/image-url';
 import type { Locale } from './public-product';
 
 export type AdminProductListItem = {
@@ -216,6 +217,7 @@ async function primaryImageUrls(productIds: string[]): Promise<Map<string, strin
     .from(productImages)
     .where(inArray(productImages.productId, productIds))
     .orderBy(desc(productImages.isPrimary), asc(productImages.sortOrder));
-  for (const row of rows) if (!out.has(row.productId)) out.set(row.productId, row.url);
+  for (const row of rows)
+    if (!out.has(row.productId)) out.set(row.productId, resolveImageUrl(row.url));
   return out;
 }

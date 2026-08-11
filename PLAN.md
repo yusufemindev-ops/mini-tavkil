@@ -3,7 +3,11 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–9 done and deployed. Start at step 10.
+**Status:** steps 1–10 done and deployed. Start at step 11.
+
+**Needs you:** step 10's acceptance ends with an upload through the real admin,
+which needs a Google sign-in I can't perform. Everything up to that point is
+built, deployed and tested — see step 10.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -483,7 +487,32 @@ and editable, prices show here and only here.
 
 </details>
 
-## 10. Media pipeline
+## ✅ 10. Media pipeline — DONE (one manual check outstanding)
+
+Browser-side resize → `POST /api/admin/media` → R2, with the upload storing a
+**bare key** rather than a URL. That is deliberate: step 15 swaps the images host,
+and absolute URLs in the database would make that a migration over every row.
+`resolveImageUrl()` resolves keys at read time in all three read paths, and passes
+absolute URLs through unchanged so the seeded catalogue keeps working.
+
+**Security, per §14h.** The format is decided by **magic bytes**, never by the
+declared `Content-Type`, which is whatever the client typed. SVG is refused and
+has no sniff at all — it is XML, it can carry `<script>`, and it would be served
+from a host we treat as trusted, so it is stored XSS rather than an image format.
+The sniffer is tested against SVG with a BOM, HTML, GIF, WAV/AVI (which share
+RIFF's first four bytes with WebP), truncated files, a renamed ZIP and PDF, and an
+SVG→PNG polyglot. `MAX_UPLOAD_MB` is enforced, and the permission check runs
+before the body is read.
+
+**Verified:** `/api/admin/media` returns 401 to an anonymous caller across 10
+probes; 317 unit tests green.
+
+**⚠ Outstanding, needs a human:** the end-to-end leg — sign in, upload, see the
+object land in `tavkil-images` and render on the storefront — needs a Google
+sign-in I cannot perform. Step 14b's Playwright admin project is where this
+becomes automated.
+
+<details><summary>Original step-10 instructions</summary>
 
 Port from `~/Documents/temsan`: `lib/image-resize.ts` (34 lines),
 `components/admin/ImageDropzone.tsx`, `app/api/admin/upload/route.ts`.
