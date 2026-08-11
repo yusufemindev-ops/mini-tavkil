@@ -30,6 +30,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "//": "The admin is a separate package with its own tsconfig and its own `@/*` root. Type-checking it from here resolves its imports against the Next app's src and produces nonsense errors — `pnpm admin:typecheck` covers it.",
-  "exclude": ["node_modules", "admin", "public"]
+  "//": "Excluded: `admin` is a separate package with its own tsconfig and its own `@/*` root, so checking it here resolves its imports against this app's src (use `pnpm admin:typecheck`). `worker.ts` imports .open-next/worker.js, which the OpenNext build generates AFTER `next build` — checking it here is a chicken-and-egg failure, and wrangler bundles it at deploy time.",
+  "exclude": ["node_modules", "admin", "public", "worker.ts"]
 }

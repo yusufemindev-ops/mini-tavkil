@@ -4,7 +4,8 @@
   // Pinned: wrangler was once authenticated to the temsan account, which made the
   // R2 buckets look "not found". Pinning fails loudly instead of deploying elsewhere.
   "account_id": "0b90963dada5e65530f075206f214362",
-  "main": ".open-next/worker.js",
+  // Wraps OpenNext's generated worker to add a `scheduled` export — see worker.ts.
+  "main": "worker.ts",
   "compatibility_date": "2026-08-10",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 
@@ -46,8 +47,12 @@
   // ─── Cron ──────────────────────────────────────────────────────────────────
   // Workers have no long-lived process. The FX refresh that was a Nest
   // WORKER_MODE loop runs here instead. Handler: src/app/api/cron/fx/route.ts
+  // Every 2 hours, not once a day. The handler no-ops if a refresh already
+  // succeeded today, so this is "one success per day plus automatic retries
+  // until it works" — a daily-only trigger would leave rates a full day stale
+  // after a single bad morning. 12 invocations/day is well inside the free plan.
   "triggers": {
-    "crons": ["0 6 * * *"],
+    "crons": ["0 */2 * * *"],
   },
 
   "vars": {

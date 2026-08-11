@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–11 done and deployed. Start at step 12.
+**Status:** steps 1–12 done and deployed. Start at step 13.
 
 **Needs you:** step 10's acceptance ends with an upload through the real admin,
 which needs a Google sign-in I can't perform. Everything up to that point is
@@ -596,7 +596,31 @@ link to their products and sibling categories. This matters more than the markup
 
 </details>
 
-## 12. FX cron
+## ✅ 12. FX cron — DONE
+
+`pnpm fx:refresh` fetched a real rate on the first run: **USD→TRY 47.695 via
+Frankfurter**, written to `fx_rates` with a `fx_rate_runs` row.
+
+**The cron is every 2 hours, not daily** — a change from what this step originally
+said. The handler no-ops when a refresh already succeeded today, so the effect is
+"one success per day plus automatic retries until it works". A daily-only trigger
+would leave rates a full day stale after one bad morning, which is exactly the
+behaviour Tavkil's 2-hourly `@Cron` plus `hasSucceededToday` was designed to avoid.
+
+**A custom Worker entry (`worker.ts`) was needed.** OpenNext generates a worker
+exporting only `fetch`; a Cron Trigger needs `scheduled`. Rather than patch
+generated output, `worker.ts` delegates `fetch` untouched and adds `scheduled`.
+Two consequences worth knowing:
+
+- `scheduled` runs outside any request, so OpenNext hasn't populated
+  `process.env` — the database client is built from the `env` argument explicitly.
+- `src/lib/db.ts` is now **lazy**. Reading `DATABASE_URL` at module scope made
+  `import { db }` throw during import, which broke unit tests four separate times
+  while porting the services and would have broken the cron handler too.
+- `worker.ts` is excluded from the Next tsconfig: it imports `.open-next/worker.js`,
+  which the OpenNext build generates _after_ `next build` runs.
+
+<details><summary>Original step-12 instructions</summary>
 
 Port `currencies/fx-rates.service.ts`: fetch USD→TRY from **Frankfurter**, fall back to
 `open.er-api`, retry every 2h until it succeeds, SAR/AED are USD-pegged and never
@@ -609,6 +633,8 @@ fetched. Rows land in `fx_rates` / `fx_rate_runs`.
 
 **Acceptance:** `pnpm fx:refresh` writes a row; Settings shows the run; USD and TRY both
 resolve in the admin.
+
+</details>
 
 ## 13. Contact form
 
