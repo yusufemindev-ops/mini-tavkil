@@ -74,6 +74,29 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={`${sansVariable} ${jetbrainsMono.variable} h-full antialiased`}
     >
+      <head>
+        {/*
+          esbuild's `keepNames` helper, defined before anything can call it.
+
+          OpenNext bundles the server with `keepNames: true`, which wraps every
+          function in `__name(fn, "fn")`. That is harmless inside a module, where
+          esbuild also emits the helper — but next-themes builds its no-flash
+          script by stringifying a function, so the instrumentation travels into
+          the inline <script> in the HTML while the helper does not. The script
+          threw `ReferenceError: __name is not defined` on the line before it
+          applied the theme, which meant the flash-prevention never ran in
+          production and every page load logged an error.
+
+          A no-op is the whole fix: `__name` only sets a function's `.name`, which
+          nothing here reads. Declared with `var` on `window` so it exists however
+          the script is scoped, and guarded so it never shadows a real helper.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: 'window.__name=window.__name||function(f){return f}',
+          }}
+        />
+      </head>
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider>
           <SkipLink />
