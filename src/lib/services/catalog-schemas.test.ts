@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
+  adminListProductsSchema,
   createCategorySchema,
   reorderSchema,
   SORT_STRATEGIES,
@@ -94,5 +96,39 @@ describe('category schemas', () => {
   it('requires at least one id to reorder', () => {
     expect(reorderSchema.safeParse({ ids: [] }).success).toBe(false);
     expect(reorderSchema.safeParse({ ids: [crypto.randomUUID()] }).success).toBe(true);
+  });
+});
+
+/**
+ * The admin's arrange view is the one caller that asks for a whole sub-category
+ * at once, and it asks for exactly CATEGORY_PRODUCTS_CAP rows. When this schema
+ * capped pageSize at 100 and that constant was 200, every load of
+ * "Arrange — <sub-category>" was a 422 and the screen said "0 published products"
+ * over a sub-category holding three. Nothing failed loudly; the list was simply
+ * empty, which reads as "there is nothing here".
+ *
+ * Read the constant out of the SPA source rather than restating it — a copied
+ * number is exactly what drifted the first time.
+ */
+describe('adminListProductsSchema pageSize', () => {
+  const CAP = Number(
+    /CATEGORY_PRODUCTS_CAP = (\d+)/.exec(
+      readFileSync('admin/src/features/products/queries.ts', 'utf8'),
+    )?.[1],
+  );
+
+  it('accepts the exact page size the arrange view requests', () => {
+    expect(CAP).toBeGreaterThan(0);
+    const parsed = adminListProductsSchema.safeParse({ pageSize: String(CAP) });
+    expect(parsed.success, `pageSize=${CAP} must be accepted`).toBe(true);
+  });
+
+  it('still refuses an unbounded page', () => {
+    expect(adminListProductsSchema.safeParse({ pageSize: '10000' }).success).toBe(false);
+    expect(adminListProductsSchema.safeParse({ pageSize: '0' }).success).toBe(false);
+  });
+
+  it('defaults to a small page when none is asked for', () => {
+    expect(adminListProductsSchema.parse({}).pageSize).toBe(20);
   });
 });

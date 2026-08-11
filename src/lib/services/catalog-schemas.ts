@@ -199,7 +199,16 @@ export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 /** Admin list query. Price sorts are fine here — the admin may see prices. */
 export const adminListProductsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  /**
+   * 200, not 100, because the admin's arrange view asks for exactly that.
+   *
+   * `CATEGORY_PRODUCTS_CAP` in admin/src/features/products/queries.ts is 200, so
+   * every load of "Arrange — <sub-category>" was a 422 and the page rendered
+   * "0 published products" above a sub-category holding three. The list is
+   * bounded either way; the two bounds simply have to agree, and the client's is
+   * the one with a reason behind it (one screen of drag-and-drop).
+   */
+  pageSize: z.coerce.number().int().min(1).max(200).default(20),
   search: z.string().trim().min(1).optional(),
   categoryId: z.string().uuid().optional(),
   supplierId: z.string().uuid().optional(),
