@@ -36,15 +36,20 @@ export function ProductCard({
       />
       <div className="flex flex-1 flex-col p-[15px]">
         {product.sku && (
-          <span className="text-muted-foreground font-mono text-[0.68rem]">{product.sku}</span>
+          <span dir="auto" className="text-muted-foreground font-mono text-[0.68rem]">
+            {product.sku}
+          </span>
         )}
-        <h3 className="text-foreground my-1 text-base font-bold leading-tight tracking-tight">
+        <h3
+          dir="auto"
+          className="text-foreground my-1 text-base font-bold leading-tight tracking-tight"
+        >
           {product.name}
         </h3>
         <div className="border-border-2 mt-auto flex items-center justify-between gap-2 border-t pt-3">
           <span className="text-muted-foreground text-[0.76rem]">
             {t('moq')}{' '}
-            <b dir="ltr" className="text-foreground font-mono" style={{ unicodeBidi: 'isolate' }}>
+            <b dir="auto" className="text-foreground font-mono">
               {product.moq}
             </b>
           </span>

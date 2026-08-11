@@ -117,9 +117,13 @@ export default async function ProductPage({
           <ProductGallery images={product.images} productName={product.name} />
 
           <div>
-            <h1 className="text-foreground text-3xl font-bold tracking-tight">{product.name}</h1>
+            <h1 dir="auto" className="text-foreground text-3xl font-bold tracking-tight">
+              {product.name}
+            </h1>
             {product.sku && (
-              <div className="text-muted-foreground mt-1 font-mono text-sm">{product.sku}</div>
+              <div dir="auto" className="text-muted-foreground mt-1 font-mono text-sm">
+                {product.sku}
+              </div>
             )}
 
             {/* Flex rather than grid so the facts fill the width evenly at any
@@ -138,7 +142,7 @@ export default async function ProductPage({
                     // paragraph the bidi algorithm reorders that to "L 12", which
                     // reads as a different quantity. Isolating the run keeps it
                     // in logical order without forcing the whole cell LTR.
-                    dir={fact.mono ? 'ltr' : undefined}
+                    dir="auto"
                     className={cn(
                       'text-foreground mt-1 text-sm',
                       fact.mono && 'font-mono rtl:text-right',
@@ -180,10 +184,13 @@ export default async function ProductPage({
                                   key={attribute.label}
                                   className="bg-card grid grid-cols-[40%_1fr]"
                                 >
-                                  <dt className="text-muted-foreground p-3.5 text-sm">
+                                  <dt dir="auto" className="text-muted-foreground p-3.5 text-sm">
                                     {attribute.label}
                                   </dt>
-                                  <dd className="text-foreground p-3.5 text-sm font-medium">
+                                  <dd
+                                    dir="auto"
+                                    className="text-foreground p-3.5 text-sm font-medium"
+                                  >
                                     {attribute.value}
                                   </dd>
                                 </div>
@@ -205,7 +212,10 @@ export default async function ProductPage({
                                     <dt className="text-muted-foreground p-3.5 text-sm">
                                       {fact.label}
                                     </dt>
-                                    <dd className="text-foreground p-3.5 font-mono text-sm font-medium">
+                                    <dd
+                                      dir="auto"
+                                      className="text-foreground p-3.5 font-mono text-sm font-medium"
+                                    >
                                       {fact.value}
                                     </dd>
                                   </div>

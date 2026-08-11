@@ -65,7 +65,8 @@ function FilterRow({ label, href, active }: { label: string; href: string; activ
           : 'text-foreground-soft hover:bg-background-2 hover:text-foreground',
       )}
     >
-      <span>{label}</span>
+      {/* A category name from the database — its direction follows the name. */}
+      <span dir="auto">{label}</span>
     </Link>
   );
 }

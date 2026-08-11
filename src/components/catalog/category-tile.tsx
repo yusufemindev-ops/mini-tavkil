@@ -36,9 +36,11 @@ export function CategoryTile({
         </div>
       )}
       <div className="min-w-0 flex-1 pe-6">
-        <h3 className="text-foreground mb-1 text-[1.12rem] font-bold">{category.name}</h3>
+        <h3 dir="auto" className="text-foreground mb-1 text-[1.12rem] font-bold">
+          {category.name}
+        </h3>
         {category.description && (
-          <p className="text-muted-foreground text-[0.85rem] leading-snug">
+          <p dir="auto" className="text-muted-foreground text-[0.85rem] leading-snug">
             {category.description}
           </p>
         )}

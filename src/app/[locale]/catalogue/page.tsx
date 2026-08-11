@@ -135,7 +135,10 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
                 return (
                   <section key={category.id} id={`cat-${category.id}`} className="scroll-mt-24">
                     <div className="border-border mb-4 flex items-center justify-between gap-4 border-b pb-3">
-                      <h2 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">
+                      <h2
+                        dir="auto"
+                        className="text-foreground text-xl font-bold tracking-tight sm:text-2xl"
+                      >
                         {category.name}
                       </h2>
                       <Link

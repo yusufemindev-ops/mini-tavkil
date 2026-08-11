@@ -194,7 +194,10 @@ export function ContactForm({
 
       {product && (
         <p className="text-muted-foreground text-sm">
-          {t('con_about_product')} <b className="text-foreground">{product.name}</b>
+          {t('con_about_product')}{' '}
+          <b dir="auto" className="text-foreground">
+            {product.name}
+          </b>
         </p>
       )}
 

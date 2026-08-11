@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { PublicOption } from '@/lib/queries/public-product';
+import { BidiText } from '@/components/bidi-text';
 
 /**
  * Buyer-facing option picker — Tavkil's, kept as it was.
@@ -59,8 +60,11 @@ export function ProductOptions({ options }: { options: PublicOption[] }) {
         return (
           <div key={option.name}>
             <div className="text-sm">
-              <span className="text-muted-foreground">{option.name}:</span>{' '}
-              <span className="text-foreground font-medium">{selectedLabel}</span>
+              {/* Option names and values are admin data, not UI copy — a
+                  measurement like "2 mm" reorders to "mm 2" in an RTL page
+                  unless its direction comes from the string itself. */}
+              <BidiText className="text-muted-foreground">{option.name}</BidiText>:{' '}
+              <BidiText className="text-foreground font-medium">{selectedLabel}</BidiText>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {option.values.map((value) => {
@@ -93,6 +97,7 @@ export function ProductOptions({ options }: { options: PublicOption[] }) {
                         ? 'border-primary text-foreground bg-primary/10'
                         : 'border-border text-muted-foreground hover:text-foreground',
                     )}
+                    dir="auto"
                   >
                     {value.label}
                   </button>

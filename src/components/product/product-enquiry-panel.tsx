@@ -42,11 +42,11 @@ export async function ProductEnquiryPanel({
     <section className="border-border bg-card mt-6 rounded-lg border p-5">
       <p className="text-muted-foreground text-sm">
         {t('pd_moq_note')}{' '}
-        {/* dir="ltr" on the quantity: bidi would otherwise reorder "12 L" to
-            "L 12" inside an Arabic sentence, which reads as a different value.
-            `unicode-bidi: isolate` (Tailwind's `isolate` is z-index, hence the
-            explicit style) keeps it from affecting the surrounding text. */}
-        <b dir="ltr" className="text-foreground font-mono" style={{ unicodeBidi: 'isolate' }}>
+        {/* Without a direction of its own, bidi reorders "12 L" to "L 12" inside
+            an Arabic sentence — which reads as a different value. `auto` takes the
+            direction from the string rather than assuming Latin, and makes the
+            element an isolate, so it cannot disturb the sentence around it. */}
+        <b dir="auto" className="text-foreground font-mono">
           {moq} {unit}
           {packSuffix}
         </b>

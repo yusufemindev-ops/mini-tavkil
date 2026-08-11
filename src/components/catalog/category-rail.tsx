@@ -51,7 +51,7 @@ export function CategoryRail({
               )}
             >
               <CategoryPill hint={`${item.slug ?? ''} ${item.label}`} active={item.active} />
-              {item.label}
+              <span dir="auto">{item.label}</span>
             </a>
           </li>
         ))}
