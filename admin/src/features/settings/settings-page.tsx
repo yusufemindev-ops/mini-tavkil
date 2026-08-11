@@ -15,7 +15,7 @@ import { SingleImageUpload } from '@/components/ui/media-upload';
 import { EditPageSkeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/api/client';
-import { SETTINGS_TABS } from './fixtures';
+import { SETTINGS_TABS } from './tabs';
 import { settingsKeys, updateSettings, useSettings, type GeneralSettings } from './queries';
 import {
   currenciesKeys,

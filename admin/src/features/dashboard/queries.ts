@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api/client';
-import type { ActivityItem, DashKpi, PublishStat } from './fixtures';
+import type { ActivityItem, DashKpi, PublishStat } from './types';
 
 // The dashboard endpoint returns all three sections in one payload so the page
 // can render with a single query/loading state.

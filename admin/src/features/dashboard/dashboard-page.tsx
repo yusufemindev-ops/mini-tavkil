@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { Panel, PanelBody, PanelHead } from '@/components/ui/panel';
 import { ActivitySkeleton, KpiCardSkeleton, Skeleton } from '@/components/ui/skeleton';
-import { type ActivityIcon, type ActivityTone, type ValueTone } from './fixtures';
+import { type ActivityIcon, type ActivityTone, type ValueTone } from './types';
 import { useDashboard } from './queries';
 
 // Resolve the fixture's serializable icon key to a lucide component.
