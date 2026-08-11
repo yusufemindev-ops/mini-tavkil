@@ -19,9 +19,9 @@ const buttonVariants = cva(
         // A fixed shade rather than a token: this variant sits on the always-orange
         // CTA panel in both themes, and --primary-ink flips to pale peach in dark
         // mode. The value is the light-mode --primary-ink, so it is the same brand
-        // orange Tavkil uses here — just the text-safe shade of it (4.79:1 on
+        // orange Tavkil uses here — just the text-safe shade of it (5.00:1 on
         // white, where the brand #f2640c is 3.18:1 and fails AA for a button label).
-        light: 'bg-white text-[#c24e06] hover:bg-footer hover:text-white',
+        light: 'bg-white text-[#bd4c06] hover:bg-footer hover:text-white',
         line: 'border-white/50 bg-transparent text-white hover:bg-white/15',
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive/20',

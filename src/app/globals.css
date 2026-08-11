@@ -18,13 +18,18 @@
   /* Tavkil's brand orange, exactly. It measures 3.18:1 on white, so it is a FILL
      colour, not a text colour: use it for button/badge backgrounds, the logo
      tile, rings and glows. Orange *text* on a light background uses
-     --primary-ink (4.79:1), which is what that token is for.
+     --primary-ink, which is what that token is for.
      This was briefly deepened to #c24e06 to clear axe; that fixed contrast by
      changing the brand on every page, which is the wrong trade. */
   --primary: #f2640c;
   --primary-foreground: #ffffff;
   --primary-soft: #fff1e7;
-  --primary-ink: #c24e06;
+  /* Tavkil's ink is #c24e06. Five points darker, because #c24e06 measures
+     4.33:1 on --primary-soft and 4.43:1 on --background-2 — both just under the
+     4.5 AA needs for normal text, and both are real surfaces this sits on (chips,
+     the section eyebrow). #bd4c06 clears 4.5 on white, soft AND background-2, and
+     the shift is imperceptible next to the fill it accompanies. */
+  --primary-ink: #bd4c06;
   --primary-hover: #ff7a1a;
   --secondary: #f5f6f8;
   --secondary-foreground: #15181d;
