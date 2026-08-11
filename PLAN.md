@@ -7,11 +7,11 @@ Work top to bottom. Commit and push to `main` after every step.
 remaining item needs a credential or a browser session only you have.
 
 **Needs you before launch:** Turnstile keys, the Cloudflare Email Service binding,
-and a Google sign-in for the admin upload check. See steps 10, 13 and 15.
+all of which need the domain and your credentials. See step 15.
 
-**Needs you:** step 10's acceptance ends with an upload through the real admin,
-which needs a Google sign-in I can't perform. Everything up to that point is
-built, deployed and tested — see step 10.
+**Needs you:** only step 15 now — attaching `tavkil.com`, flipping
+`SITE_INDEXABLE`, swapping the R2 domain and submitting the sitemaps. Everything
+before it is built, deployed and tested, the admin upload included.
 
 Live: https://mini-tavkil.yusufemin-dev.workers.dev
 
@@ -974,9 +974,12 @@ project. 14a's leak suite and 14c's view-source pass are the real security tests
 - [x] Admin reachable and Google-gated; catalogue editable via 39 guarded routes
 - [x] R2 → storefront proven: 243 product photographs served from the bucket and
       rendering on category and product pages in all three locales
-- [ ] The _admin upload_ path (browser canvas → WebP → R2 binding) is still
-      unexercised — **needs a Google sign-in**. The images above were placed by
-      `pnpm import:temsan`, which writes to the same bucket by a different route
+- [x] The _admin upload_ path is covered end to end — a 1600×1200 PNG picked in
+      the real dropzone arrives in R2 as WebP, smaller than it went in, and
+      survives a save (`e2e/admin/media-upload.spec.ts`). This is the half the
+      import could never prove: Workers cannot run Sharp, so the conversion runs
+      on a canvas in the browser, and a silent no-op there still looks like
+      success while the bucket fills with full-size originals
 - [x] Lighthouse (product page, mobile): A11y **97**, Best Practices **100**,
       Agentic Browsing **100**. Two failures remain and both are decisions:
       `is-crawlable` is the pre-launch `noindex`, and `color-contrast` is the
@@ -994,9 +997,10 @@ project. 14a's leak suite and 14c's view-source pass are the real security tests
       rendered words on the same product
 - [x] Security headers present; SVG upload rejected (byte-sniffed).
       Secrets: none reach the browser; build-artifact hygiene noted in GO-LIVE.md
-- [x] Playwright green against the deployed URL — 53 public specs
-      (a11y, responsive, visual, console, leak, category sort).
-      **Admin flows need a saved session** — `e2e/admin.setup.ts`
+- [x] Playwright green against the deployed URL — 53 public specs (a11y,
+      responsive, visual, console, leak, category sort) and 29 admin specs
+      (API contract, CRUD walkthrough, media upload), leaving no `e2e-` rows
+      behind. Admin runs need a saved session — `e2e/admin.setup.ts`
 - [x] Vitest: 399 passing
 - [x] Bundle **2.47 MB** gzipped of 3 MB
 - ~~Contact form sends a real email~~ — the form was removed. The contact page
