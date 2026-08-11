@@ -29,7 +29,9 @@ for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
 
       for (const path of PATHS) {
-        await page.goto(`/${locale}${path}`, { waitUntil: 'networkidle' });
+        // `load` rather than `networkidle` — see a11y.spec.ts; networkidle is not
+        // reachable under parallel load and made the suite flaky.
+        await page.goto(`/${locale}${path}`, { waitUntil: 'load' });
 
         const overflow = await page.evaluate(
           () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -69,7 +71,7 @@ test('form inputs are at least 16px on mobile — iOS zooms below that', async (
   // does not zoom back out on blur. The contact form was 15.2px and the admin's
   // 14px, so every field trapped the user at 1.3× until they pinched out.
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto('/en/contact', { waitUntil: 'networkidle' });
+  await page.goto('/en/contact', { waitUntil: 'load' });
 
   const small = await page.evaluate(() =>
     [...document.querySelectorAll('input, textarea, select')]
@@ -116,7 +118,7 @@ test('the catalogue rail becomes a dropdown below lg', async ({ page }) => {
 for (const path of ['', '/catalogue', '/about', '/contact']) {
   test(`tap targets on a phone are big enough to hit${path || ' (home)'}`, async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(`/en${path}`, { waitUntil: 'networkidle' });
+    await page.goto(`/en${path}`, { waitUntil: 'load' });
 
     // 24px is the WCAG 2.2 minimum (2.5.8). Inline links inside a paragraph are
     // exempt — the rule targets standalone controls. This found the hero's 9px

@@ -45,7 +45,12 @@ function isAcceptedBrandContrast(node: { any: { id: string; data?: unknown }[] }
 }
 
 async function scan(page: import('@playwright/test').Page, path: string) {
-  await page.goto(path, { waitUntil: 'networkidle' });
+  // `load`, not `networkidle`. Networkidle waits for 500ms of silence, which five
+  // workers hammering a remote Worker never reliably reach — the suite failed a
+  // different one or two pages every run and passed 17/17 serially. axe needs a
+  // parsed DOM and applied styles, which `load` guarantees; network quiet is
+  // neither necessary nor obtainable here.
+  await page.goto(path, { waitUntil: 'load' });
   const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
 
   // Drop only the nodes covered by the brand exception; a violation whose nodes
