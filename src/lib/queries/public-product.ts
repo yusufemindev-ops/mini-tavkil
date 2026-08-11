@@ -273,6 +273,81 @@ export async function publicProduct(slug: string, locale: Locale): Promise<Publi
   });
 }
 
+/**
+ * Attributes and options for MANY products in two queries.
+ *
+ * `llms-full.txt` used to re-read every product with `publicProduct()` to get
+ * these — roughly five queries per row. At twelve products that is ~60 outbound
+ * fetches from a single Worker invocation, past Cloudflare's subrequest limit,
+ * and the route returned a 500 with `fetch failed`. It also broke the build,
+ * where the same route is prerendered.
+ *
+ * Two set-based reads instead, regardless of catalogue size.
+ */
+export async function publicDetailsFor(
+  productIds: string[],
+  locale: Locale,
+): Promise<{
+  attributes: Map<string, PublicAttribute[]>;
+  options: Map<string, PublicOption[]>;
+}> {
+  const attributes = new Map<string, PublicAttribute[]>();
+  const options = new Map<string, PublicOption[]>();
+  if (productIds.length === 0) return { attributes, options };
+
+  const [attributeRows, optionRows] = await Promise.all([
+    db
+      .select({
+        productId: productAttributes.productId,
+        label: productAttributes.attrName,
+        value: productAttributes.attrValue,
+      })
+      .from(productAttributes)
+      .where(
+        and(inArray(productAttributes.productId, productIds), eq(productAttributes.locale, locale)),
+      )
+      .orderBy(asc(productAttributes.sortOrder)),
+    db
+      .select({
+        productId: productOptions.productId,
+        optionId: productOptions.id,
+        name: productOptions.name,
+        type: productOptions.type,
+        label: productOptionValues.label,
+        imageUrl: productOptionValues.imageUrl,
+        colorHex: productOptionValues.colorHex,
+      })
+      .from(productOptions)
+      .leftJoin(productOptionValues, eq(productOptionValues.optionId, productOptions.id))
+      .where(and(inArray(productOptions.productId, productIds), eq(productOptions.isVisible, true)))
+      .orderBy(asc(productOptions.sortOrder), asc(productOptionValues.sortOrder)),
+  ]);
+
+  for (const row of attributeRows) {
+    const list = attributes.get(row.productId) ?? [];
+    list.push({ label: row.label, value: row.value });
+    attributes.set(row.productId, list);
+  }
+
+  const optionByKey = new Map<string, PublicOption>();
+  for (const row of optionRows) {
+    const key = row.optionId;
+    let option = optionByKey.get(key);
+    if (!option) {
+      option = { name: row.name, type: row.type, values: [] };
+      optionByKey.set(key, option);
+      const list = options.get(row.productId) ?? [];
+      list.push(option);
+      options.set(row.productId, list);
+    }
+    if (row.label !== null) {
+      option.values.push({ label: row.label, imageUrl: row.imageUrl, colorHex: row.colorHex });
+    }
+  }
+
+  return { attributes, options };
+}
+
 async function optionsFor(productId: string): Promise<PublicOption[]> {
   const rows = await db
     .select({

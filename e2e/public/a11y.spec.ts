@@ -79,17 +79,19 @@ for (const locale of LOCALES) {
   test(`${locale}: contact is clean`, async ({ page }) => scan(page, `/${locale}/contact`));
 
   test(`${locale}: category and product are clean`, async ({ page }) => {
+    // Three levels: the catalogue links subcategories, and products live one
+    // level below that. Following the chain is what a crawler does.
     await page.goto(`/${locale}/catalogue`);
     const category = await page
       .locator(`a[href^="/${locale}/catalogue/"]`)
       .first()
       .getAttribute('href');
+    if (category) await scan(page, category);
+
     const product = await page
       .locator(`a[href^="/${locale}/product/"]`)
       .first()
       .getAttribute('href');
-
-    if (category) await scan(page, category);
     if (product) await scan(page, product);
   });
 }

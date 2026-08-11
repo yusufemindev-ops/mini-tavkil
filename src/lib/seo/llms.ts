@@ -2,7 +2,7 @@ import { routing } from '@/i18n/routing';
 import { env } from '@/lib/env';
 import {
   publicCategories,
-  publicProduct,
+  publicDetailsFor,
   publicProducts,
   type Locale,
 } from '@/lib/queries/public-product';
@@ -73,44 +73,46 @@ export async function buildLlmsFullTxt(): Promise<string> {
     publicProducts({}, 'en' as Locale),
   ]);
 
-  // The list read omits attributes and options (they'd be a query per row on a
-  // grid); this file wants them, so each product is re-read individually. It is
-  // cached for an hour, so that cost is paid once.
-  const detailed = await Promise.all(
-    products.map((product) => publicProduct(product.slug, 'en' as Locale)),
+  // The list read omits attributes and options (they would be a query per row on
+  // a grid), and this file wants both. Fetching them per product meant ~5 queries
+  // × every product from ONE Worker invocation — past Cloudflare's subrequest
+  // limit at a dozen products, so the route 500'd with `fetch failed` and took
+  // the build's prerender down with it. Two set-based reads instead, flat in the
+  // number of products.
+  const { attributes: attributesBy, options: optionsBy } = await publicDetailsFor(
+    products.map((product) => product.id),
+    'en' as Locale,
   );
 
-  const sections = detailed
-    .filter((product) => product !== null)
-    .map((product) => {
-      const facts: string[] = [];
-      if (product.sku) facts.push(`- SKU: ${product.sku}`);
-      if (product.category) facts.push(`- Category: ${product.category.name}`);
-      if (product.brandName) facts.push(`- Brand: ${product.brandName}`);
-      if (product.countryOfOrigin) facts.push(`- Country of origin: ${product.countryOfOrigin}`);
-      facts.push(`- Minimum order: ${product.moq} ${product.unit}`);
-      if (product.boxQuantity) facts.push(`- Units per box: ${product.boxQuantity}`);
-      for (const attribute of product.attributes) {
-        facts.push(`- ${attribute.label}: ${attribute.value}`);
-      }
-      for (const option of product.options) {
-        facts.push(`- ${option.name}: ${option.values.map((v) => v.label).join(', ')}`);
-      }
-      facts.push(`- Pricing: by quote — contact ${base}/en/contact`);
+  const sections = products.map((product) => {
+    const facts: string[] = [];
+    if (product.sku) facts.push(`- SKU: ${product.sku}`);
+    if (product.category) facts.push(`- Category: ${product.category.name}`);
+    if (product.brandName) facts.push(`- Brand: ${product.brandName}`);
+    if (product.countryOfOrigin) facts.push(`- Country of origin: ${product.countryOfOrigin}`);
+    facts.push(`- Minimum order: ${product.moq} ${product.unit}`);
+    if (product.boxQuantity) facts.push(`- Units per box: ${product.boxQuantity}`);
+    for (const attribute of attributesBy.get(product.id) ?? []) {
+      facts.push(`- ${attribute.label}: ${attribute.value}`);
+    }
+    for (const option of optionsBy.get(product.id) ?? []) {
+      facts.push(`- ${option.name}: ${option.values.map((v) => v.label).join(', ')}`);
+    }
+    facts.push(`- Pricing: by quote — contact ${base}/en/contact`);
 
-      return [
-        `### ${product.name}`,
-        '',
-        `${base}/en/product/${product.slug}`,
-        '',
-        product.description || '',
-        product.description ? '' : null,
-        ...facts,
-        '',
-      ]
-        .filter((line) => line !== null)
-        .join('\n');
-    });
+    return [
+      `### ${product.name}`,
+      '',
+      `${base}/en/product/${product.slug}`,
+      '',
+      product.description || '',
+      product.description ? '' : null,
+      ...facts,
+      '',
+    ]
+      .filter((line) => line !== null)
+      .join('\n');
+  });
 
   return [
     siteHeader(base),

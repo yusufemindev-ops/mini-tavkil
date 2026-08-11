@@ -36,8 +36,38 @@ async function assertClean(html: string, where: string) {
   }
 }
 
+/**
+ * Find a real category and product URL for a locale.
+ *
+ * The catalogue is three levels — category → subcategory → product — so the
+ * catalogue page links SUBCATEGORIES, not products. Following the first category
+ * link and picking a product from there is the traversal a crawler makes, which
+ * is also why it belongs in the test: if a product stops being reachable this
+ * way, it has stopped being reachable at all.
+ */
+async function findCategoryAndProduct(
+  request: import('@playwright/test').APIRequestContext,
+  locale: string,
+): Promise<{ category?: string; product?: string }> {
+  const catalogue = await (await request.get(`/${locale}/catalogue`)).text();
+  const category = catalogue.match(new RegExp(`href="(/${locale}/catalogue/[^"]+)"`))?.[1];
+  if (!category) return {};
+
+  // A product may live on the category page or one level deeper.
+  const categoryHtml = await (await request.get(category)).text();
+  const productPattern = new RegExp(`href="(/${locale}/product/[^"]+)"`);
+  let product = categoryHtml.match(productPattern)?.[1];
+  if (!product) {
+    const deeper = categoryHtml.match(new RegExp(`href="(/${locale}/catalogue/[^"]+)"`))?.[1];
+    if (deeper && deeper !== category) {
+      product = (await (await request.get(deeper)).text()).match(productPattern)?.[1];
+    }
+  }
+  return { category, product };
+}
+
 for (const locale of LOCALES) {
-  test(`${locale}: no price or supplier in any public page's source`, async ({ page, request }) => {
+  test(`${locale}: no price or supplier in any public page's source`, async ({ request }) => {
     const staticPaths = [
       `/${locale}`,
       `/${locale}/catalogue`,
@@ -46,21 +76,16 @@ for (const locale of LOCALES) {
     ];
 
     // Discover a real category and product for this locale — slugs are localised,
-    // so they can't be hardcoded.
-    await page.goto(`/${locale}/catalogue`);
-    const productHref = await page
-      .locator(`a[href^="/${locale}/product/"]`)
-      .first()
-      .getAttribute('href');
-    const categoryHref = await page
-      .locator(`a[href^="/${locale}/catalogue/"]`)
-      .first()
-      .getAttribute('href');
+    // so they cannot be hardcoded, and the tree is three levels deep.
+    const { category: categoryHref, product: productHref } = await findCategoryAndProduct(
+      request,
+      locale,
+    );
 
     const paths = [...staticPaths, categoryHref, productHref].filter((path): path is string =>
       Boolean(path),
     );
-    expect(paths.length, 'catalogue should link to a category and a product').toBeGreaterThan(4);
+    expect(paths.length, 'catalogue should lead to a category and a product').toBeGreaterThan(5);
 
     for (const path of paths) {
       // request.get() fetches the raw server HTML — not the hydrated DOM — which
@@ -73,11 +98,10 @@ for (const locale of LOCALES) {
 }
 
 test('the JSON-LD Product carries no offers', async ({ request }) => {
-  const catalogue = await (await request.get('/en/catalogue')).text();
-  const slug = catalogue.match(/href="\/en\/product\/([^"]+)"/)?.[1];
-  expect(slug, 'a product should be linked from the catalogue').toBeTruthy();
+  const { product } = await findCategoryAndProduct(request, 'en');
+  expect(product, 'a product should be reachable from the catalogue').toBeTruthy();
 
-  const html = await (await request.get(`/en/product/${slug}`)).text();
+  const html = await (await request.get(product!)).text();
   expect(html).toContain('"@type":"Product"');
   expect(html).toContain('"@type":"BreadcrumbList"');
   // Inventing a price to satisfy rich results is the structured-data spam that
