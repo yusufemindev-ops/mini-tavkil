@@ -16,6 +16,7 @@ import {
 } from '@/lib/db/schema';
 import { conflict, invalid, isUniqueViolation, notFound } from '@/lib/api/errors';
 import { resolveImageUrl } from '@/lib/media/image-url';
+import { revalidateProduct } from '@/lib/cache';
 import { pingIndexNow } from '@/lib/seo/ping';
 import {
   assertProductPublishable,
@@ -241,7 +242,11 @@ export async function createProduct(
     .returning();
 
   await applyChildren(row.id, input, actorId);
-  return getProduct(row.id);
+  const revalidated = await getProduct(row.id);
+  // Push it onto the storefront now. Without this the change waits out the
+  // page's revalidate window — up to an hour — before a visitor sees it.
+  revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 export async function updateProduct(
@@ -291,13 +296,18 @@ export async function updateProduct(
   }
 
   await applyChildren(id, input, actorId);
-  return getProduct(id);
+  const revalidated = await getProduct(id);
+  // Push it onto the storefront now. Without this the change waits out the
+  // page's revalidate window — up to an hour — before a visitor sees it.
+  revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 export async function deleteProduct(id: string): Promise<{ id: string }> {
   await findActive(id);
   const now = new Date().toISOString();
   await db.update(products).set({ deletedAt: now, updatedAt: now }).where(eq(products.id, id));
+  revalidateProduct();
   return { id };
 }
 
@@ -334,7 +344,11 @@ export async function publishProduct(id: string): Promise<AdminProduct> {
 
   const published = await getProduct(id);
   pingIndexNow({ type: 'product', slugs: slugMap(published.translations) });
-  return published;
+  const revalidated = published;
+  // Push it onto the storefront now. Without this the change waits out the
+  // page's revalidate window — up to an hour — before a visitor sees it.
+  revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 export async function unpublishProduct(id: string): Promise<AdminProduct> {
@@ -348,7 +362,11 @@ export async function unpublishProduct(id: string): Promise<AdminProduct> {
   // promptly is what removes it from the index rather than leaving a dead result.
   const updated = await getProduct(id);
   pingIndexNow({ type: 'product', slugs: slugMap(updated.translations) });
-  return updated;
+  const revalidated = updated;
+  // Push it onto the storefront now. Without this the change waits out the
+  // page's revalidate window — up to an hour — before a visitor sees it.
+  revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 /** Locale → slug, for the URL set a publish-state change affects. */
@@ -363,7 +381,11 @@ export async function archiveProduct(id: string): Promise<AdminProduct> {
     .update(products)
     .set({ status: ARCHIVED, updatedAt: new Date().toISOString() })
     .where(eq(products.id, id));
-  return getProduct(id);
+  const revalidated = await getProduct(id);
+  // Push it onto the storefront now. Without this the change waits out the
+  // page's revalidate window — up to an hour — before a visitor sees it.
+  revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 /** Restore an archived product to draft — never straight back to published. */
@@ -374,7 +396,11 @@ export async function restoreProduct(id: string): Promise<AdminProduct> {
     .update(products)
     .set({ status: DRAFT, updatedAt: new Date().toISOString() })
     .where(eq(products.id, id));
-  return getProduct(id);
+  const revalidated = await getProduct(id);
+  // Push it onto the storefront now. Without this the change waits out the
+  // page's revalidate window — up to an hour — before a visitor sees it.
+  revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 /**
@@ -410,6 +436,7 @@ export async function reorderProducts(categoryId: string, ids: string[]): Promis
       .where(eq(products.id, id)),
   );
   await db.batch(updates as [(typeof updates)[number], ...typeof updates]);
+  revalidateProduct();
   return { ok: true };
 }
 

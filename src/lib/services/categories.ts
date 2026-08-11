@@ -14,6 +14,7 @@ import type {
   TranslationInput,
   UpdateCategoryInput,
 } from '@/lib/services/catalog-schemas';
+import { revalidateCategory } from '@/lib/cache';
 
 /**
  * Category service, ported from Tavkil's Nest service.
@@ -71,7 +72,11 @@ export async function createCategory(input: CreateCategoryInput): Promise<AdminC
   if (input.translations?.length) {
     await upsertTranslations(row.id, input.translations);
   }
-  return getCategory(row.id);
+  const revalidated = await getCategory(row.id);
+  // Straight onto the storefront; otherwise the catalogue shows the old tree
+  // until the revalidate window expires.
+  revalidateCategory(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 export async function updateCategory(
@@ -97,7 +102,11 @@ export async function updateCategory(
   }
   if (input.translations?.length) await upsertTranslations(id, input.translations);
 
-  return getCategory(id);
+  const revalidated = await getCategory(id);
+  // Straight onto the storefront; otherwise the catalogue shows the old tree
+  // until the revalidate window expires.
+  revalidateCategory(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 /** Soft delete. The row stays so historical references keep resolving. */
@@ -107,6 +116,7 @@ export async function deleteCategory(id: string): Promise<{ id: string }> {
     .update(categories)
     .set({ deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
     .where(eq(categories.id, id));
+  revalidateCategory();
   return { id };
 }
 
@@ -136,6 +146,7 @@ export async function reorderCategories(ids: string[]): Promise<{ ok: true }> {
       .where(eq(categories.id, id)),
   );
   await db.batch(updates as [(typeof updates)[number], ...typeof updates]);
+  revalidateCategory();
   return { ok: true };
 }
 
@@ -149,7 +160,11 @@ export async function publishCategory(id: string): Promise<AdminCategory> {
 
   const published = await getCategory(id);
   pingIndexNow({ type: 'category', slugs: slugMap(published.translations) });
-  return published;
+  const revalidated = published;
+  // Straight onto the storefront; otherwise the catalogue shows the old tree
+  // until the revalidate window expires.
+  revalidateCategory(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 export async function unpublishCategory(id: string): Promise<AdminCategory> {
@@ -163,7 +178,11 @@ export async function unpublishCategory(id: string): Promise<AdminCategory> {
   // what clears it from the index rather than leaving a dead result.
   const updated = await getCategory(id);
   pingIndexNow({ type: 'category', slugs: slugMap(updated.translations) });
-  return updated;
+  const revalidated = updated;
+  // Straight onto the storefront; otherwise the catalogue shows the old tree
+  // until the revalidate window expires.
+  revalidateCategory(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
+  return revalidated;
 }
 
 /** Locale → slug, for the URL set a publish-state change affects. */

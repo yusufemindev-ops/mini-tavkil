@@ -28,6 +28,19 @@
 
   "observability": { "enabled": true },
 
+  // ─── D1: the ISR tag cache ─────────────────────────────────────────────────
+  // Without a tag cache OpenNext resolves `tagCache` to "dummy", which makes
+  // `revalidatePath()` a SILENT no-op — an admin publishing a product would wait
+  // out the full `revalidate` window (an hour) before the storefront showed it.
+  // D1 is on the free plan and holds only tag→path rows, so this costs nothing.
+  "d1_databases": [
+    {
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "tavkil-tags",
+      "database_id": "c37acd64-984d-461e-9987-1261ecf05ee4",
+    },
+  ],
+
   // ─── R2 ────────────────────────────────────────────────────────────────────
   // No S3 credentials anywhere: the bucket is a binding.
   // ONE bucket, no dev/preview variant — local dev writes to the real bucket

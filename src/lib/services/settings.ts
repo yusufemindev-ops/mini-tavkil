@@ -8,6 +8,7 @@ import {
   type GeneralSettings,
   type UpdateSettingsInput,
 } from '@/lib/services/settings-schema';
+import { revalidateSettings } from '@/lib/cache';
 
 export { generalSettingsSchema, updateSettingsSchema };
 export type { GeneralSettings, UpdateSettingsInput };
@@ -58,5 +59,9 @@ export async function updateGeneralSettings(
       set: { value: merged, updatedByUserId: actorId, updatedAt: now },
     });
 
-  return merged;
+  const updated = merged;
+  // Site name, logo and contact details render in the header and footer of
+  // every public page, so this one invalidates the whole storefront.
+  revalidateSettings();
+  return updated;
 }

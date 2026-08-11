@@ -110,6 +110,28 @@ export const auth = betterAuth({
         },
       },
     },
+    session: {
+      create: {
+        /**
+         * Stamp `lastSeenAt`.
+         *
+         * Nothing wrote this column, so the users table reported "Invited · Not
+         * signed in yet" about an admin who was signed in and looking at the
+         * page — `status` is derived from it (services/rbac.ts), so an empty
+         * column made the whole column wrong rather than merely blank.
+         *
+         * On session create, not on every request: one write per sign-in answers
+         * "is this account in use", and writing on every request would add a
+         * round-trip to the hot path for nothing.
+         */
+        after: async (session) => {
+          await db
+            .update(authUser)
+            .set({ lastSeenAt: new Date().toISOString() })
+            .where(eq(authUser.id, session.userId));
+        },
+      },
+    },
   },
   // Where a failed OAuth round-trip lands. Without this, Better Auth redirects to
   // its own /api/auth/error, which redirects to `/`, which the i18n middleware
