@@ -1,3 +1,4 @@
+import { Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface CategoryRailItem {
@@ -5,14 +6,19 @@ export interface CategoryRailItem {
   id: string;
   label: string;
   href: string;
+  /** Category image; fills the icon pill when set. */
+  imageUrl?: string | null;
   active?: boolean;
 }
 
-// Prototype `.dir-rail` — a carded, sticky category navigation rail. Items can
-// point to in-page anchors (#cat-<id>) or to routes.
+// Prototype `.dir-rail` — a carded, sticky category navigation rail with icon
+// pills. Items can point to in-page anchors (#cat-<id>) or to routes.
 //
-// Tavkil rendered a per-category icon from a fixed six-value enum. Categories are
-// database rows here, so there is no enum to key off — the rail is text only.
+// The pill is Tavkil's, unchanged. What fills it isn't: Tavkil keyed a hand-drawn
+// icon off a fixed six-value CategoryId enum, and categories are database rows
+// here — a row named "Hydraulic seals" has no enum member to look up. So the pill
+// shows the category's own uploaded image, and falls back to a single neutral
+// glyph rather than guessing an icon from the name.
 export function CategoryRail({
   title,
   items,
@@ -44,11 +50,34 @@ export function CategoryRail({
                   : 'text-foreground-soft hover:bg-background-2 hover:text-foreground',
               )}
             >
+              <CategoryPill imageUrl={item.imageUrl} active={item.active} />
               {item.label}
             </a>
           </li>
         ))}
       </ul>
     </nav>
+  );
+}
+
+/** Shared with the mobile dropdown so both navigations look the same. */
+export function CategoryPill({ imageUrl, active }: { imageUrl?: string | null; active?: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'grid size-[30px] flex-none place-items-center overflow-hidden rounded-lg transition-colors',
+        active
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-primary-soft text-primary group-hover:bg-primary group-hover:text-primary-foreground',
+      )}
+    >
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt="" draggable={false} className="size-full object-cover" />
+      ) : (
+        <Package className="size-[17px]" />
+      )}
+    </span>
   );
 }

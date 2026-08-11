@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import type { CategoryRailItem } from '@/components/catalog/category-rail';
+import { CategoryPill, type CategoryRailItem } from '@/components/catalog/category-rail';
 
 // Mobile/tablet counterpart of the CategoryRail: a full-width dropdown that jumps
 // to the in-page category sections (same anchor links). Shown below lg where the
@@ -41,6 +41,7 @@ export function CategoryMenuMobile({
                   onClick={() => setOpen(false)}
                   className="text-foreground-soft hover:bg-background-2 hover:text-foreground group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[0.92rem] font-medium transition-colors"
                 >
+                  <CategoryPill imageUrl={item.imageUrl} />
                   {item.label}
                 </a>
               </li>

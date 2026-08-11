@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils';
  * Image tile with a tinted brand gradient underneath, matching the prototype `.ph`.
  *
  * Two differences from Tavkil's version. It has no picsum.photos placeholder — a
- * production page must not fetch images from a third party, and step 14h's CSP
- * restricts `img-src` to self + the R2 host, which would block it anyway. And the
+ * production page must not fetch decorative images from a third party, and step
+ * 14h's CSP names its `img-src` hosts explicitly. And the
  * gradient is not decoration: it *is* the empty state, so a product whose image
  * hasn't been uploaded yet renders as a deliberate brand-coloured tile rather than
  * a hole.
