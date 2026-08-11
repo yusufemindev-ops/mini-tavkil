@@ -692,16 +692,16 @@ without a valid token are rejected.
 
 ## ✅ 14. Verification & hardening — DONE (results below)
 
-| Pass              | Result                                                                                                    |
-| ----------------- | --------------------------------------------------------------------------------------------------------- |
-| 14a Vitest        | 360 unit + 32 integration, green. Leak walker runs every public query in 3 locales.                       |
-| 14b Playwright    | 22/22 against the **deployed** URL. Admin flows still need a Google session — see below.                  |
-| 14c Browser sweep | 22 pages × view-source: zero price/supplier occurrences. Console clean, no overflow at 375px.             |
-| 14d UI rules      | No inline SVG except 4 brand marks lucide doesn't ship; no hardcoded strings; empty states on every list. |
+| Pass              | Result                                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 14a Vitest        | 360 unit + 32 integration, green. Leak walker runs every public query in 3 locales.                               |
+| 14b Playwright    | 22/22 against the **deployed** URL. Admin flows still need a Google session — see below.                          |
+| 14c Browser sweep | 22 pages × view-source: zero price/supplier occurrences. Console clean, no overflow at 375px.                     |
+| 14d UI rules      | No inline SVG except 4 brand marks lucide doesn't ship; no hardcoded strings; empty states on every list.         |
 | 14e Accessibility | WCAG 2.1 AA, six pages × three locales including Arabic. 87 → 3–5 nodes/page, all the accepted brand-orange fill. |
-| 14f Lighthouse    | A11y **100**, Best Practices **100**, SEO 66→**100** with indexing on. LCP **292 ms**, CLS **0.00**.      |
-| 14g SEO substance | JSON-LD server-rendered; canonical per-locale; hreflang reciprocal + x-default; real `lastmod`.           |
-| 14h Security      | 7 headers live. Secrets-in-bundle finding recorded below.                                                 |
+| 14f Lighthouse    | A11y **100**, Best Practices **100**, SEO 66→**100** with indexing on. LCP **292 ms**, CLS **0.00**.              |
+| 14g SEO substance | JSON-LD server-rendered; canonical per-locale; hreflang reciprocal + x-default; real `lastmod`.                   |
+| 14h Security      | 7 headers live. Secrets-in-bundle finding recorded below.                                                         |
 
 **The a11y pass earned its place — but its first fix was wrong.** 87 contrast
 violations, all from the brand orange: white on it measured 2.61–3.18:1 where 4.5
@@ -968,20 +968,39 @@ project. 14a's leak suite and 14c's view-source pass are the real security tests
 ### Definition of done — where each item stands
 
 - [x] All 6 storefront routes live in EN/TR/AR, RTL correct in AR
-- [x] Zero price or supplier occurrences in any public page's **source** — 22 pages
+- [x] Zero price or supplier occurrences in any public page's **source** — 6 routes
+      × 3 locales plus both llms files, asserted against the raw HTML a crawler
+      sees, with the supplier names read from the database rather than hardcoded
 - [x] Admin reachable and Google-gated; catalogue editable via 39 guarded routes
-- [ ] Image upload → R2 → renders on the storefront — **needs a Google sign-in**
-- [x] Lighthouse: A11y **100**, Best Practices **100**, LCP 292 ms, CLS 0.00.
-      SEO 66 on workers.dev is `is-crawlable` only; **100** with indexing on
-- [x] axe: **zero** WCAG 2.1 AA violations (was 87)
-- [x] Sitemap has real `lastmod` — 45 row timestamps, none today.
+- [x] R2 → storefront proven: 243 product photographs served from the bucket and
+      rendering on category and product pages in all three locales
+- [ ] The _admin upload_ path (browser canvas → WebP → R2 binding) is still
+      unexercised — **needs a Google sign-in**. The images above were placed by
+      `pnpm import:temsan`, which writes to the same bucket by a different route
+- [x] Lighthouse (product page, mobile): A11y **97**, Best Practices **100**,
+      Agentic Browsing **100**. Two failures remain and both are decisions:
+      `is-crawlable` is the pre-launch `noindex`, and `color-contrast` is the
+      Tavkil brand orange, kept deliberately. SEO **69** is the same `noindex`
+- [x] axe: **zero** WCAG 2.1 AA violations across 6 routes × 3 locales
+- [x] Every public page type is edge-cached — category and product were
+      `no-cache, no-store` until the `searchParams` read and the missing
+      `generateStaticParams` were fixed; both now answer `x-nextjs-cache: HIT`
+- [x] Sitemap has real `lastmod` — 291 entity rows (246 product + 45 category
+      URLs) plus 12 static, every timestamp from the row's own `updated_at`.
       Rich Results **needs a crawlable URL** → after step 15
+- [x] Structured data on every public page type: Product (no `offers`),
+      CollectionPage + ItemList, BreadcrumbList, Organization, WebSite
+- [x] All 82 products carry long-form copy in EN, TR and AR — 215 / 206 / 205
+      rendered words on the same product
 - [x] Security headers present; SVG upload rejected (byte-sniffed).
       Secrets: none reach the browser; build-artifact hygiene noted in GO-LIVE.md
-- [x] Public Playwright flows green against the deployed URL (22/22).
+- [x] Playwright green against the deployed URL — 53 public specs
+      (a11y, responsive, visual, console, leak, category sort).
       **Admin flows need a saved session** — `e2e/admin.setup.ts`
-- [x] Bundle **2.37 MB** gzipped of 3 MB
-- [ ] Contact form sends a real email — **needs Turnstile keys + the email binding**
+- [x] Vitest: 399 passing
+- [x] Bundle **2.47 MB** gzipped of 3 MB
+- ~~Contact form sends a real email~~ — the form was removed. The contact page
+  is address, phone and WhatsApp; there is no form and no Turnstile dependency
 
 ---
 
@@ -992,7 +1011,8 @@ project. 14a's leak suite and 14c's view-source pass are the real security tests
 direct TCP for `drizzle-kit` and scripts. `.dev.vars` is a symlink to `.env`.
 Production secrets are set with `wrangler secret bulk`.
 
-Still empty: `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` — needed at step 13.
+`NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are still empty and are
+no longer on the critical path: they existed for the contact form, which was removed.
 
 ## Reference
 
