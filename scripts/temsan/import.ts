@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import pg from 'pg';
 import * as schema from '../../src/lib/db/schema';
 import { CATEGORIES } from '../catalogue-tree';

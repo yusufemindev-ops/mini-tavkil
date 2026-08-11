@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { categories, categoryTranslations } from '@/lib/db/schema';
 import { conflict, isUniqueViolation, invalid, notFound, assertUuid } from '@/lib/api/errors';

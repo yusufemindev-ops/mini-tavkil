@@ -18,11 +18,7 @@ import { conflict, invalid, isUniqueViolation, notFound, assertUuid } from '@/li
 import { resolveImageUrl } from '@/lib/media/image-url';
 import { revalidateProduct } from '@/lib/cache';
 import { pingIndexNow } from '@/lib/seo/ping';
-import {
-  assertProductPublishable,
-  DEFAULT_LOCALE,
-  type AdminTranslation,
-} from '@/lib/services/publish-gates';
+import { assertProductPublishable, type AdminTranslation } from '@/lib/services/publish-gates';
 import type {
   AdminListProductsQuery,
   CreateProductInput,

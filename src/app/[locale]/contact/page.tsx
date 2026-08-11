@@ -8,7 +8,6 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { WhatsAppButton } from '@/components/whatsapp-button';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getSiteSettings, waUrl } from '@/lib/settings';
-import { env } from '@/lib/env';
 import { JsonLd, organizationSchema } from '@/lib/seo/json-ld';
 
 export async function generateMetadata({
