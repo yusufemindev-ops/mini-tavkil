@@ -8,6 +8,7 @@ import pg from 'pg';
 import * as schema from '../../src/lib/db/schema';
 import { CATEGORIES } from '../catalogue-tree';
 import { CATEGORY_BY_TR, PRODUCTS, type Locale, type Tri } from './catalogue';
+import { attributesFor } from './attributes';
 
 /**
  * Imports Temsan's real catalogue: 82 products, 104 variants, 243 photographs.
@@ -85,6 +86,7 @@ async function main() {
     products,
     productTranslations,
     productImages,
+    productAttributes,
     productOptions,
     productOptionValues,
     productVariants,
@@ -132,6 +134,7 @@ async function main() {
     for (const id of owned) {
       // Options cascade to their values and to the variant links; variants are
       // removed explicitly because they hang off the product, not the option.
+      await db.delete(productAttributes).where(eq(productAttributes.productId, id));
       await db.delete(productVariants).where(eq(productVariants.productId, id));
       await db.delete(productOptions).where(eq(productOptions.productId, id));
       await db.delete(productImages).where(eq(productImages.productId, id));
@@ -282,6 +285,7 @@ async function main() {
   let sortOrder = 1;
   let variantCount = 0;
   let imageCount = 0;
+  let attributeCount = 0;
 
   for (const data of DATA) {
     const copy = authored.get(data.variants[0].code);
@@ -345,6 +349,25 @@ async function main() {
     await db.insert(productImages).values(imageRows);
     imageCount += imageRows.length;
 
+    // ── Attributes ───────────────────────────────────────────────────────────
+    // Read out of the supplier's own Turkish name, which is a spec sheet written
+    // as a string — material, weave, edge finish, pack count, size. Extracted,
+    // never invented: a wrong specification on a wholesale listing is worse than
+    // a missing one, because a buyer orders against it.
+    const attributeRows = LOCALES.flatMap((locale) =>
+      attributesFor(lead.trName, locale).map((attribute, index) => ({
+        productId: row.id,
+        locale,
+        attrName: attribute.name,
+        attrValue: attribute.value,
+        sortOrder: index,
+      })),
+    );
+    if (attributeRows.length > 0) {
+      await db.insert(productAttributes).values(attributeRows);
+      attributeCount += attributeRows.length / LOCALES.length;
+    }
+
     // ── Variants ─────────────────────────────────────────────────────────────
     // Only families get an option axis. A single-row product has nothing to
     // choose between, and an option with one value is noise on the page.
@@ -388,7 +411,7 @@ async function main() {
   console.log(
     `imported ${DATA.length} products, ${variantCount} variants, ${imageCount} images ` +
       `(${DATA.filter((d) => d.kind === 'family').length} families, ` +
-      `${featuredCodes.size} featured)`,
+      `${featuredCodes.size} featured, ${attributeCount} attributes ×${LOCALES.length} locales)`,
   );
 
   // ── Category images ────────────────────────────────────────────────────────
