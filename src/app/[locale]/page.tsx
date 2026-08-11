@@ -8,7 +8,11 @@ import { SectionHeading } from '@/components/ui/section-heading';
 import { Reveal } from '@/components/ui/reveal';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
-import { TvShowcase, type ShowcaseChannel } from '@/components/home/tv-showcase';
+import {
+  TvShowcase,
+  type ShowcaseChannel,
+  type ShowcaseFeature,
+} from '@/components/home/tv-showcase';
 import { StepCard, Steps } from '@/components/home/step-card';
 import { AboutTeaser } from '@/components/home/about-teaser';
 import { CtaPanel } from '@/components/home/cta-panel';
@@ -37,7 +41,13 @@ export async function generateMetadata({
   return buildMetadata({ locale, path: '', title: t('title'), description: t('description') });
 }
 
-function Hero({ channels }: { channels: ShowcaseChannel[] }) {
+function Hero({
+  channels,
+  features,
+}: {
+  channels: ShowcaseChannel[];
+  features: ShowcaseFeature[];
+}) {
   const t = useTranslations('store');
   return (
     <section className="border-border/60 relative overflow-hidden border-b">
@@ -82,7 +92,7 @@ function Hero({ channels }: { channels: ShowcaseChannel[] }) {
           </ul>
         </div>
 
-        <TvShowcase channels={channels} />
+        <TvShowcase channels={channels} features={features} />
       </div>
     </section>
   );
@@ -195,12 +205,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     }),
   );
 
+  // The showcase's second set. No price and no supplier — `publicProducts()`
+  // cannot return either, which is what makes this safe where Tavkil's supplier
+  // channel would not be.
+  const features: ShowcaseFeature[] = featured.slice(0, 6).map((product) => ({
+    slug: product.slug,
+    name: product.name,
+    category: product.category?.name ?? null,
+    imageUrl: product.images[0]?.url ?? null,
+  }));
+
   return (
     <>
       <JsonLd schema={[organizationSchema(), websiteSchema(locale)]} />
       <SiteHeader />
       <main className="flex-1">
-        <Hero channels={channels} />
+        <Hero channels={channels} features={features} />
         <Sectors categories={roots} />
         <FeaturedProducts products={featured} />
         <HowItWorks />

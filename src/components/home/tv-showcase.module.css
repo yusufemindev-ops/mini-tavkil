@@ -1,11 +1,10 @@
-/* Hero showcase: a "TV set" that channel-hops through the catalogue's categories,
-   with a CRT switch animation and an ambient Ambilight glow. Prototype CSS
-   variables are remapped to the storefront tokens.
+/* Faithful port of the prototype hero showcase: two "TV sets" with a CRT switch
+   animation and an ambient glow. Prototype CSS variables are remapped to the
+   storefront tokens.
 
-   Tavkil's version had a SECOND set — a premium-supplier channel. Suppliers are
-   admin-only here (CLAUDE.md §1), so that set and its .scSup / .tvPrem rules are
-   gone and the remaining set flows in the stage at full width instead of being
-   absolutely positioned to overlap. */
+   Tavkil's second set was a premium-supplier channel. Suppliers never appear on a
+   public surface here (CLAUDE.md §1), so it shows a featured product instead —
+   the composition, sizing and z-order are unchanged, only the content differs. */
 
 .showcase {
   position: relative;
@@ -13,6 +12,7 @@
 .stage {
   position: relative;
   isolation: isolate;
+  min-block-size: 450px;
 }
 
 /* ambient "light from the screens" — Ambilight */
@@ -97,7 +97,7 @@
 
 /* —— TV set: dark bezel (same in light & dark themes) —— */
 .tv {
-  position: relative;
+  position: absolute;
   border-radius: 20px;
   padding: 13px 13px 0;
   background: linear-gradient(165deg, #2a2e36, #14161b);
@@ -108,8 +108,16 @@
     0 0 72px -10px color-mix(in srgb, var(--primary) 70%, transparent);
 }
 .scCat {
-  inline-size: 100%;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 80%;
   z-index: 2;
+}
+.scSup {
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  inline-size: 66%;
+  z-index: 3;
 }
 
 .tvScreen {
@@ -228,6 +236,9 @@
   margin-block-start: 5px;
   letter-spacing: -0.01em;
 }
+.scSup .tvCap h3 {
+  font-size: 1.08rem;
+}
 .tvCap .meta {
   display: flex;
   align-items: center;
@@ -243,6 +254,22 @@
 }
 :global([dir='rtl']) .tvCap .meta svg.ar {
   transform: scaleX(-1);
+}
+.tvPrem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--primary);
+  padding: 3px 7px;
+  border-radius: 100px;
+}
+.tvPrem svg {
+  inline-size: 10px;
+  block-size: 10px;
 }
 
 /* bezel chrome */
@@ -379,4 +406,16 @@
   display: flex;
   gap: 6px;
   margin-inline-start: auto;
+}
+
+@media (max-width: 980px) {
+  .scCat {
+    inline-size: 90%;
+  }
+  .scSup {
+    inline-size: 82%;
+  }
+  .stage {
+    min-block-size: 460px;
+  }
 }

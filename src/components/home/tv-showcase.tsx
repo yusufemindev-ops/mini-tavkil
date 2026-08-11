@@ -26,30 +26,47 @@ export type ShowcaseChannel = {
   imageUrl: string | null;
 };
 
+/** The second set's content: a featured product, where Tavkil showed a supplier. */
+export type ShowcaseFeature = {
+  slug: string;
+  name: string;
+  category: string | null;
+  imageUrl: string | null;
+};
+
 const ROTATE_MS = 4400;
 
-export function TvShowcase({ channels }: { channels: ShowcaseChannel[] }) {
+export function TvShowcase({
+  channels,
+  features = [],
+}: {
+  channels: ShowcaseChannel[];
+  features?: ShowcaseFeature[];
+}) {
   const t = useTranslations('store');
   const total = channels.length;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduced = usePrefersReducedMotion();
 
-  const inner = useRef<HTMLDivElement>(null);
-  const noise = useRef<HTMLDivElement>(null);
+  const catInner = useRef<HTMLDivElement>(null);
+  const catStatic = useRef<HTMLDivElement>(null);
+  const supInner = useRef<HTMLDivElement>(null);
+  const supStatic = useRef<HTMLDivElement>(null);
   const ambient = useRef<HTMLDivElement>(null);
 
   // CRT switch + ambient flash whenever the channel changes.
   useEffect(() => {
-    const innerNode = inner.current;
-    const noiseNode = noise.current;
-    if (innerNode && noiseNode) {
-      innerNode.classList.remove(styles.switching);
-      noiseNode.classList.remove(styles.on);
-      void innerNode.offsetWidth; // force reflow so the animation restarts
-      innerNode.classList.add(styles.switching);
-      noiseNode.classList.add(styles.on);
-    }
+    const pulse = (node: HTMLDivElement | null, noise: HTMLDivElement | null) => {
+      if (!node || !noise) return;
+      node.classList.remove(styles.switching);
+      noise.classList.remove(styles.on);
+      void node.offsetWidth; // force reflow so the animation restarts
+      node.classList.add(styles.switching);
+      noise.classList.add(styles.on);
+    };
+    pulse(catInner.current, catStatic.current);
+    pulse(supInner.current, supStatic.current);
 
     const amb = ambient.current;
     if (amb) {
@@ -71,6 +88,7 @@ export function TvShowcase({ channels }: { channels: ShowcaseChannel[] }) {
 
   const go = (i: number) => setIndex(((i % total) + total) % total);
   const channel = channels[index];
+  const feature = features.length > 0 ? features[index % features.length] : null;
   const channelNo = String(index + 1).padStart(2, '0');
   const channelTotal = String(total).padStart(2, '0');
 
@@ -91,8 +109,8 @@ export function TvShowcase({ channels }: { channels: ShowcaseChannel[] }) {
 
         <article className={`${styles.tv} ${styles.scCat}`}>
           <div className={styles.tvScreen}>
-            <div ref={noise} className={styles.tvStatic} />
-            <div ref={inner} className={styles.tvInner}>
+            <div ref={catStatic} className={styles.tvStatic} />
+            <div ref={catInner} className={styles.tvInner}>
               <Thumb src={channel.imageUrl} className="absolute inset-0 size-full" priority />
               <div className={styles.tvOsd}>
                 <span className={styles.tvCh}>
@@ -120,6 +138,38 @@ export function TvShowcase({ channels }: { channels: ShowcaseChannel[] }) {
             </div>
           </div>
         </article>
+
+        {/* Second set. Tavkil's showed a premium supplier — name, city, country —
+            which is admin-only here (CLAUDE.md §1). A featured product carries no
+            price and no supplier, so it fills the same frame safely. */}
+        {feature && (
+          <article className={`${styles.tv} ${styles.scSup}`}>
+            <div className={styles.tvScreen}>
+              <div ref={supStatic} className={styles.tvStatic} />
+              <div ref={supInner} className={styles.tvInner}>
+                <Thumb src={feature.imageUrl} className="absolute inset-0 size-full" />
+                <div className={styles.tvOsd}>
+                  <span className={styles.tvLive}>
+                    <span className={styles.dot} />
+                    {t('sc_featured')}
+                  </span>
+                </div>
+                <div className={styles.tvCap}>
+                  <span className={styles.k}>{t('sc_featured')}</span>
+                  <h3>{feature.name}</h3>
+                  {feature.category && <div className={styles.meta}>{feature.category}</div>}
+                </div>
+              </div>
+            </div>
+            <div className={styles.tvFoot}>
+              <span className={styles.tvBrand}>CH&nbsp;·&nbsp;{t('sc_featured')}</span>
+              <div className={styles.tvCtrl}>
+                <span className={styles.tvKnob} />
+                <span className={styles.tvPwr} />
+              </div>
+            </div>
+          </article>
+        )}
       </div>
 
       {total > 1 && (
