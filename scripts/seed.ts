@@ -45,7 +45,7 @@ const SUPPLIERS: { key: string; country: string; name: Tri; desc: Tri }[] = [
   },
 ];
 
-const CATEGORIES: { key: string; name: Tri; desc: Tri }[] = [
+const CATEGORIES: { key: string; parent?: string; name: Tri; desc: Tri }[] = [
   {
     key: 'seed-cleaning',
     name: { en: 'Cleaning Products', tr: 'Temizlik Ürünleri', ar: 'منتجات التنظيف' },
@@ -73,6 +73,71 @@ const CATEGORIES: { key: string; name: Tri; desc: Tri }[] = [
       ar: 'أكياس وأغلفة وعبوات غذائية.',
     },
   },
+  // ─── Subcategories ─────────────────────────────────────────────────────────
+  // Tavkil's catalogue is three levels: category → subcategory → product, and the
+  // storefront already renders that (`children.length > 0` swaps product cards for
+  // SubcategoryTile). It looked two-level here only because the seed created no
+  // children — a data gap, not a missing feature.
+  {
+    key: 'seed-mops',
+    parent: 'seed-cleaning',
+    name: { en: 'Mops & Floor Care', tr: 'Mop ve Zemin Bakımı', ar: 'الممساح والعناية بالأرضيات' },
+    desc: {
+      en: 'Mop heads, frames and refills for wet and dry floor cleaning.',
+      tr: 'Islak ve kuru zemin temizliği için mop başlıkları, iskeletler ve yedekler.',
+      ar: 'رؤوس ممساح وهياكل وبدائل لتنظيف الأرضيات الرطب والجاف.',
+    },
+  },
+  {
+    key: 'seed-cloths',
+    parent: 'seed-cleaning',
+    name: { en: 'Cloths & Wipes', tr: 'Bez ve Mendiller', ar: 'المناشف والمماسح' },
+    desc: {
+      en: 'Microfibre and cotton cloths for surfaces, glass and polishing.',
+      tr: 'Yüzey, cam ve parlatma için mikrofiber ve pamuklu bezler.',
+      ar: 'مناشف ميكروفايبر وقطن للأسطح والزجاج والتلميع.',
+    },
+  },
+  {
+    key: 'seed-sponges',
+    parent: 'seed-cleaning',
+    name: { en: 'Sponges & Scourers', tr: 'Sünger ve Ovma Telleri', ar: 'الإسفنج وأدوات الجلي' },
+    desc: {
+      en: 'Kitchen sponges, scourers and abrasive pads.',
+      tr: 'Mutfak süngerleri, ovma telleri ve aşındırıcı pedler.',
+      ar: 'إسفنج مطبخ وأدوات جلي ووسادات كاشطة.',
+    },
+  },
+  {
+    key: 'seed-paper',
+    parent: 'seed-hygiene',
+    name: { en: 'Paper Products', tr: 'Kağıt Ürünleri', ar: 'المنتجات الورقية' },
+    desc: {
+      en: 'Kitchen rolls, hand towels and tissue.',
+      tr: 'Kağıt havlu, el havlusu ve peçete.',
+      ar: 'لفات مطبخ ومناشف يد ومناديل.',
+    },
+  },
+  {
+    key: 'seed-bath',
+    parent: 'seed-hygiene',
+    name: { en: 'Bath & Shower', tr: 'Banyo ve Duş', ar: 'الحمام والاستحمام' },
+    desc: {
+      en: 'Bath puffs, loofahs and personal washing accessories.',
+      tr: 'Banyo lifleri, keseler ve kişisel yıkama aksesuarları.',
+      ar: 'ليف الاستحمام والليفة وملحقات الاغتسال الشخصي.',
+    },
+  },
+  {
+    key: 'seed-twine',
+    parent: 'seed-packaging',
+    name: { en: 'Twine & Rope', tr: 'İp ve Halat', ar: 'الخيوط والحبال' },
+    desc: {
+      en: 'Jute, polypropylene and PVC twine and rope for bundling and baling.',
+      tr: 'Paketleme ve balyalama için jüt, polipropilen ve PVC ip ve halat.',
+      ar: 'خيوط وحبال من الجوت والبولي بروبيلين والبي في سي للتحزيم والبالات.',
+    },
+  },
 ];
 
 const PRODUCTS: {
@@ -94,7 +159,7 @@ const PRODUCTS: {
   // ─── Cleaning ──────────────────────────────────────────────────────────────
   {
     key: 'seed-p-01',
-    category: 'seed-cleaning',
+    category: 'seed-cloths',
     supplier: 'seed-supplier-a',
     unit: 'pack',
     moq: 24,
@@ -114,7 +179,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-02',
-    category: 'seed-cleaning',
+    category: 'seed-mops',
     supplier: 'seed-supplier-a',
     unit: 'pc',
     moq: 48,
@@ -133,7 +198,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-03',
-    category: 'seed-cleaning',
+    category: 'seed-mops',
     supplier: 'seed-supplier-a',
     unit: 'pc',
     moq: 50,
@@ -149,7 +214,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-04',
-    category: 'seed-cleaning',
+    category: 'seed-sponges',
     supplier: 'seed-supplier-a',
     unit: 'pack',
     moq: 60,
@@ -168,7 +233,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-05',
-    category: 'seed-cleaning',
+    category: 'seed-mops',
     supplier: 'seed-supplier-a',
     unit: 'pc',
     moq: 20,
@@ -188,7 +253,7 @@ const PRODUCTS: {
   // ─── Paper & Hygiene ───────────────────────────────────────────────────────
   {
     key: 'seed-p-06',
-    category: 'seed-hygiene',
+    category: 'seed-paper',
     supplier: 'seed-supplier-b',
     unit: 'pack',
     moq: 36,
@@ -208,7 +273,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-07',
-    category: 'seed-hygiene',
+    category: 'seed-bath',
     supplier: 'seed-supplier-b',
     unit: 'pc',
     moq: 100,
@@ -223,7 +288,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-08',
-    category: 'seed-hygiene',
+    category: 'seed-bath',
     supplier: 'seed-supplier-b',
     unit: 'pack',
     moq: 40,
@@ -243,7 +308,7 @@ const PRODUCTS: {
   // ─── Packaging ─────────────────────────────────────────────────────────────
   {
     key: 'seed-p-09',
-    category: 'seed-packaging',
+    category: 'seed-twine',
     supplier: 'seed-supplier-b',
     unit: 'pc',
     moq: 24,
@@ -258,7 +323,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-10',
-    category: 'seed-packaging',
+    category: 'seed-twine',
     supplier: 'seed-supplier-b',
     unit: 'spool',
     moq: 10,
@@ -278,7 +343,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-11',
-    category: 'seed-packaging',
+    category: 'seed-twine',
     supplier: 'seed-supplier-b',
     unit: 'spool',
     moq: 8,
@@ -297,7 +362,7 @@ const PRODUCTS: {
   },
   {
     key: 'seed-p-12',
-    category: 'seed-packaging',
+    category: 'seed-twine',
     supplier: 'seed-supplier-b',
     unit: 'coil',
     moq: 6,
@@ -397,10 +462,18 @@ async function main() {
   // ── Categories ──
   const categoryIds = new Map<string, string>();
   let order = 1;
-  for (const c of CATEGORIES) {
+  // Roots first, so a child's parent id always exists by the time it is inserted.
+  // CATEGORIES is authored roots-then-children, but sorting makes that explicit
+  // rather than load-bearing on array order.
+  const ordered = [...CATEGORIES].sort((a, b) => Number(!!a.parent) - Number(!!b.parent));
+  for (const c of ordered) {
     const [row] = await db
       .insert(categories)
-      .values({ status: 'published', displayOrder: order++ })
+      .values({
+        status: 'published',
+        displayOrder: order++,
+        parentId: c.parent ? categoryIds.get(c.parent) : null,
+      })
       .returning({ id: categories.id });
     categoryIds.set(c.key, row.id);
     await db.insert(categoryTranslations).values(
