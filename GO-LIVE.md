@@ -71,9 +71,8 @@ access → Custom domain).
 `resolveImageUrl()` resolves it at read time — that was the whole reason for
 storing keys rather than URLs.
 
-Then remove `https://placehold.co` from the CSP in `next.config.ts`. It is only
-there for the seeded rows; the admin dashboard's **"missing primary image"** count
-tells you when every product has a real one.
+`placehold.co` is already out of the CSP — the seed carries real product
+photography in R2, so `img-src` is self plus the R2 host and nothing else.
 
 ## 5. Turn on indexing — last, not first
 
@@ -84,8 +83,9 @@ tells you when every product has a real one.
 
 Everything is `noindex` until this flips, and that is on purpose: an indexed
 `workers.dev` URL is very hard to un-index and would compete with `tavkil.com` for
-the same content. Lighthouse SEO scores 66 today for exactly this reason — with
-indexing on it measures **100**.
+the same content. Lighthouse SEO scores **69** today for exactly this reason —
+"Page is blocked from indexing" is its _only_ failing audit, so the score is 100
+the moment this flips. Accessibility measures 96 and Best Practices 100.
 
 ## 6. Deploy, then re-verify against the real domain
 
@@ -117,13 +117,36 @@ Budgets are in `.lighthouserc.json` and fail the run rather than being noted.
 
 ---
 
+## Settings you must fill in — the storefront hides what is unset
+
+Every field below is empty in the database, and each one silently removes UI:
+an unset value means "hide the corresponding element" everywhere, deliberately,
+so nothing renders as a broken half-thing. The effect is a storefront that looks
+like it is missing features when it is really missing data.
+
+| Setting                       | Where                       | What is hidden while empty                                                   |
+| ----------------------------- | --------------------------- | ---------------------------------------------------------------------------- |
+| **WhatsApp number**           | Settings → Contact & social | the floating WhatsApp button on every page, and the WhatsApp CTA on /contact |
+| **Instagram/TikTok/Facebook** | Settings → Contact & social | the entire "Follow us" column in the footer                                  |
+| **Google Maps embed**         | Settings → Contact & social | the map panel on /contact                                                    |
+| **Logo**                      | Settings → Branding         | falls back to the "T" tile                                                   |
+| **Default OG image**          | Settings → SEO defaults     | shared links get no preview image                                            |
+
+`contactEmail`, `inquiryEmail` and `address` are set to `info@tavkil.com` /
+İstanbul as sensible defaults — change them if either is wrong.
+
 ## Things I could not verify — please check these
 
-| What                         | Why                                                                                                                                                                                                                                                                                  | Where    |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| **Upload → R2 → storefront** | needs a Google sign-in                                                                                                                                                                                                                                                               | step 10  |
-| **Admin Playwright flows**   | needs a saved session; see `e2e/admin.setup.ts`                                                                                                                                                                                                                                      | step 14b |
-| **Rich Results Test**        | needs a crawlable URL                                                                                                                                                                                                                                                                | §14g     |
+| What                         | Why                                                                        | Where   |
+| ---------------------------- | -------------------------------------------------------------------------- | ------- |
+| **Upload → R2 → storefront** | needs a real file picked in a browser; the endpoint and R2 write are green | step 10 |
+| **Rich Results Test**        | needs a crawlable URL, so it waits on `SITE_INDEXABLE`                     | §14g    |
+| **Contact form submission**  | disabled until Turnstile keys exist — the button says so on the page       | §2      |
+
+**Admin Playwright flows now run.** They needed a saved Google session, which is
+why they had never executed once — and every bug the first real login found lived
+in that gap. `e2e/.auth/admin.json` (gitignored) holds one; regenerate it when
+the admin specs start redirecting to `/admin/login`.
 
 ## Accepted, on the record: the brand orange fails AA on button labels
 
@@ -133,7 +156,8 @@ silent exception in a test file.
 `--primary` is Tavkil's exact `#f2640c`. **White text on it measures 3.18:1**,
 where WCAG 2.1 AA wants 4.5:1 for normal text. That affects primary button labels
 and the active language pill — 3–5 elements per page. Everything else is clean:
-orange used as *text* goes through `--primary-ink` (`#c24e06`, 4.79:1), and large
+orange used as _text_ goes through `--primary-ink` (`#bd4c06`, 5.00:1 on white and
+≥4.5 on every tinted surface it sits on), and large
 display text passes the 3:1 large-text bar at 3.18.
 
 `e2e/public/a11y.spec.ts` allows exactly one pairing — white on `#f2640c` — so any
