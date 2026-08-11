@@ -55,6 +55,23 @@
     "crons": ["0 */2 * * *"],
   },
 
+  // ─── Rate limiting ─────────────────────────────────────────────────────────
+  // The contact form is the only public write on the site, so it is the only
+  // public path worth spending money to abuse. Cloudflare's rate limiter keys on
+  // whatever string we pass — here the client IP — and is enforced at the edge,
+  // so a flood never reaches the Worker's CPU or Neon.
+  //
+  // 5 per minute per IP: generous for a human filling in a form twice, useless
+  // for a script. §14h also calls for a WAF rule on this path; that is the
+  // heavier backstop and this is the in-Worker one.
+  "ratelimits": [
+    {
+      "name": "CONTACT_RATE_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 5, "period": 60 },
+    },
+  ],
+
   "vars": {
     "SITE_INDEXABLE": "false",
   },

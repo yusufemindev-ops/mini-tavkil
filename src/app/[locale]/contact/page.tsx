@@ -8,6 +8,8 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { WhatsAppButton } from '@/components/whatsapp-button';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getSiteSettings, waUrl } from '@/lib/settings';
+import { ContactForm } from '@/components/contact/contact-form';
+import { env } from '@/lib/env';
 import { JsonLd, organizationSchema } from '@/lib/seo/json-ld';
 
 export async function generateMetadata({
@@ -41,12 +43,18 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
   );
 }
 
-// Primary panel. Step 13 replaces this with the real Turnstile-protected form
-// that POSTs to /api/contact; until then it routes buyers to email or WhatsApp,
-// which is a working conversion path rather than a placeholder. The email CTA and
-// address line hide when unset, and the WhatsApp button self-hides on an empty
-// href, so an unconfigured site never renders a dead control.
-function ContactNote({ email, waHref }: { email: string; waHref: string }) {
+// Primary panel: the form, plus the direct routes underneath it. Both stay —
+// some buyers will always rather press WhatsApp than fill anything in, and the
+// email link is the fallback when Turnstile isn't configured.
+function ContactNote({
+  email,
+  waHref,
+  product,
+}: {
+  email: string;
+  waHref: string;
+  product?: { slug: string; name: string };
+}) {
   const t = useTranslations('store');
   return (
     <section className="border-border bg-card flex flex-col justify-center rounded-lg border p-7 sm:p-9">
@@ -57,17 +65,24 @@ function ContactNote({ email, waHref }: { email: string; waHref: string }) {
       <p className="text-muted-foreground mt-2.5 max-w-prose text-[0.95rem] leading-relaxed">
         {t('con_note_d')}
       </p>
-      <div className="mt-7 grid gap-3 sm:grid-cols-2">
-        {email && (
-          <a
-            href={`mailto:${email}`}
-            className="bg-primary text-primary-foreground flex w-full items-center justify-center gap-2.5 rounded-sm px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-          >
-            <Mail className="size-[18px]" />
-            {t('con_email_cta')}
-          </a>
-        )}
-        <WhatsAppButton href={waHref} variant="full" label={t('con_whatsapp')} />
+
+      <div className="mt-7">
+        <ContactForm siteKey={env.turnstileSiteKey} product={product} />
+      </div>
+
+      <div className="border-border mt-8 border-t pt-6">
+        <div className="mt-7 grid gap-3 sm:grid-cols-2">
+          {email && (
+            <a
+              href={`mailto:${email}`}
+              className="bg-primary text-primary-foreground flex w-full items-center justify-center gap-2.5 rounded-sm px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+            >
+              <Mail className="size-[18px]" />
+              {t('con_email_cta')}
+            </a>
+          )}
+          <WhatsAppButton href={waHref} variant="full" label={t('con_whatsapp')} />
+        </div>
       </div>
       {email && (
         <p className="text-muted-foreground mt-4 text-[0.82rem]">
@@ -131,12 +146,23 @@ function ContactMap({ mapsEmbedUrl, address }: { mapsEmbedUrl: string; address: 
   );
 }
 
-export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function ContactPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ product?: string; name?: string }>;
+}) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('store');
   const settings = await getSiteSettings();
   const waHref = waUrl(settings.whatsappNumber);
+
+  // The product page's "Request a quote" arrives with the product in the URL, so
+  // the buyer never has to describe which one they mean.
+  const { product: productSlug, name: productName } = await searchParams;
+  const product = productSlug && productName ? { slug: productSlug, name: productName } : undefined;
 
   return (
     <>
@@ -152,7 +178,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr] lg:items-start">
-          <ContactNote email={settings.contactEmail} waHref={waHref} />
+          <ContactNote email={settings.contactEmail} waHref={waHref} product={product} />
           <ContactInfo email={settings.contactEmail} />
         </div>
 

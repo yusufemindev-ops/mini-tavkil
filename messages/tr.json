@@ -420,6 +420,16 @@
     "cta_contact": "Teklif isteyin",
     "sc_go_to": "{name} kategorisini göster",
     "sc_prev": "Önceki kategori",
-    "sc_next": "Sonraki kategori"
+    "sc_next": "Sonraki kategori",
+    "con_f_name": "Adınız",
+    "con_f_email": "E-posta adresi",
+    "con_f_company": "Şirket (isteğe bağlı)",
+    "con_f_message": "Neyi tedarik etmek istiyorsunuz?",
+    "con_send": "Mesajı gönder",
+    "con_sending": "Gönderiliyor…",
+    "con_sent_d": "Teşekkürler — talebinizi aldık, bir iş günü içinde yanıtlayacağız.",
+    "con_form_error": "Gönderilemedi. Lütfen formu kontrol edip tekrar deneyin.",
+    "con_about_product": "Bu talep şu ürünle ilgili:",
+    "con_unconfigured": "Form şu anda kullanılamıyor — lütfen yukarıdaki e-posta veya WhatsApp bağlantılarını kullanın."
   }
 }

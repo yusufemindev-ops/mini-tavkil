@@ -3,7 +3,10 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–12 done and deployed. Start at step 13.
+**Status:** steps 1–13 done and deployed. Start at step 14.
+
+**Needs you before launch:** Turnstile keys, the Cloudflare Email Service binding,
+and a Google sign-in for the admin upload check. See steps 10, 13 and 15.
 
 **Needs you:** step 10's acceptance ends with an upload through the real admin,
 which needs a Google sign-in I can't perform. Everything up to that point is
@@ -636,7 +639,37 @@ resolve in the admin.
 
 </details>
 
-## 13. Contact form
+## ✅ 13. Contact form — DONE (two things need your credentials)
+
+Form, server-side validation, Turnstile verification, rate-limit binding, and the
+send path. `/en/contact` renders it and the product page's "Request a quote"
+arrives with the product in the query string, so a buyer never has to describe
+which one they mean.
+
+**The order of checks in `/api/contact` is the design:** rate limit → Turnstile →
+validation → settings → send. Each step is cheaper than the next, so an abusive
+request is dropped as early as possible. Verifying the captcha _after_ reading
+settings would mean a bot still costs a Neon query per attempt.
+
+**It fails closed.** With `TURNSTILE_SECRET_KEY` unset the endpoint refuses every
+submission — verified on the deployed URL. Treating "not configured" as "skip the
+check" would turn one unset variable into an open relay into someone's inbox.
+
+**⚠ Open, and needs your credentials:**
+
+| What                                                      | Why it's blocked                                                                                                                                                                                            |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` | Create the widget in the Cloudflare dashboard. Until then the form is visibly disabled and points at the email/WhatsApp links.                                                                              |
+| `CONTACT_EMAIL` (`send_email` binding)                    | Cloudflare Email Service needs a verified destination on an attached zone, which is step 15. The binding is deliberately _not_ in `wrangler.jsonc` yet — adding it before the zone exists fails the deploy. |
+
+**⚠ Unverified:** the `CONTACT_RATE_LIMIT` binding is declared and wrangler reports
+it at deploy (`5 requests/60s`), but **12 rapid requests never produced a 429** and
+`wrangler tail` captured no diagnostic log. It may be that OpenNext's
+`getCloudflareContext().env` does not surface ratelimit bindings. Do not treat this
+as working. §14h already calls for a WAF rate-limit rule on `/api/contact` — that
+is the authoritative control, and this needs confirming or removing there.
+
+<details><summary>Original step-13 instructions</summary>
 
 The only public write and the only conversion path.
 
@@ -652,6 +685,8 @@ The only public write and the only conversion path.
 
 **Acceptance:** submit end-to-end on the deployed URL, email arrives, bot submissions
 without a valid token are rejected.
+
+</details>
 
 ## 14. Verification & hardening — eight passes, all of them
 
@@ -799,6 +834,9 @@ serving the old entry after the 300 s stale window, scope the cache per build wi
   role. 401/403, never 200.
 - Permission checks are the **first line** of each admin handler — grep to confirm none were missed
 - Auth endpoints rate-limited
+- **Confirm or remove the in-Worker `CONTACT_RATE_LIMIT`** — see step 13; it never
+  returned a 429 in testing, and a control that looks present in review but does
+  nothing is worse than none
 
 **Injection & input:**
 

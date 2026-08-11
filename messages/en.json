@@ -420,6 +420,16 @@
     "cta_contact": "Request a quote",
     "sc_go_to": "Show {name}",
     "sc_prev": "Previous category",
-    "sc_next": "Next category"
+    "sc_next": "Next category",
+    "con_f_name": "Your name",
+    "con_f_email": "Email address",
+    "con_f_company": "Company (optional)",
+    "con_f_message": "What are you sourcing?",
+    "con_send": "Send message",
+    "con_sending": "Sending…",
+    "con_sent_d": "Thanks — we have your enquiry and will reply within one business day.",
+    "con_form_error": "We could not send that. Please check the form and try again.",
+    "con_about_product": "This enquiry is about:",
+    "con_unconfigured": "The form is not available right now — please use the email or WhatsApp links above."
   }
 }
