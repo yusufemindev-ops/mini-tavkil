@@ -12,7 +12,12 @@ export function LoginPage() {
     setPending(true);
     const { error } = await authClient.signIn.social({
       provider: 'google',
-      callbackURL: `${window.location.origin}/dashboard`,
+      // `/admin/dashboard`, not `/dashboard`. Tavkil served this SPA at the root
+      // of its own origin, so the bare path was right there. Here it is mounted
+      // under /admin, and Better Auth redirects at the ORIGIN — it knows nothing
+      // about the router's basename — so the bare path sent a completed sign-in
+      // to https://host/dashboard, which is not a route and returned 404.
+      callbackURL: `${window.location.origin}/admin/dashboard`,
     });
     if (error) {
       toast.error(error.message ?? 'Could not start Google sign-in.');
