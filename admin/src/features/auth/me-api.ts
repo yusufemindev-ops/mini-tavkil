@@ -1,6 +1,5 @@
 import { authClient } from '@/lib/auth-client';
 import { api } from '@/lib/api/client';
-import { USER_TYPE } from './auth-constants';
 
 export interface CurrentAdmin {
   id: string;
@@ -19,7 +18,18 @@ export async function fetchCurrentAdmin(): Promise<CurrentAdmin> {
   const user = data?.user as
     { id: string; email: string; name: string; userType?: string | null } | undefined;
 
-  if (!user || user.userType !== USER_TYPE.ADMIN) {
+  // A session is enough. Tavkil also required `userType === 'admin'` because its
+  // Better Auth instance served BUYERS as well, and the dashboard had to turn
+  // them away. There is no buyer tier here (PLAN.md §3) — every account that can
+  // exist is staff — so the only question that matters is whether the session is
+  // allowlisted, and that is answered server-side: `requireAdmin()` re-reads
+  // ADMIN_ALLOWLIST on every /api/admin/* call, and the shell itself is not
+  // served without it. This check could therefore never grant access the server
+  // denies; it could only deny access the server had already granted, which is
+  // exactly what it did — `userType` is a custom column, Better Auth omitted it
+  // from the session payload, and the comparison against `undefined` bounced
+  // every signed-in admin back to /login on a loop.
+  if (!user) {
     throw new Error('unauthorized');
   }
 
