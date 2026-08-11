@@ -125,6 +125,11 @@ for (const path of ['', '/catalogue', '/about', '/contact']) {
       const offenders: string[] = [];
       for (const el of document.querySelectorAll('button, a[href]')) {
         if (el.closest('p')) continue;
+        const style = getComputedStyle(el);
+        // WCAG 2.5.8 governs POINTER targets. A visually-hidden, keyboard-only
+        // control — the skip link — is clipped away and cannot be tapped at all,
+        // so its box size is meaningless. `clip` is the sr-only technique.
+        if (style.clip !== 'auto' && style.clip !== '') continue;
         const rect = el.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) continue;
         if (rect.height < 24 || rect.width < 24) {
