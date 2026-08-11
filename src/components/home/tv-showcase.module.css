@@ -383,30 +383,45 @@
 }
 .scDots {
   display: flex;
-  /* No gap: each button below is a 24×24 hit area with the 9px dot centred in
-     it, so adjacent buttons sit flush and their centres are 24px apart. That
-     leaves ~15px of visual space between dots — wider than the original 8px, and
-     unavoidable: WCAG 2.5.8 fails a 9px target whether it is undersized OR its
-     24px hit area overlaps its neighbour's, and at an 8px gap it did both. */
-  gap: 0;
+  gap: 8px;
 }
-/* The dot stays 9px; the BUTTON is padded out to a 24×24 hit area around it.
-   A 9px touch target is a real problem on a phone, and this is the one control
-   that advances the hero. `background-clip: content-box` keeps the padding
-   transparent so only the dot is painted. */
+/*
+ * Tavkil's dots exactly: a 9px circle, 8px apart, stretching to a 26px pill when
+ * active.
+ *
+ * An earlier attempt padded each button out to a 24×24 hit area for WCAG 2.5.8
+ * and set `background-clip: content-box` so only the 9px centre painted. The
+ * `background` shorthand one line below it silently reset that clip back to
+ * `border-box`, so the padding painted too — the dots rendered as 24px blobs and
+ * the active one as a 41px slab. A shorthand after its own longhand is a quiet
+ * way to undo it.
+ *
+ * The hit area is enlarged by a pseudo-element instead, which grows the target
+ * without painting anything or touching layout. It stops short of 24px wide on
+ * purpose: at 8px spacing a full 24px target would overlap its neighbour's, and
+ * a dot that triggers the one next to it is worse than a small dot. Height gets
+ * the full 24px, where there is nothing to collide with. The prev/next arrows
+ * sit beside these at full size and do the same job, which is the equivalent
+ * control 2.5.8 accepts.
+ */
 .scDots button {
+  position: relative;
   inline-size: 9px;
   block-size: 9px;
-  box-sizing: content-box;
-  padding: 7.5px;
-  background-clip: content-box;
   border-radius: 50%;
   background: var(--border);
+  padding: 0;
   border: 0;
   cursor: pointer;
   transition:
     width 0.25s var(--ease),
     background 0.2s;
+}
+.scDots button::after {
+  content: '';
+  position: absolute;
+  /* 23px tall, 17px wide — centres are 17px apart, so targets never overlap. */
+  inset: -7px -4px;
 }
 .scDots button.on {
   background: var(--primary);
