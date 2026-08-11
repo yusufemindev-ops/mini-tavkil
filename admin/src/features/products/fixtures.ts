@@ -19,7 +19,8 @@ function img(id: string, _url: string, alt: string, isPrimary: boolean): AdminPr
   return {
     id,
     url: `https://picsum.photos/seed/${id}/200/200`,
-    alt,
+    // Alt is per-locale on the wire; fixtures only ever need English.
+    alt: { en: alt },
     isPrimary,
     sortOrder: isPrimary ? 0 : 1,
   };
