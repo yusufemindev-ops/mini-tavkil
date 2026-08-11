@@ -1,3 +1,19 @@
+import {
+  Brush,
+  Cable,
+  Car,
+  Footprints,
+  Link2,
+  PanelsTopLeft,
+  ShowerHead,
+  Shirt,
+  Sparkles,
+  Spool,
+  Utensils,
+  Waves,
+  Wind,
+  Wrench,
+} from 'lucide-react';
 import type { ReactNode, SVGProps } from 'react';
 
 // Tavkil custom SVG icon set, shared between the storefront and the admin
@@ -261,9 +277,41 @@ export const BRAND_ICONS = {
  * Written as branches returning JSX rather than a name → component lookup on
  * purpose: assigning a component to a local and rendering it trips React's
  * "Cannot create components during render" rule.
+ *
+ * The six hand-drawn brand icons cover Tavkil's original industry categories.
+ * The Temsan catalogue's sixteen are narrower than any of them — a mop and a
+ * steel wire rope are both "industrial" — so those come from lucide-react, which
+ * is the project's icon set for everything outside the ported brand marks.
  */
 export function CategoryIcon({ hint = '', className }: { hint?: string; className?: string }) {
-  if (/clean|temizlik|تنظيف/i.test(hint)) return <HomeGoodsIcon className={className} />;
+  // Most specific first: "Glass Cleaning" and "Floor Cleaning" both contain
+  // "clean", so the bare cleaning branch has to come last of the cleaning group.
+  // Every pattern lists all three locales — matching English only would leave the
+  // Turkish and Arabic rails on the fallback icon, which is precisely the
+  // "every category has the same grey box" look this replaces.
+
+  // Cleaning
+  if (/floor|yer temiz|paspas|الأرضيات/i.test(hint)) return <Footprints className={className} />;
+  if (/glass|cam temiz|الزجاج/i.test(hint)) return <PanelsTopLeft className={className} />;
+  if (/dishwash|bulaşık|bulasik|الأطباق/i.test(hint)) return <Utensils className={className} />;
+  if (/car care|otomobil|السيارات/i.test(hint)) return <Car className={className} />;
+  if (/bath|banyo|الحمام/i.test(hint)) return <ShowerHead className={className} />;
+  if (/general clean|genel temiz|التنظيف العام/i.test(hint))
+    return <Sparkles className={className} />;
+
+  // Hardware
+  if (/clothesline|çamaşır|camasir|الغسيل/i.test(hint)) return <Shirt className={className} />;
+  if (/jute|jüt|jut|الجوت/i.test(hint)) return <Spool className={className} />;
+  if (/kite|uçurtma|ucurtma|الطائرات/i.test(hint)) return <Wind className={className} />;
+  if (/hose|hortum|الخراطيم/i.test(hint)) return <Waves className={className} />;
+  if (/steel wire|çelik halat|celik halat|فولاذية/i.test(hint))
+    return <Link2 className={className} />;
+  if (/plaster|sıva|siva|المحارة/i.test(hint)) return <Brush className={className} />;
+  if (/multi-purpose|çok amaçlı|cok amacli|متعددة/i.test(hint))
+    return <Cable className={className} />;
+  if (/hardware|hırdavat|hirdavat|الأدوات/i.test(hint)) return <Wrench className={className} />;
+
+  // Tavkil's original six, kept for the industry categories they were drawn for.
   if (/hygien|hijyen|paper|kağıt|kagit|نظاف|ورق/i.test(hint))
     return <TextilesIcon className={className} />;
   if (/packag|ambalaj|تغليف/i.test(hint)) return <PackagingIcon className={className} />;
@@ -271,5 +319,6 @@ export function CategoryIcon({ hint = '', className }: { hint?: string; classNam
   if (/electron|elektronik|إلكترون/i.test(hint)) return <ElectronicsIcon className={className} />;
   if (/textil|tekstil|نسيج/i.test(hint)) return <TextilesIcon className={className} />;
   if (/industr|endüstri|endustri|صناع/i.test(hint)) return <IndustrialIcon className={className} />;
+  if (/clean|temizlik|تنظيف/i.test(hint)) return <HomeGoodsIcon className={className} />;
   return <PackageIcon className={className} />;
 }

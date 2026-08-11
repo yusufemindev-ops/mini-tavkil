@@ -6,9 +6,7 @@ export interface CategoryRailItem {
   id: string;
   label: string;
   href: string;
-  /** Category image; fills the icon pill when set. */
-  imageUrl?: string | null;
-  /** Slug, used to pick the brand category icon when there is no image. */
+  /** Slug; combined with the label to pick the brand category icon. */
   slug?: string;
   active?: boolean;
 }
@@ -52,11 +50,7 @@ export function CategoryRail({
                   : 'text-foreground-soft hover:bg-background-2 hover:text-foreground',
               )}
             >
-              <CategoryPill
-                imageUrl={item.imageUrl}
-                hint={`${item.slug ?? ''} ${item.label}`}
-                active={item.active}
-              />
+              <CategoryPill hint={`${item.slug ?? ''} ${item.label}`} active={item.active} />
               {item.label}
             </a>
           </li>
@@ -66,16 +60,16 @@ export function CategoryRail({
   );
 }
 
-/** Shared with the mobile dropdown so both navigations look the same. */
-export function CategoryPill({
-  imageUrl,
-  hint,
-  active,
-}: {
-  imageUrl?: string | null;
-  hint?: string;
-  active?: boolean;
-}) {
+/**
+ * Shared with the mobile dropdown so both navigations look the same.
+ *
+ * Always the brand icon, never the category photograph. The pill is 30px, and a
+ * product shot scaled into it is an unreadable smudge that changes colour from
+ * row to row — the rail stops reading as navigation. Tavkil drew an icon here
+ * for the same reason. The photograph still carries the category on its card,
+ * where it has the space to mean something.
+ */
+export function CategoryPill({ hint, active }: { hint?: string; active?: boolean }) {
   return (
     <span
       aria-hidden
@@ -86,12 +80,7 @@ export function CategoryPill({
           : 'bg-primary-soft text-primary-ink group-hover:bg-primary group-hover:text-primary-foreground',
       )}
     >
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt="" draggable={false} className="size-full object-cover" />
-      ) : (
-        <CategoryIcon hint={hint} className="size-[17px]" />
-      )}
+      <CategoryIcon hint={hint} className="size-[17px]" />
     </span>
   );
 }
