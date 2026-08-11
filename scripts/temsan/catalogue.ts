@@ -16,21 +16,9 @@
  * into attributes or drops out.
  */
 
-export type Locale = 'en' | 'tr' | 'ar';
-export type Tri = Record<Locale, string>;
+import type { Tri } from '../catalogue-tree';
 
-export interface TemsanCategory {
-  /** Stable key; also the slug prefix, so re-running never orphans a URL. */
-  key: string;
-  /** Parent category key. Absent for the two roots. */
-  parent?: string;
-  /** The ANA/ALT KATEGORİ value in the supplier's sheet that maps here. */
-  trSource: string;
-  /** lucide-react icon name shown in the storefront category rail. */
-  icon: string;
-  name: Tri;
-  desc: Tri;
-}
+export type { Locale, Tri } from '../catalogue-tree';
 
 export interface TemsanProduct {
   /** First variant code of the family — the join key into data.json. */
@@ -44,207 +32,27 @@ export interface TemsanProduct {
   option?: Tri;
 }
 
-// ── Categories ───────────────────────────────────────────────────────────────
-// Two roots and fourteen children, exactly the ANA/ALT KATEGORİ pairs that
-// survive the "has both a price and a photo" filter. No invented tiers: a
-// sub-category exists here only because products landed in it.
+// ── Category mapping ─────────────────────────────────────────────────────────
+// Temsan's own ALT KATEGORİ column, mapped to the shared taxonomy. This is the
+// supplier-specific half: the tree belongs to the marketplace (catalogue-tree.ts),
+// and each supplier says which of their groupings lands where.
 
-export const CATEGORIES: TemsanCategory[] = [
-  {
-    key: 'cleaning',
-    trSource: 'TEMİZLİK',
-    icon: 'SprayCan',
-    name: { en: 'Cleaning', tr: 'Temizlik', ar: 'التنظيف' },
-    desc: {
-      en: 'Cloths, sponges, mops and car care made in Türkiye for wholesale and export.',
-      tr: 'Toptan ve ihracat için Türkiye’de üretilen bez, sünger, mop ve oto bakım ürünleri.',
-      ar: 'مماسح وأقمشة وإسفنج ومستلزمات العناية بالسيارات، صناعة تركية للبيع بالجملة والتصدير.',
-    },
-  },
-  {
-    key: 'hardware',
-    trSource: 'HIRDAVAT',
-    icon: 'Wrench',
-    name: { en: 'Hardware', tr: 'Hırdavat', ar: 'الأدوات' },
-    desc: {
-      en: 'Ropes, twines, steel wire and hoses for household, garden and packing use.',
-      tr: 'Ev, bahçe ve paketleme için ipler, halatlar, çelik teller ve hortumlar.',
-      ar: 'حبال وخيوط وأسلاك فولاذية وخراطيم للاستخدام المنزلي والحدائق والتغليف.',
-    },
-  },
-
-  // Cleaning
-  {
-    key: 'floor-cleaning',
-    parent: 'cleaning',
-    trSource: 'YER TEMİZLİĞİ',
-    icon: 'Footprints',
-    name: { en: 'Floor Cleaning', tr: 'Yer Temizliği', ar: 'تنظيف الأرضيات' },
-    desc: {
-      en: 'Mops, mop refills and flat-mop frames in welsoft, microfibre and cord.',
-      tr: 'Welsoft, mikrofiber ve iplik mop, mop yedeği ve palet aparatları.',
-      ar: 'مماسح ورؤوس بديلة وحوامل مسطحة من الولسوفت والألياف الدقيقة والخيط.',
-    },
-  },
-  {
-    key: 'general-cleaning',
-    parent: 'cleaning',
-    trSource: 'GENEL TEMİZLİK',
-    icon: 'Sparkles',
-    name: { en: 'General Cleaning', tr: 'Genel Temizlik', ar: 'التنظيف العام' },
-    desc: {
-      en: 'Microfibre and plush cloths for everyday surface cleaning, loose or in sets.',
-      tr: 'Günlük yüzey temizliği için mikrofiber ve peluş bezler; tekli veya setli.',
-      ar: 'أقمشة من الألياف الدقيقة والوبر لتنظيف الأسطح اليومي، مفردة أو في أطقم.',
-    },
-  },
-  {
-    key: 'dishwashing',
-    parent: 'cleaning',
-    trSource: 'BULAŞIK',
-    icon: 'Utensils',
-    name: { en: 'Dishwashing', tr: 'Bulaşık', ar: 'غسيل الأطباق' },
-    desc: {
-      en: 'Dish sponges, stainless scourers and draining mats for kitchen and catering.',
-      tr: 'Mutfak ve toplu tüketim için bulaşık süngerleri, inox teller ve bulaşık altlıkları.',
-      ar: 'إسفنج غسيل وسلك ستانلس وحصائر تجفيف للمطابخ والمطاعم.',
-    },
-  },
-  {
-    key: 'glass-cleaning',
-    parent: 'cleaning',
-    trSource: 'CAM TEMİZLİĞİ',
-    icon: 'PanelsTopLeft',
-    name: { en: 'Glass Cleaning', tr: 'Cam Temizliği', ar: 'تنظيف الزجاج' },
-    desc: {
-      en: 'Diamond-weave and piqué cloths that clear glass without lint or streaks.',
-      tr: 'Camı iz ve tüy bırakmadan temizleyen baklava desenli ve lacost bezler.',
-      ar: 'أقمشة بنقشة معينية ونسيج بيكيه تنظف الزجاج دون خيوط أو خطوط.',
-    },
-  },
-  {
-    key: 'car-care',
-    parent: 'cleaning',
-    trSource: 'OTOMOBİL TEMİZLİĞİ',
-    icon: 'Car',
-    name: { en: 'Car Care', tr: 'Otomobil Temizliği', ar: 'العناية بالسيارات' },
-    desc: {
-      en: 'Drying cloths, wash sponges and mitts sized for vehicle bodywork.',
-      tr: 'Araç kaportası için kurulama bezleri, yıkama süngerleri ve eldivenler.',
-      ar: 'أقمشة تجفيف وإسفنج غسيل وقفازات بمقاسات مناسبة لهيكل السيارة.',
-    },
-  },
-  {
-    key: 'bath',
-    parent: 'cleaning',
-    trSource: 'BANYO',
-    icon: 'ShowerHead',
-    name: { en: 'Bath', tr: 'Banyo', ar: 'الحمام' },
-    desc: {
-      en: 'Bath puffs and sponges in retail-ready display packs.',
-      tr: 'Perakendeye hazır standlı kolilerde banyo lifi ve süngerleri.',
-      ar: 'ليف وإسفنج استحمام في عبوات عرض جاهزة للبيع بالتجزئة.',
-    },
-  },
-
-  // Hardware
-  {
-    key: 'clotheslines',
-    parent: 'hardware',
-    trSource: 'ÇAMAŞIR ASMA VE KURUTMA İPLERİ',
-    icon: 'Shirt',
-    name: { en: 'Clotheslines', tr: 'Çamaşır İpleri', ar: 'حبال الغسيل' },
-    desc: {
-      en: 'Nylon, PVC-coated steel and polyester lines in 6 to 20 metre lengths.',
-      tr: '6 ile 20 metre arası naylon, PVC kaplı çelik ve polyester çamaşır ipleri.',
-      ar: 'حبال نايلون وفولاذ مغلف بالـPVC وبوليستر بأطوال من 6 إلى 20 مترًا.',
-    },
-  },
-  {
-    key: 'multi-purpose-rope',
-    parent: 'hardware',
-    trSource: 'ÇOK AMAÇLI İPLER',
-    icon: 'Cable',
-    name: { en: 'Multi-Purpose Rope', tr: 'Çok Amaçlı İpler', ar: 'حبال متعددة الاستخدامات' },
-    desc: {
-      en: 'Round and flat utility rope for tying down, hanging and general site use.',
-      tr: 'Bağlama, asma ve genel şantiye kullanımı için yuvarlak ve yassı ipler.',
-      ar: 'حبال دائرية ومسطحة للربط والتعليق والاستخدامات العامة.',
-    },
-  },
-  {
-    key: 'jute-twine',
-    parent: 'hardware',
-    trSource: 'JÜT İPLERİ',
-    icon: 'Spool',
-    name: { en: 'Jute Twine', tr: 'Jüt İpleri', ar: 'خيوط الجوت' },
-    desc: {
-      en: 'Natural jute twine for parcels, garden work and decorative use.',
-      tr: 'Paket, bahçe ve dekorasyon işleri için doğal jüt kırnap ipi.',
-      ar: 'خيوط جوت طبيعية للطرود وأعمال الحدائق والاستخدام الزخرفي.',
-    },
-  },
-  {
-    key: 'kite-string',
-    parent: 'hardware',
-    trSource: 'UÇURTMA İPLERİ',
-    icon: 'Wind',
-    name: { en: 'Kite String', tr: 'Uçurtma İpleri', ar: 'خيط الطائرات الورقية' },
-    desc: {
-      en: 'Wound kite string on spools, packed 20 to the pack.',
-      tr: 'Makaraya sarılı, 20’li paketlerde uçurtma ipi.',
-      ar: 'خيط طائرات ورقية ملفوف على بكرات، 20 قطعة في العبوة.',
-    },
-  },
-  {
-    key: 'packaging-twine',
-    parent: 'hardware',
-    trSource: 'AMBALAJ İPLERİ',
-    icon: 'Package',
-    name: { en: 'Packaging Twine', tr: 'Ambalaj İpleri', ar: 'خيوط التغليف' },
-    desc: {
-      en: 'Polypropylene twine by weight for parcels, bundling and sack closing.',
-      tr: 'Paketleme, bağlama ve çuval ağzı dikimi için kilo bazlı polipropilen ip.',
-      ar: 'خيوط بولي بروبيلين بالوزن للطرود والتجميع وإغلاق الأكياس.',
-    },
-  },
-  {
-    key: 'hoses',
-    parent: 'hardware',
-    trSource: 'HORTUMLAR',
-    icon: 'Waves',
-    name: { en: 'Hoses', tr: 'Hortumlar', ar: 'الخراطيم' },
-    desc: {
-      en: 'Reinforced garden hose supplied in fixed coil lengths.',
-      tr: 'Sabit boylarda takviyeli bahçe hortumu.',
-      ar: 'خراطيم حدائق مقواة تُورّد بأطوال ملفوفة ثابتة.',
-    },
-  },
-  {
-    key: 'steel-wire-rope',
-    parent: 'hardware',
-    trSource: 'İZOLELİ ÇELİK HALATLAR',
-    icon: 'Link',
-    name: { en: 'Steel Wire Rope', tr: 'İzoleli Çelik Halatlar', ar: 'حبال فولاذية' },
-    desc: {
-      en: 'PVC-insulated steel wire rope from 2 to 10 mm, sold on 200 m reels.',
-      tr: '2–10 mm arası PVC izoleli çelik halat, 200 metrelik makaralarda.',
-      ar: 'حبال فولاذية معزولة بالـPVC من 2 إلى 10 مم على بكرات 200 متر.',
-    },
-  },
-  {
-    key: 'plaster-sponges',
-    parent: 'hardware',
-    trSource: 'SIVA SÜNGERLERİ',
-    icon: 'Brush',
-    name: { en: 'Plaster Sponges', tr: 'Sıva Süngerleri', ar: 'إسفنج المحارة' },
-    desc: {
-      en: 'Dense sponges for floating plaster, render and tile grout.',
-      tr: 'Sıva, şap ve derz uygulamaları için yoğun dokulu süngerler.',
-      ar: 'إسفنج عالي الكثافة لتسوية المحارة والقصارة وحشو البلاط.',
-    },
-  },
-];
+export const CATEGORY_BY_TR: Record<string, string> = {
+  'YER TEMİZLİĞİ': 'floor-cleaning',
+  'GENEL TEMİZLİK': 'general-cleaning',
+  BULAŞIK: 'dishwashing',
+  'CAM TEMİZLİĞİ': 'glass-cleaning',
+  'OTOMOBİL TEMİZLİĞİ': 'car-care',
+  BANYO: 'bath',
+  'ÇAMAŞIR ASMA VE KURUTMA İPLERİ': 'clotheslines',
+  'ÇOK AMAÇLI İPLER': 'multi-purpose-rope',
+  'JÜT İPLERİ': 'jute-twine',
+  'UÇURTMA İPLERİ': 'kite-string',
+  'AMBALAJ İPLERİ': 'packaging-twine',
+  HORTUMLAR: 'hoses',
+  'İZOLELİ ÇELİK HALATLAR': 'steel-wire-rope',
+  'SIVA SÜNGERLERİ': 'plaster-sponges',
+};
 
 // ── Products ─────────────────────────────────────────────────────────────────
 // One entry per family, keyed by its first variant code. Sizes and lengths are

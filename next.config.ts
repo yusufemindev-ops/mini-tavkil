@@ -10,8 +10,13 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
  *
  * The CSP is the one with teeth. Notes on the choices that aren't obvious:
  *
- * - **No `unsafe-eval`.** Next doesn't need it in production, and it's the single
- *   directive that turns an injected string into running code.
+ * - **No `unsafe-eval` in production.** It is the single directive that turns an
+ *   injected string into running code, and Next does not need it once built.
+ *   React's *development* build does — it evals to reconstruct callstacks across
+ *   environments — so without the exemption below every dev page load logs
+ *   "eval() is not supported in this environment" and the overlay claims an
+ *   error that cannot happen in production. The allowance is keyed off
+ *   NODE_ENV, so the shipped header is unchanged.
  * - `'unsafe-inline'` for scripts is still required: Next inlines its bootstrap
  *   and RSC payload, and next-themes writes an inline no-flash script. Moving to
  *   a nonce means a per-request CSP header, which conflicts with caching every
@@ -26,10 +31,13 @@ function contentSecurityPolicy(): string {
   const r2 = r2Host();
   const turnstile = 'https://challenges.cloudflare.com';
   const maps = 'https://www.google.com';
+  // Development only — see the note above. `next build` sets NODE_ENV to
+  // production, so this can never reach a deployed response.
+  const evalForReactDev = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'";
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' ${turnstile}`,
+    `script-src 'self' 'unsafe-inline'${evalForReactDev} ${turnstile}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${r2}`,
     "font-src 'self' data:",

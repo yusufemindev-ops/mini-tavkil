@@ -8,7 +8,6 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { WhatsAppButton } from '@/components/whatsapp-button';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getSiteSettings, waUrl } from '@/lib/settings';
-import { ContactForm } from '@/components/contact/contact-form';
 import { env } from '@/lib/env';
 import { JsonLd, organizationSchema } from '@/lib/seo/json-ld';
 
@@ -43,9 +42,19 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
   );
 }
 
-// Primary panel: the form, plus the direct routes underneath it. Both stay —
-// some buyers will always rather press WhatsApp than fill anything in, and the
-// email link is the fallback when Turnstile isn't configured.
+/**
+ * Primary panel: email and WhatsApp, and nothing else.
+ *
+ * There was a five-field enquiry form here. It went because a form is only worth
+ * its friction if it beats the alternatives, and here it did not: a buyer who has
+ * found a product wants to send a message now, and both remaining routes do that
+ * in one tap from a phone. It also needed a Turnstile key to work at all, so
+ * until one existed the page offered a disabled button above an apology.
+ *
+ * The API route stays. Removing the form is a change to how buyers are asked to
+ * get in touch, not a decision to delete a working endpoint, and putting the form
+ * back should not mean rebuilding the backend for it.
+ */
 function ContactNote({
   email,
   waHref,
@@ -56,6 +65,13 @@ function ContactNote({
   product?: { slug: string; name: string };
 }) {
   const t = useTranslations('store');
+  // "Request a quote" on a product page arrives here with the product in the URL.
+  // The form used to carry that context; now the links do, so a buyer still never
+  // has to describe which product they mean.
+  const subject = product ? `${t('con_about_product')} ${product.name}` : '';
+  const mailto = email
+    ? `mailto:${email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`
+    : '';
   return (
     <section className="border-border bg-card flex flex-col justify-center rounded-lg border p-7 sm:p-9">
       <span className="bg-primary-soft text-primary-ink grid size-12 place-items-center rounded-xl">
@@ -66,15 +82,20 @@ function ContactNote({
         {t('con_note_d')}
       </p>
 
-      <div className="mt-7">
-        <ContactForm siteKey={env.turnstileSiteKey} product={product} />
-      </div>
+      {product && (
+        <p className="text-muted-foreground mt-4 text-sm">
+          {t('con_about_product')}{' '}
+          <b dir="auto" className="text-foreground">
+            {product.name}
+          </b>
+        </p>
+      )}
 
-      <div className="border-border mt-8 border-t pt-6">
-        <div className="mt-7 grid gap-3 sm:grid-cols-2">
+      <div className="mt-8">
+        <div className="grid gap-3 sm:grid-cols-2">
           {email && (
             <a
-              href={`mailto:${email}`}
+              href={mailto}
               className="bg-primary text-primary-foreground flex w-full items-center justify-center gap-2.5 rounded-sm px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
             >
               <Mail className="size-[18px]" />
@@ -178,12 +199,15 @@ export default async function ContactPage({
   setRequestLocale(locale);
   const t = await getTranslations('store');
   const settings = await getSiteSettings();
-  const waHref = waUrl(settings.whatsappNumber);
-
   // The product page's "Request a quote" arrives with the product in the URL, so
   // the buyer never has to describe which one they mean.
   const { product: productSlug, name: productName } = await searchParams;
   const product = productSlug && productName ? { slug: productSlug, name: productName } : undefined;
+
+  const waHref = waUrl(
+    settings.whatsappNumber,
+    product ? `${t('con_about_product')} ${product.name}` : undefined,
+  );
 
   return (
     <>

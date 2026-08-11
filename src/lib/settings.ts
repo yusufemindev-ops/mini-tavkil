@@ -78,7 +78,14 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
 
 // Build a wa.me link from a raw phone number. Non-digits (spaces, +, dashes) are
 // stripped. Returns '' when there's nothing to link, so callers hide the control.
-export function waUrl(number: string): string {
-  const digits = (number ?? '').replace(/\D/g, '');
-  return digits ? `https://wa.me/${digits}` : '';
+export function waUrl(number: string, text?: string): string {
+  let digits = (number ?? '').replace(/\D/g, '');
+  // `00` is the international access prefix people dial, not part of the number.
+  // wa.me wants country code + subscriber number and nothing else: a saved
+  // "00905333922089" builds a wa.me link that simply does not resolve, and the
+  // button looks like it works right up until someone presses it.
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (!digits) return '';
+  const url = `https://wa.me/${digits}`;
+  return text ? `${url}?text=${encodeURIComponent(text)}` : url;
 }
