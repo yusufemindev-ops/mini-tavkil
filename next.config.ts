@@ -18,10 +18,9 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
  *   public page — a real trade-off, deliberately taken.
  * - `frame-ancestors 'none'` does the job `X-Frame-Options: DENY` used to, but
  *   both are sent because some scanners still look for the older header.
- * - `img-src` is the tight one asked for: self plus the R2 host. `placehold.co`
- *   is in there ONLY for the seeded catalogue and must be removed at step 15
- *   once real uploads exist — the dashboard's "missing primary image" count is
- *   what tells you when that's safe.
+ * - `img-src` is the tight one asked for: self plus the R2 host, and nothing
+ *   else. `placehold.co` used to be allowed for the seeded catalogue; the seed
+ *   now carries real photography in R2, so the exception is gone.
  */
 function contentSecurityPolicy(): string {
   const r2 = r2Host();
@@ -32,7 +31,7 @@ function contentSecurityPolicy(): string {
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline' ${turnstile}`,
     "style-src 'self' 'unsafe-inline'",
-    `img-src 'self' data: blob: ${r2} https://placehold.co`,
+    `img-src 'self' data: blob: ${r2}`,
     "font-src 'self' data:",
     `connect-src 'self' ${turnstile}`,
     // Turnstile renders in a frame; the contact page embeds a Google Map.
