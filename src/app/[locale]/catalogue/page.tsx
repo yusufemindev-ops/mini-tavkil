@@ -49,22 +49,31 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
   // instead. That also shortens crawl depth: every previewed product is two
   // clicks from the homepage rather than three (PLAN.md §11 — internal linking
   // matters more than the markup).
-  const previews = new Map<string, PublicProduct[]>(
-    await Promise.all(
-      roots
-        .filter((category) => childrenOf(category.slug).length === 0)
-        .map(
-          async (category) =>
-            [
-              category.id,
-              await publicProducts(
-                { category: category.slug, includeDescendants: true, limit: 8 },
-                locale as Locale,
-              ),
-            ] as const,
-        ),
-    ),
-  );
+  //
+  // One read for all of them, grouped in memory, rather than a `publicProducts()`
+  // call per childless category. The identical pattern on the homepage exhausted
+  // the outbound connection budget during a build and killed prerendering with
+  // `NeonDbError: fetch failed`. It is inert here today because every root has
+  // children — which is exactly why it would come back unnoticed.
+  const leaves = roots.filter((category) => childrenOf(category.slug).length === 0);
+  const previews = new Map<string, PublicProduct[]>();
+  if (leaves.length > 0) {
+    const products = await publicProducts({}, locale as Locale);
+    const rootSlugOf = (categorySlug: string) =>
+      all.find((c) => c.slug === categorySlug)?.parent?.slug ?? categorySlug;
+
+    for (const category of leaves) {
+      previews.set(
+        category.id,
+        products
+          .filter((product) => {
+            const slug = product.category?.slug;
+            return slug ? rootSlugOf(slug) === category.slug : false;
+          })
+          .slice(0, 8),
+      );
+    }
+  }
 
   // Shared by the desktop rail and the mobile dropdown — anchors to the sections.
   const railItems = roots.map((category) => ({

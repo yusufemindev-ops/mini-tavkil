@@ -179,31 +179,47 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [categories, featured] = await Promise.all([
+  const [categories, allProducts] = await Promise.all([
     publicCategories(locale as Locale),
-    publicProducts({ featured: true, limit: 8 }, locale as Locale),
+    // Every published product, once. The homepage needs three things from this
+    // list — the featured strip, the showcase's product channel, and a cover
+    // image per category — and reading it once is the difference between two
+    // queries and a dozen.
+    publicProducts({}, locale as Locale),
   ]);
 
   const roots = categories.filter((category) => category.parent === null);
+  const featured = allProducts.filter((product) => product.isFeatured).slice(0, 8);
 
-  // A channel needs a picture. Use the category's own image, else the first image
-  // of one of its products, so the showcase is never a row of blank gradients.
-  const channels: ShowcaseChannel[] = await Promise.all(
-    roots.slice(0, 6).map(async (category) => {
-      if (category.imageUrl) {
-        return { slug: category.slug, name: category.name, imageUrl: category.imageUrl };
-      }
-      const [product] = await publicProducts(
-        { category: category.slug, includeDescendants: true, limit: 1 },
-        locale as Locale,
-      );
-      return {
-        slug: category.slug,
-        name: category.name,
-        imageUrl: product?.images[0]?.url ?? null,
-      };
-    }),
+  /**
+   * A channel needs a picture: the category's own image, else the first image of
+   * any product under it.
+   *
+   * Derived from the list above rather than a `publicProducts()` call per
+   * category. That loop was six extra reads per locale, and during a build —
+   * nine workers, three locales at once — it exhausted the outbound connection
+   * budget and prerendering died with `NeonDbError: fetch failed`. I wrote that
+   * off as a flaky database twice before reading the stack.
+   */
+  const childToRoot = new Map(
+    categories
+      .filter((category) => category.parent !== null)
+      .map((category) => [category.slug, category.parent!.slug]),
   );
+  const coverBySlug = new Map<string, string>();
+  for (const product of allProducts) {
+    const categorySlug = product.category?.slug;
+    const image = product.images[0]?.url;
+    if (!categorySlug || !image) continue;
+    const rootSlug = childToRoot.get(categorySlug) ?? categorySlug;
+    if (!coverBySlug.has(rootSlug)) coverBySlug.set(rootSlug, image);
+  }
+
+  const channels: ShowcaseChannel[] = roots.slice(0, 6).map((category) => ({
+    slug: category.slug,
+    name: category.name,
+    imageUrl: category.imageUrl ?? coverBySlug.get(category.slug) ?? null,
+  }));
 
   // The showcase's second set. No price and no supplier — `publicProducts()`
   // cannot return either, which is what makes this safe where Tavkil's supplier
