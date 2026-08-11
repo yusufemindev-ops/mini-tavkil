@@ -2,6 +2,7 @@ import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { categories, categoryTranslations } from '@/lib/db/schema';
 import { conflict, isUniqueViolation, invalid, notFound } from '@/lib/api/errors';
+import { pingIndexNow } from '@/lib/seo/ping';
 import {
   assertCategoryPublishable,
   DEFAULT_LOCALE,
@@ -145,7 +146,10 @@ export async function publishCategory(id: string): Promise<AdminCategory> {
     .update(categories)
     .set({ status: PUBLISHED, updatedAt: new Date().toISOString() })
     .where(eq(categories.id, id));
-  return getCategory(id);
+
+  const published = await getCategory(id);
+  pingIndexNow({ type: 'category', slugs: slugMap(published.translations) });
+  return published;
 }
 
 export async function unpublishCategory(id: string): Promise<AdminCategory> {
@@ -154,7 +158,17 @@ export async function unpublishCategory(id: string): Promise<AdminCategory> {
     .update(categories)
     .set({ status: DRAFT, updatedAt: new Date().toISOString() })
     .where(eq(categories.id, id));
-  return getCategory(id);
+
+  // Submitted on unpublish as well — the URL now 404s, and saying so promptly is
+  // what clears it from the index rather than leaving a dead result.
+  const updated = await getCategory(id);
+  pingIndexNow({ type: 'category', slugs: slugMap(updated.translations) });
+  return updated;
+}
+
+/** Locale → slug, for the URL set a publish-state change affects. */
+function slugMap(translations: readonly { locale: string; slug: string }[]) {
+  return Object.fromEntries(translations.map((t) => [t.locale, t.slug]));
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

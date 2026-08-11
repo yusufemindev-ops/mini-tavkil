@@ -103,6 +103,8 @@ export type PublicFilter = {
 
 export type SitemapEntry = {
   type: 'product' | 'category';
+  /** Entity id, so the sitemap can group a row's locales into hreflang alternates. */
+  id: string;
   slug: string;
   locale: Locale;
   updatedAt: Date;
@@ -552,6 +554,7 @@ export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
   const [productRows, categoryRows] = await Promise.all([
     db
       .select({
+        id: products.id,
         slug: productTranslations.slug,
         locale: productTranslations.locale,
         updatedAt: products.updatedAt,
@@ -561,6 +564,7 @@ export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
       .where(and(productIsPublic, eq(productTranslations.isComplete, true))),
     db
       .select({
+        id: categories.id,
         slug: categoryTranslations.slug,
         locale: categoryTranslations.locale,
         updatedAt: categories.updatedAt,
@@ -575,6 +579,7 @@ export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
     if (isLocale(row.locale)) {
       entries.push({
         type: 'product',
+        id: row.id,
         slug: row.slug,
         locale: row.locale,
         updatedAt: new Date(row.updatedAt),
@@ -585,6 +590,7 @@ export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
     if (isLocale(row.locale)) {
       entries.push({
         type: 'category',
+        id: row.id,
         slug: row.slug,
         locale: row.locale,
         updatedAt: new Date(row.updatedAt),

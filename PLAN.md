@@ -3,7 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–10 done and deployed. Start at step 11.
+**Status:** steps 1–11 done and deployed. Start at step 12.
 
 **Needs you:** step 10's acceptance ends with an upload through the real admin,
 which needs a Google sign-in I can't perform. Everything up to that point is
@@ -527,7 +527,34 @@ Port from `~/Documents/temsan`: `lib/image-resize.ts` (34 lines),
 **Acceptance:** upload in admin → object appears in `tavkil-images` → renders on the
 storefront product page → replaces the placeholder seed URL.
 
-## 11. SEO
+## ✅ 11. SEO — DONE
+
+Sitemap with real `lastModified`, robots, `llms.txt` / `llms-full.txt`, IndexNow,
+and the remaining JSON-LD (`CollectionPage` + `ItemList` on category pages).
+
+**Verified with indexing switched on locally:** 57 URLs, 171 hreflang alternate
+links, 45 `lastmod` values — and **none of them is today's date**. They are the
+rows' own `updated_at`, to the millisecond. That was the one assertion worth
+proving directly, since a sitemap claiming everything changed today makes Google
+crawl the site _less_.
+
+Alternates group by **entity id**, not slug: a catalogue slug differs per locale,
+so grouping on the slug would treat each translation as a separate page and emit
+no alternates at all.
+
+IndexNow submits on publish _and_ unpublish — an unpublished URL now 404s, and
+saying so promptly is what clears it from the index rather than leaving a dead
+result. It also submits the catalogue listing pages, which the change affects too.
+It is fire-and-forget by construction and no-ops while `SITE_INDEXABLE` is false:
+a publish must never fail because a search engine was unreachable. Worth
+remembering that this is for Bing and Yandex — **Google uses neither IndexNow nor
+sitemap pings**, so for Google the work that matters is the accurate `lastModified`
+above and internal linking.
+
+The key file is served from middleware, because `/<key>.txt` is a dynamic segment
+at the app root and `app/[key]/route.ts` collides with `app/[locale]`.
+
+<details><summary>Original step-11 instructions</summary>
 
 **Metadata** — `generateMetadata` on all 6 routes: title, description, canonical
 (self-locale), `alternates.languages` for the locales that have content, `x-default`,
@@ -566,6 +593,8 @@ categories, attributes, descriptions. No prices, no suppliers.
 
 **Internal linking** — every product reachable in ~3 clicks from home. Category pages
 link to their products and sibling categories. This matters more than the markup.
+
+</details>
 
 ## 12. FX cron
 

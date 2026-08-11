@@ -16,6 +16,7 @@ import {
 } from '@/lib/db/schema';
 import { conflict, invalid, isUniqueViolation, notFound } from '@/lib/api/errors';
 import { resolveImageUrl } from '@/lib/media/image-url';
+import { pingIndexNow } from '@/lib/seo/ping';
 import {
   assertProductPublishable,
   DEFAULT_LOCALE,
@@ -315,7 +316,10 @@ export async function publishProduct(id: string): Promise<AdminProduct> {
       updatedAt: new Date().toISOString(),
     })
     .where(eq(products.id, id));
-  return getProduct(id);
+
+  const published = await getProduct(id);
+  pingIndexNow({ type: 'product', slugs: slugMap(published.translations) });
+  return published;
 }
 
 export async function unpublishProduct(id: string): Promise<AdminProduct> {
@@ -324,7 +328,17 @@ export async function unpublishProduct(id: string): Promise<AdminProduct> {
     .update(products)
     .set({ status: DRAFT, updatedAt: new Date().toISOString() })
     .where(eq(products.id, id));
-  return getProduct(id);
+
+  // Unpublishing is submitted too: the URL now 404s, and telling the engine
+  // promptly is what removes it from the index rather than leaving a dead result.
+  const updated = await getProduct(id);
+  pingIndexNow({ type: 'product', slugs: slugMap(updated.translations) });
+  return updated;
+}
+
+/** Locale → slug, for the URL set a publish-state change affects. */
+function slugMap(translations: readonly { locale: string; slug: string }[]) {
+  return Object.fromEntries(translations.map((t) => [t.locale, t.slug]));
 }
 
 /** Archive = discontinued for good. Kept for records; off the storefront. */

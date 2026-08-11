@@ -11,6 +11,7 @@ import { CategoryProductGrid } from '@/components/catalog/category-product-grid'
 import { CategoryFilters } from '@/components/catalog/category-filters';
 import { CategorySort } from '@/components/catalog/category-sort';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { breadcrumbSchema, collectionSchema, JsonLd } from '@/lib/seo/json-ld';
 import { parseProductSort } from '@/lib/catalog/product-sort';
 import {
   publicCategories,
@@ -88,20 +89,32 @@ export default async function CategoryPage({
     siblingsFor(found, locale as Locale),
   ]);
 
+  const trail = [
+    { name: t('nav_home'), path: '' },
+    { name: t('nav_catalog'), path: '/catalogue' },
+    ...(found.parent ? [{ name: found.parent.name, path: `/catalogue/${found.parent.slug}` }] : []),
+    { name: found.name },
+  ];
+
   return (
     <>
       <RegisterLocalizedPaths paths={localizedPathMap('/catalogue', found.localizedSlugs)} />
+      <JsonLd
+        schema={[
+          collectionSchema({
+            locale,
+            path: `/catalogue/${found.slug}`,
+            name: found.name,
+            description: found.description,
+            items: products.map((product) => ({ name: product.name, slug: product.slug })),
+          }),
+          breadcrumbSchema(locale, trail),
+        ]}
+      />
       <SiteHeader />
       <main className="mx-auto w-full max-w-[1520px] flex-1 px-5 py-8 sm:px-6">
         <Breadcrumb
-          items={[
-            { label: t('nav_home'), href: '/' },
-            { label: t('nav_catalog'), href: '/catalogue' },
-            ...(found.parent
-              ? [{ label: found.parent.name, href: `/catalogue/${found.parent.slug}` }]
-              : []),
-            { label: found.name },
-          ]}
+          items={trail.map((crumb) => ({ label: crumb.name, href: crumb.path || undefined }))}
         />
         <header className="mb-6">
           <h1 className="text-foreground text-3xl font-bold tracking-tight">{found.name}</h1>

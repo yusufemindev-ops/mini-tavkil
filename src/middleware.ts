@@ -29,6 +29,25 @@ const ADMIN_ASSET = /\.(?!html?$)[a-z0-9]+$/i;
 export default function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
+  // IndexNow verification file. It has to live at `/<key>.txt`, which is a
+  // dynamic segment at the app root — and `app/[key]/route.ts` collides with
+  // `app/[locale]`, since Next forbids two different slug names at the same
+  // level. Serving it here avoids the collision and keeps the key out of
+  // `public/`, where a stale file would linger after the key was rotated.
+  if (pathname.endsWith('.txt')) {
+    const indexNowKey = process.env.INDEXNOW_API_KEY;
+    if (indexNowKey && pathname === `/${indexNowKey}.txt`) {
+      return new NextResponse(indexNowKey, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
+    // Any other root .txt — llms.txt, llms-full.txt — is a real route. It must
+    // NOT fall through to the i18n handler below, which would redirect
+    // /llms.txt to /en/llms.txt and break both files. That is exactly what the
+    // `/:key.txt` matcher caused when it was first added.
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith('/admin')) {
     // The SPA's own JS, CSS and fonts must not be gated. They carry no data — the
     // bundle is identical for every visitor — and redirecting them to /sign-in
@@ -51,5 +70,6 @@ export default function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ['/', '/(tr|ar|en)/:path*', '/admin/:path*'],
+  // `/:key.txt` is here only for the IndexNow verification file above.
+  matcher: ['/', '/(tr|ar|en)/:path*', '/admin/:path*', '/:key.txt'],
 };
