@@ -154,8 +154,16 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
                     {children.length > 0 ? (
                       // Intrinsic columns: tiles never shrink below ~180px, so the
                       // count adapts instead of cramming six into a narrow space.
+                      //
+                      // Every child renders. This was capped at 12, which never
+                      // fired while there were two roots holding six and eight —
+                      // then the two merged into one root of fourteen and the page
+                      // quietly stopped showing Steel Wire Rope and Plaster
+                      // Sponges. A cap that hides part of the catalogue with no
+                      // indication is worse than a long page, and this catalogue
+                      // is meant to grow.
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))]">
-                        {children.slice(0, 12).map((child) => (
+                        {children.map((child) => (
                           <SubcategoryTile key={child.id} category={child} />
                         ))}
                       </div>

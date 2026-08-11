@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { PublicOption } from '@/lib/queries/public-product';
 import { BidiText } from '@/components/bidi-text';
@@ -42,8 +43,34 @@ const COLOR_MAP: Record<string, string> = {
 };
 const colourFor = (label: string) => COLOR_MAP[label.trim().toLowerCase()] ?? '#9ca3af';
 
+/**
+ * Option names are one untranslated text column, and options do reach public
+ * pages — so an Arabic visitor read "Diameter" in English above a row of Arabic.
+ *
+ * Translated here rather than in the database. There are three axes in the whole
+ * catalogue and they are measurement kinds, not content: giving `product_options`
+ * a translations table would mean a migration, an admin editor and three rows per
+ * option, to hold words that never vary per product. A name with no mapping falls
+ * through unchanged, so an admin inventing a new axis gets their own wording
+ * rather than a blank.
+ *
+ * The values themselves — 2 mm, 40 × 40 cm — are deliberately not translated.
+ * They are measurements, and they are already formatted at import.
+ */
+const OPTION_KEYS: Record<string, string> = {
+  size: 'opt_size',
+  length: 'opt_length',
+  diameter: 'opt_diameter',
+};
+
 export function ProductOptions({ options }: { options: PublicOption[] }) {
+  const t = useTranslations('store');
   const visible = options.filter((option) => option.values.length > 0);
+
+  const optionName = (name: string) => {
+    const key = OPTION_KEYS[name.trim().toLowerCase()];
+    return key ? t(key) : name;
+  };
 
   // Local, not lifted: nothing downstream consumes the choice. First value of
   // each axis, so the label line is never empty on first paint.
@@ -67,7 +94,7 @@ export function ProductOptions({ options }: { options: PublicOption[] }) {
                   label. Left outside, it is a neutral between two isolates and
                   resolves against the page, drifting to the far side of the
                   label in Arabic. */}
-              <BidiText className="text-muted-foreground">{option.name}:</BidiText>{' '}
+              <BidiText className="text-muted-foreground">{optionName(option.name)}:</BidiText>{' '}
               <BidiText className="text-foreground font-medium">{selectedLabel}</BidiText>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">

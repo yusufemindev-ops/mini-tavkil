@@ -1,7 +1,18 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render as rtlRender, screen } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
 import { describe, expect, it } from 'vitest';
+import messages from '../../../messages/en.json';
 import { ProductOptions } from './product-options';
 import type { PublicOption } from '@/lib/queries/public-product';
+
+// Option names are translated at render time now, so the component needs the
+// message catalogue the way the page gives it one.
+const render = (ui: React.ReactElement) =>
+  rtlRender(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
 
 const swatch: PublicOption = {
   name: 'Colour',
@@ -80,5 +91,49 @@ describe('ProductOptions', () => {
     expect(screen.getByRole('button', { name: 'Blue' })).toHaveStyle({
       backgroundColor: '#2563eb',
     });
+  });
+});
+
+/**
+ * The axis name is admin data in one untranslated column, and options render on
+ * public pages — so an Arabic visitor was reading "Diameter" in English above a
+ * row of Arabic. Mapped at render time rather than migrated, because there are
+ * three axes in the catalogue and they name measurement kinds, not content.
+ */
+describe('option names across locales', () => {
+  const diameter: PublicOption = {
+    name: 'Diameter',
+    type: 'select',
+    values: [{ label: '2 mm', imageUrl: null, colorHex: null }],
+  };
+
+  it.each([
+    ['tr', 'Çap'],
+    ['ar', 'القطر'],
+  ])('renders the %s name for a known axis', async (locale, expected) => {
+    const catalogue = (await import(`../../../messages/${locale}.json`)).default;
+    rtlRender(
+      <NextIntlClientProvider locale={locale} messages={catalogue}>
+        <ProductOptions options={[diameter]} />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByText(`${expected}:`)).toBeInTheDocument();
+    // The measurement is not translated — it is a measurement.
+    expect(screen.getAllByText('2 mm').length).toBeGreaterThan(0);
+  });
+
+  it('leaves an unmapped axis exactly as the admin typed it', () => {
+    render(
+      <ProductOptions
+        options={[
+          {
+            name: 'Thread Pitch',
+            type: 'select',
+            values: [{ label: 'M8', imageUrl: null, colorHex: null }],
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText('Thread Pitch:')).toBeInTheDocument();
   });
 });

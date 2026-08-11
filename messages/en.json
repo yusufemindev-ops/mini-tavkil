@@ -432,6 +432,9 @@
     "con_sent_d": "Thanks — we have your enquiry and will reply within one business day.",
     "con_form_error": "We could not send that. Please check the form and try again.",
     "con_about_product": "This enquiry is about:",
-    "con_unconfigured": "The form is not available right now — please use the email or WhatsApp links above."
+    "con_unconfigured": "The form is not available right now — please use the email or WhatsApp links above.",
+    "opt_size": "Size",
+    "opt_length": "Length",
+    "opt_diameter": "Diameter"
   }
 }

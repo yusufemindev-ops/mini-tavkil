@@ -432,6 +432,9 @@
     "con_sent_d": "Teşekkürler — talebinizi aldık, bir iş günü içinde yanıtlayacağız.",
     "con_form_error": "Gönderilemedi. Lütfen formu kontrol edip tekrar deneyin.",
     "con_about_product": "Bu talep şu ürünle ilgili:",
-    "con_unconfigured": "Form şu anda kullanılamıyor — lütfen yukarıdaki e-posta veya WhatsApp bağlantılarını kullanın."
+    "con_unconfigured": "Form şu anda kullanılamıyor — lütfen yukarıdaki e-posta veya WhatsApp bağlantılarını kullanın.",
+    "opt_size": "Ebat",
+    "opt_length": "Uzunluk",
+    "opt_diameter": "Çap"
   }
 }
