@@ -73,6 +73,21 @@ export function invalid(message: string, details?: Record<string, string[]>): Ap
 }
 
 /** Postgres unique-violation. Drizzle surfaces the driver error, not a typed one. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * A path id that is not a UUID cannot match a row, so treat it as "not found"
+ * rather than handing it to Postgres.
+ *
+ * `GET /api/admin/products/not-a-uuid` used to reach the query, where Postgres
+ * raised `invalid input syntax for type uuid` and the handler turned that into a
+ * **500**. A malformed URL is a client mistake — a 404 says so, a 500 claims the
+ * server broke and gets alerted on.
+ */
+export function assertUuid(id: string, what: string): void {
+  if (!UUID.test(id)) throw notFound(`${what} not found.`);
+}
+
 export function isUniqueViolation(error: unknown): boolean {
   const code = (error as { code?: unknown })?.code;
   if (code === '23505') return true;

@@ -87,7 +87,7 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[1520px] flex-1 px-5 py-10 sm:px-6">
+      <main id="main" className="mx-auto w-full max-w-[1520px] flex-1 px-5 py-10 sm:px-6">
         <header className="max-w-2xl">
           <h1 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">
             {t('cat_title')}

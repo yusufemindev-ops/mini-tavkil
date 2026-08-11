@@ -105,7 +105,10 @@ export default async function ProductPage({
         ]}
       />
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[var(--width-container)] flex-1 px-5 py-8 sm:px-6">
+      <main
+        id="main"
+        className="mx-auto w-full max-w-[var(--width-container)] flex-1 px-5 py-8 sm:px-6"
+      >
         <Breadcrumb
           items={trail.map((crumb) => ({ label: crumb.name, href: crumb.path || undefined }))}
         />

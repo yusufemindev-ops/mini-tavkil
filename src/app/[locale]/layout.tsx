@@ -5,6 +5,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
 import { Providers } from '@/components/providers';
 import { WhatsAppFab } from '@/components/whatsapp-button';
+import { SkipLink } from '@/components/skip-link';
 import { getSiteSettings, waUrl } from '@/lib/settings';
 import { IBM_Plex_Sans_Arabic, Inter, JetBrains_Mono } from 'next/font/google';
 import '../globals.css';
@@ -75,6 +76,7 @@ export default async function LocaleLayout({
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider>
+          <SkipLink />
           <Providers>{children}</Providers>
           <WhatsAppFab href={waUrl(settings.whatsappNumber)} />
         </NextIntlClientProvider>

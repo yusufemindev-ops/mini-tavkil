@@ -7,6 +7,10 @@
 /* Brand tokens vendored from tavkil packages/tokens/tokens.css — this repo is
    not a monorepo, so the shared package is inlined here. */
 :root {
+  /* Native UI — scrollbars, spinners, the date picker — reads this, not our
+     tokens. Without it a dark page keeps light scrollbars and a white flash
+     around form controls. */
+  color-scheme: light;
   --background: #ffffff;
   --background-2: #f5f6f8;
   --card: #ffffff;
@@ -78,6 +82,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0f1115;
   --background-2: #171a20;
   --card: #171a20;
@@ -369,4 +374,20 @@
   .font-mono {
     font-feature-settings: 'tnum' 1;
   }
+}
+
+/*
+ * Controls do not wait for a double-tap.
+ *
+ * Mobile browsers hold a ~300ms delay on tap in case a second tap follows
+ * (double-tap-to-zoom). On a button that is 300ms of nothing happening, which
+ * reads as an unresponsive page. Zoom itself is untouched — pinch still works,
+ * and the page is still zoomable.
+ */
+button,
+[role='button'],
+a,
+input[type='submit'],
+label {
+  touch-action: manipulation;
 }

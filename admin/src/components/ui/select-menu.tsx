@@ -54,7 +54,7 @@ export function SelectMenu({
         id={id ?? fieldId}
         aria-label={ariaLabel}
         className={cn(
-          'border-input bg-background text-foreground flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-sm outline-none',
+          'border-input bg-background text-foreground flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-base sm:text-sm outline-none',
           'focus-visible:ring-ring focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50',
           'data-[popup-open]:border-primary',
           className,

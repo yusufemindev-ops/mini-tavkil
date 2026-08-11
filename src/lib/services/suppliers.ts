@@ -2,7 +2,7 @@ import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { suppliers, supplierTranslations } from '@/lib/db/schema';
-import { conflict, invalid, isUniqueViolation, notFound } from '@/lib/api/errors';
+import { conflict, invalid, isUniqueViolation, notFound, assertUuid } from '@/lib/api/errors';
 import { DEFAULT_LOCALE, type AdminTranslation } from '@/lib/services/publish-gates';
 import { translationSchema, type TranslationInput } from '@/lib/services/catalog-schemas';
 
@@ -167,6 +167,7 @@ export async function unpublishSupplier(id: string): Promise<AdminSupplier> {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function findActive(id: string) {
+  assertUuid(id, 'Supplier');
   const [row] = await db
     .select()
     .from(suppliers)

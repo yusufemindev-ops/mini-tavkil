@@ -64,6 +64,25 @@ for (const viewport of VIEWPORTS) {
   }
 }
 
+test('form inputs are at least 16px on mobile — iOS zooms below that', async ({ page }) => {
+  // Safari on iOS zooms the whole page when a focused input is under 16px, and
+  // does not zoom back out on blur. The contact form was 15.2px and the admin's
+  // 14px, so every field trapped the user at 1.3× until they pinched out.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/en/contact', { waitUntil: 'networkidle' });
+
+  const small = await page.evaluate(() =>
+    [...document.querySelectorAll('input, textarea, select')]
+      .filter((el) => (el as HTMLElement).offsetParent !== null)
+      .map((el) => ({
+        name: el.getAttribute('name') ?? el.tagName.toLowerCase(),
+        px: parseFloat(getComputedStyle(el).fontSize),
+      }))
+      .filter((entry) => entry.px < 16),
+  );
+  expect(small).toEqual([]);
+});
+
 test('the nav collapses to a menu button on a phone and is a full bar on desktop', async ({
   page,
 }) => {

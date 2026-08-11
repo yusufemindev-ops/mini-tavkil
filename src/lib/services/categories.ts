@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { categories, categoryTranslations } from '@/lib/db/schema';
-import { conflict, isUniqueViolation, invalid, notFound } from '@/lib/api/errors';
+import { conflict, isUniqueViolation, invalid, notFound, assertUuid } from '@/lib/api/errors';
 import { pingIndexNow } from '@/lib/seo/ping';
 import {
   assertCategoryPublishable,
@@ -193,6 +193,7 @@ function slugMap(translations: readonly { locale: string; slug: string }[]) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function findActive(id: string) {
+  assertUuid(id, 'Category');
   const [row] = await db
     .select()
     .from(categories)

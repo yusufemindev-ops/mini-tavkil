@@ -168,7 +168,10 @@ export default async function ContactPage({
     <>
       <JsonLd schema={organizationSchema()} />
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[var(--width-container)] flex-1 px-5 py-12 sm:px-6">
+      <main
+        id="main"
+        className="mx-auto w-full max-w-[var(--width-container)] flex-1 px-5 py-12 sm:px-6"
+      >
         <header className="mb-8">
           <Breadcrumb items={[{ label: t('nav_home'), href: '/' }, { label: t('nav_contact') }]} />
           <h1 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">

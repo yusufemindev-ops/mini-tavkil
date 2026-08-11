@@ -39,6 +39,7 @@
   },
   "store": {
     "nav_home": "الرئيسية",
+    "skip_to_content": "تخطَّ إلى المحتوى",
     "nav_catalog": "الكتالوج",
     "nav_about": "من نحن",
     "signin": "تسجيل الدخول",

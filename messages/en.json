@@ -39,6 +39,7 @@
   },
   "store": {
     "nav_home": "Home",
+    "skip_to_content": "Skip to content",
     "nav_catalog": "Catalogue",
     "nav_about": "About",
     "signin": "Sign in",

@@ -14,7 +14,7 @@ import {
   suppliers,
   supplierTranslations,
 } from '@/lib/db/schema';
-import { conflict, invalid, isUniqueViolation, notFound } from '@/lib/api/errors';
+import { conflict, invalid, isUniqueViolation, notFound, assertUuid } from '@/lib/api/errors';
 import { resolveImageUrl } from '@/lib/media/image-url';
 import { revalidateProduct } from '@/lib/cache';
 import { pingIndexNow } from '@/lib/seo/ping';
@@ -631,6 +631,7 @@ async function replaceOptionsAndVariants(
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function findActive(id: string) {
+  assertUuid(id, 'Product');
   const [row] = await db
     .select()
     .from(products)

@@ -41,7 +41,7 @@ type AboutStat = { value: number; suffix: string; labelKey: string };
 function AboutContent({ stats }: { stats: AboutStat[] }) {
   const t = useTranslations('store');
   return (
-    <main className="flex-1">
+    <main id="main" className="flex-1">
       {/* Hero */}
       <section className="py-12 sm:py-16">
         <div className={CONTAINER}>

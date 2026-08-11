@@ -68,7 +68,9 @@ export function ProductGallery({
                 aria-label={t('gallery_thumb', { n: index + 1 })}
                 aria-pressed={index === activeIndex}
                 className={cn(
-                  'overflow-hidden rounded-lg border transition-all',
+                  // Explicit properties, not `all`: `all` also transitions layout properties
+                  // and forces work the compositor cannot do on its own.
+                  'overflow-hidden rounded-lg border transition-[border-color,opacity]',
                   index === activeIndex
                     ? 'border-primary ring-primary/25 ring-2'
                     : 'border-border opacity-60 hover:opacity-100',

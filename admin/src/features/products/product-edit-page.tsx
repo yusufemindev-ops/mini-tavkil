@@ -50,6 +50,7 @@ import {
   type ProductTranslationPayload,
   type ProductVariantPayload,
 } from './queries';
+import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 
 type LocaleCode = 'en' | 'tr' | 'ar';
 
@@ -708,12 +709,16 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
 
   const localeAttributes = attributes[locale];
 
+  const unsavedRef = useUnsavedGuard(save.isSuccess);
+
   const storefrontUrl = `${STOREFRONT_BASE_URL}/${locale}/product/${
     current.slug || translations.en.slug || 'new-product'
   }`;
 
   return (
-    <div className="mx-auto max-w-[1280px]">
+    // `unsaved.ref` scopes the dirty-detection listener to this form; leaving with
+    // edits in flight now prompts instead of silently discarding them.
+    <div className="mx-auto max-w-[1280px]" ref={unsavedRef}>
       <nav className="text-muted-foreground mb-4 flex items-center gap-1.5 text-[13px]">
         <Link to="/products" className="hover:text-foreground">
           Products

@@ -227,7 +227,9 @@ function SubcategoryRow({
         <div className="min-w-0">
           <div className="text-foreground truncate text-[13px] font-medium">{nameOf(category)}</div>
           <div className="text-muted-foreground truncate font-mono text-[11px]">
-            /category/{en?.slug ?? '—'}
+            {/* `/catalogue/`, not `/category/` — the storefront route is
+                app/[locale]/catalogue/[category]. The old string 404s if copied. */}
+            /catalogue/{en?.slug ?? '—'}
           </div>
         </div>
       </div>
@@ -331,7 +333,9 @@ function ParentRow({
           <div className="min-w-0">
             <div className="text-foreground truncate text-[13px] font-medium">{nameOf(parent)}</div>
             <div className="text-muted-foreground truncate font-mono text-[11.5px]">
-              /category/{en?.slug ?? '—'} · {childrenCats.length} sub
+              {/* `/catalogue/`, not `/category/` — the storefront route is
+                app/[locale]/catalogue/[category]. The old string 404s if copied. */}
+              /catalogue/{en?.slug ?? '—'} · {childrenCats.length} sub
               {childrenCats.length === 1 ? '' : 's'}
             </div>
           </div>

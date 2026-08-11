@@ -235,7 +235,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <>
       <JsonLd schema={[organizationSchema(), websiteSchema(locale)]} />
       <SiteHeader />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         <Hero channels={channels} features={features} />
         <Sectors categories={roots} />
         <FeaturedProducts products={featured} />

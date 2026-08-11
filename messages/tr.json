@@ -39,6 +39,7 @@
   },
   "store": {
     "nav_home": "Ana sayfa",
+    "skip_to_content": "İçeriğe geç",
     "nav_catalog": "Katalog",
     "nav_about": "Hakkımızda",
     "signin": "Giriş yap",

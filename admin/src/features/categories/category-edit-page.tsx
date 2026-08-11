@@ -386,7 +386,8 @@ function EditForm({ category, isNew }: { category: AdminCategory | null; isNew: 
                 />
                 {locale === errors.locale && errors.slug && <FieldError>{errors.slug}</FieldError>}
                 <FieldHelp>
-                  URL: /{locale}/category/{current.slug || '…'} · lowercase, hyphen-separated.
+                  {/* The storefront serves categories at /catalogue/<slug>. */}
+                  URL: /{locale}/catalogue/{current.slug || '…'} · lowercase, hyphen-separated.
                 </FieldHelp>
               </Field>
 
