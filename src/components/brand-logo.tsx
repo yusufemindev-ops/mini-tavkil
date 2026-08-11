@@ -2,29 +2,54 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 /**
- * The Tavkil lockup: a monogram tile and the wordmark beside it.
+ * The Tavkil lockup: a seal and the name beside it.
  *
- * There is no logo artwork, so the brand *is* type and CSS. Two things follow
- * from that. The typeface is Inter, already loaded for body copy — a wordmark is
- * a handful of glyphs, and pulling a second family for them would cost a render-
- * blocking font request to set six letters. And the tile is drawn rather than
- * drawn *on*: a gradient, a machined top edge, and a brand-tinted shadow, which
- * survives any size and both themes without an asset to keep in sync.
+ * *Tavkil* (تَوْكِيل / tevkil) is delegation — appointing someone to act on your
+ * behalf. That is the business: a buyer hands their sourcing to us and we act for
+ * them in Türkiye. A tevkil is granted by a sealed document, so the mark is a
+ * seal rather than a letter in a box.
  *
- * Inter needs negative tracking at display sizes — its default fit is tuned for
- * paragraphs, and left alone the wordmark reads loose and unresolved next to the
- * tile. `-0.035em` closes it up without touching the counters.
+ * Round on purpose. Every marketplace ships a rounded square, and in a row of
+ * browser tabs or app icons they are indistinguishable; a disc has a silhouette
+ * of its own before anyone reads the glyph. The ring sits *inside* the disc so
+ * the outline stays a clean circle at 16px, and the T is heavier than a typeface
+ * would set it, because a seal is stamped rather than typed.
  *
- * Previously this markup sat inline in both the header and the footer, in two
- * versions that had already drifted: the footer hard-coded `text-white` and
- * dropped the shadow. One component now serves both, and the admin-supplied
- * `logoUrl` still wins over all of it when a real asset exists.
+ * The name is lowercase and tightly tracked — a marketplace, not a manufacturer —
+ * with the dot of the "i" replaced by an orange square: a unit, the thing being
+ * moved. That substitution only applies to the brand name itself; an
+ * admin-supplied `siteName` renders plainly, since the trick is a piece of
+ * lettering rather than a rule about text.
  *
- * RTL: the wordmark is forced `dir="ltr"`. A Latin brand name inside an Arabic
- * page otherwise takes part in bidi reordering, and adjacent punctuation can jump
- * to the wrong end of it. The lockup as a whole still mirrors, because the gap is
- * a logical one — the tile leads on the correct side in both directions.
+ * There is no logo file, so the mark is drawn: no asset to keep in sync, correct
+ * at any size, and identical on every machine. An uploaded `logoUrl` still wins.
+ *
+ * RTL: the wordmark is pinned `dir="ltr"` so a Latin name inside an Arabic page
+ * is not reordered by bidi. The lockup as a whole still mirrors — the gap is
+ * logical, so the seal leads on the correct side either way.
  */
+
+/** The seal. Inline SVG rather than lucide: this is the brand mark, not an icon. */
+function Seal({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden focusable="false">
+      <circle cx="32" cy="32" r="32" className="brand-seal-disc" />
+      <circle
+        cx="32"
+        cy="32"
+        r="24.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        className="brand-seal-ring"
+      />
+      <path d="M19 23.5h26v9.5h-8v20h-10v-20h-8Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+const BRAND = 'tavkil';
+
 export function BrandLogo({
   siteName = 'Tavkil',
   logoUrl = '',
@@ -43,10 +68,8 @@ export function BrandLogo({
   onNavigate?: () => void;
 }) {
   const brandName = siteName || 'Tavkil';
-  // The glyph runs to roughly 62% of the tile. At the 50% a default `text-base`
-  // gives, the monogram floats in a field of orange and the mark reads as an
-  // empty swatch at header size — it needs to fill its box to hold together.
-  const tile = size === 'sm' ? 'size-8 text-[1.25rem]' : 'size-9 text-[1.4rem]';
+  const mark = size === 'sm' ? 'size-8' : 'size-9';
+  const isBrand = brandName.toLowerCase() === BRAND;
 
   return (
     <Link
@@ -62,26 +85,35 @@ export function BrandLogo({
         <img
           src={logoUrl}
           alt=""
-          className={cn('rounded-[9px] object-cover', tile)}
+          className={cn('rounded-full object-cover', mark)}
           width={size === 'sm' ? 32 : 36}
           height={size === 'sm' ? 32 : 36}
         />
       ) : (
-        <span aria-hidden className={cn('brand-tile grid place-items-center rounded-[9px]', tile)}>
-          {/* Optical centring: the crossbar of a capital sits high, so the glyph
-              needs nudging down inside a square to look centred rather than be
-              centred. */}
-          <span className="brand-tile-letter">{brandName.charAt(0).toUpperCase()}</span>
-        </span>
+        <Seal className={cn('brand-seal flex-none', mark)} />
       )}
+
       <span
         dir="ltr"
         className={cn(
-          'brand-word text-[1.2rem] font-extrabold',
+          'brand-word text-[1.24rem] font-extrabold',
           tone === 'onDark' ? 'text-white' : 'text-foreground',
         )}
       >
-        {brandName}
+        {isBrand ? (
+          <>
+            tavk
+            {/* The square sits over the printed dot rather than replacing the
+                glyph, so the letter keeps its own spacing and the name stays
+                selectable and readable to a screen reader. */}
+            <span className="brand-i">
+              i<span aria-hidden className="brand-i-dot" />
+            </span>
+            l
+          </>
+        ) : (
+          brandName
+        )}
       </span>
     </Link>
   );

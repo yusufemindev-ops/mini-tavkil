@@ -1,12 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- The header's logo tile as an icon: brand orange square, white T. A square
-       reads better than a glyph at 16px, and it is the mark people already
-       associate with the site.
+  <!-- The Tavkil seal. A tevkil is a sealed authority to act on someone's
+       behalf, which is the business; the mark is the seal rather than a letter
+       in a box.
 
-       The T is a path, not <text>. Favicons render with no webfonts loaded, so a
-       text element falls back to whatever the OS happens to resolve — the letter
-       then differs in weight and width between machines, which is exactly the
-       kind of drift nobody can reproduce. A path is the same everywhere. -->
-  <rect width="64" height="64" rx="14" fill="#f2640c"/>
-  <path d="M13.5 16H50.5V25.5H37V48H27V25.5H13.5Z" fill="#ffffff"/>
+       Round because every marketplace ships a rounded square and they are
+       indistinguishable in a row of tabs. The ring sits inside the disc so the
+       silhouette stays a clean circle at 16px, and the T is a path rather than
+       <text>: favicons render with no webfonts loaded, so a text element falls
+       back to whatever the OS resolves and the letter differs per machine. -->
+  <circle cx="32" cy="32" r="32" fill="#f2640c"/>
+  <circle cx="32" cy="32" r="24.5" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.5"/>
+  <path d="M19 23.5h26v9.5h-8v20h-10v-20h-8Z" fill="#ffffff"/>
 </svg>
