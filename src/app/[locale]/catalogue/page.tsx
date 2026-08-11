@@ -132,7 +132,9 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
                       </h2>
                       <Link
                         href={`/catalogue/${category.slug}`}
-                        className="text-primary-ink inline-flex shrink-0 items-center gap-1 text-sm font-medium hover:underline"
+                        // py-1 gives this a 24px-tall hit area. WCAG 2.2 (2.5.8) wants 24×24 for a
+                        // standalone control, and at text-sm alone it measured 20px.
+                        className="text-primary-ink inline-flex shrink-0 items-center gap-1 py-1 text-sm font-medium hover:underline"
                       >
                         {t('cat_viewall')}
                         <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />
