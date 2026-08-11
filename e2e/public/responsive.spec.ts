@@ -128,8 +128,15 @@ for (const path of ['', '/catalogue', '/about', '/contact']) {
         const style = getComputedStyle(el);
         // WCAG 2.5.8 governs POINTER targets. A visually-hidden, keyboard-only
         // control — the skip link — is clipped away and cannot be tapped at all,
-        // so its box size is meaningless. `clip` is the sr-only technique.
-        if (style.clip !== 'auto' && style.clip !== '') continue;
+        // so its box size is meaningless.
+        //
+        // Both clipping techniques: Tailwind v4's `sr-only` uses
+        // `clip-path: inset(50%)`, older utilities use `clip: rect(…)`. Checking
+        // only `clip` missed it and flagged the skip link on every page.
+        const clipped =
+          (style.clipPath !== 'none' && style.clipPath !== '') ||
+          (style.clip !== 'auto' && style.clip !== '');
+        if (clipped) continue;
         const rect = el.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) continue;
         if (rect.height < 24 || rect.width < 24) {
