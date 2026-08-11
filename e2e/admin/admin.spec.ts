@@ -80,6 +80,30 @@ test.describe('admin', () => {
     await expect(page.getByText('row(s)')).toBeVisible();
   });
 
+  test("the storefront previews render — every Preview button 404'd", async ({ page, request }) => {
+    // `window.open('/preview/…')` bypasses React Router's basename, so all five
+    // Preview buttons opened `https://host/preview/…` and hit the Next 404
+    // instead of `/admin/preview/…`. Correct in Tavkil, where the admin sat at
+    // its own origin root; wrong the moment it is mounted under /admin.
+    const { data } = await (await request.get('/api/admin/products?pageSize=1')).json();
+    const productId = data.items[0].id;
+    const categories = (await (await request.get('/api/admin/categories')).json()).data;
+    const categoryId = categories[0].id;
+
+    for (const path of [
+      `/admin/preview/product/${productId}`,
+      `/admin/preview/category/${categoryId}`,
+      '/admin/preview/catalogue',
+    ]) {
+      const response = await page.goto(path);
+      expect(response?.status(), `${path} should render`).toBe(200);
+      await expect(page).not.toHaveURL(/admin\/login/);
+      // The SPA shell resolves the route client-side; a 404 renders Next's own
+      // "This page could not be found", which the shell never contains.
+      await expect(page.locator('body')).not.toContainText('This page could not be found');
+    }
+  });
+
   test('a non-existent product is a 404, not a 500', async ({ request }) => {
     const response = await request.get('/api/admin/products/00000000-0000-0000-0000-000000000000');
     expect(response.status()).toBe(404);

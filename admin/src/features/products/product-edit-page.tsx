@@ -51,6 +51,7 @@ import {
   type ProductVariantPayload,
 } from './queries';
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
+import { adminUrl } from '@/lib/admin-url';
 
 type LocaleCode = 'en' | 'tr' | 'ar';
 
@@ -747,7 +748,9 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
               disabled={save.isPending || (isNew && !hasName)}
               title={isNew && !hasName ? 'Enter a product name first' : undefined}
               onClick={() =>
-                isNew ? onSave(true) : window.open(`/preview/product/${productId}`, '_blank')
+                isNew
+                  ? onSave(true)
+                  : window.open(adminUrl(`/preview/product/${productId}`), '_blank')
               }
             >
               <Eye className="size-4" />

@@ -47,6 +47,7 @@ import {
   useCategories,
   type AdminCategory,
 } from './queries';
+import { adminUrl } from '@/lib/admin-url';
 
 // Shared column grid so the header and every row line up. Columns:
 // name (flex) · locales · status · actions.
@@ -130,7 +131,7 @@ function RowActions({
           aria-label="Preview on storefront"
           onClick={(e) => {
             e.stopPropagation();
-            window.open(`/preview/category/${category.id}`, '_blank');
+            window.open(adminUrl(`/preview/category/${category.id}`), '_blank');
           }}
           className={ICON_BTN}
         >
@@ -486,7 +487,7 @@ export function CategoriesPage() {
           <>
             <Button
               variant="outline"
-              onClick={() => window.open('/preview/catalogue', '_blank')}
+              onClick={() => window.open(adminUrl('/preview/catalogue'), '_blank')}
               disabled={topLevel.length === 0}
             >
               <Eye className="size-4" /> Preview catalogue

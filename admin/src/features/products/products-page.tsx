@@ -42,6 +42,7 @@ import {
   type ProductPageResult,
   type ProductSort,
 } from './queries';
+import { adminUrl } from '@/lib/admin-url';
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -428,7 +429,9 @@ export function ProductsPage() {
                               <button
                                 type="button"
                                 aria-label="Preview product"
-                                onClick={() => window.open(`/preview/product/${p.id}`, '_blank')}
+                                onClick={() =>
+                                  window.open(adminUrl(`/preview/product/${p.id}`), '_blank')
+                                }
                                 className="text-muted-foreground hover:bg-muted hover:text-foreground grid size-8 place-items-center rounded-md transition-colors"
                               >
                                 <Eye className="size-4" />

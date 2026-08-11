@@ -42,6 +42,7 @@ import {
   type AdminCategory,
   type TranslationPayload,
 } from './queries';
+import { adminUrl } from '@/lib/admin-url';
 
 // Convert the editable drafts into the backend translation payload. Locales with
 // no name are dropped — an empty translation isn't sent.
@@ -333,7 +334,7 @@ function EditForm({ category, isNew }: { category: AdminCategory | null; isNew: 
             {!isNew && (
               <Button
                 variant="outline"
-                onClick={() => window.open(`/preview/category/${categoryId}`, '_blank')}
+                onClick={() => window.open(adminUrl(`/preview/category/${categoryId}`), '_blank')}
               >
                 <Eye className="size-4" />
                 Preview
