@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 type NotificationVariant = 'info' | 'success' | 'warning' | 'error';
 
 const TONE: Record<NotificationVariant, { icon: LucideIcon; chip: string }> = {
-  info: { icon: Info, chip: 'bg-primary-soft text-primary' },
+  info: { icon: Info, chip: 'bg-primary-soft text-primary-ink' },
   success: { icon: CheckCircle2, chip: 'bg-ok/15 text-ok' },
   warning: { icon: AlertTriangle, chip: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
   error: { icon: AlertCircle, chip: 'bg-destructive/10 text-destructive' },

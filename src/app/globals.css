@@ -15,15 +15,17 @@
   --popover-foreground: #15181d;
   --foreground: #15181d;
   --foreground-soft: #3d424b;
-  /* Deepened from #f2640c for WCAG AA. The vivid orange measured 3.18:1 against
-     white — both as button text and as link text — where 4.5:1 is required for
-     normal text. #c24e06 is 4.79:1 and is still unmistakably the brand; the
-     bright shade survives as --primary-hover and in dark mode. */
-  --primary: #c24e06;
+  /* Tavkil's brand orange, exactly. It measures 3.18:1 on white, so it is a FILL
+     colour, not a text colour: use it for button/badge backgrounds, the logo
+     tile, rings and glows. Orange *text* on a light background uses
+     --primary-ink (4.79:1), which is what that token is for.
+     This was briefly deepened to #c24e06 to clear axe; that fixed contrast by
+     changing the brand on every page, which is the wrong trade. */
+  --primary: #f2640c;
   --primary-foreground: #ffffff;
   --primary-soft: #fff1e7;
-  --primary-ink: #9a3c08;
-  --primary-hover: #a8420a;
+  --primary-ink: #c24e06;
+  --primary-hover: #ff7a1a;
   --secondary: #f5f6f8;
   --secondary-foreground: #15181d;
   --muted: #f5f6f8;
@@ -37,7 +39,7 @@
   --border: #e6e8ec;
   --border-2: #eff1f4;
   --input: #e6e8ec;
-  --ring: #c24e06;
+  --ring: #f2640c;
   --radius: 0.75rem;
   --container: 1240px;
   --container-wide: 1380px;
@@ -55,19 +57,19 @@
   --footer-2: #1b1f26;
   --footer-foreground: #9aa2b1;
   --footer-border: rgba(255, 255, 255, 0.08);
-  --chart-1: #c24e06;
+  --chart-1: #f2640c;
   --chart-2: #1f9d55;
   --chart-3: #6b7280;
   --chart-4: #e6e8ec;
   --chart-5: #15181d;
   --sidebar: #ffffff;
   --sidebar-foreground: #15181d;
-  --sidebar-primary: #c24e06;
+  --sidebar-primary: #f2640c;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f5f6f8;
   --sidebar-accent-foreground: #15181d;
   --sidebar-border: #e6e8ec;
-  --sidebar-ring: #c24e06;
+  --sidebar-ring: #f2640c;
 }
 
 .dark {

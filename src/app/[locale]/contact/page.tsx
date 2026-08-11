@@ -30,7 +30,7 @@ export async function generateMetadata({
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3.5">
-      <span className="bg-primary-soft text-primary grid size-10 flex-none place-items-center rounded-[10px]">
+      <span className="bg-primary-soft text-primary-ink grid size-10 flex-none place-items-center rounded-[10px]">
         {icon}
       </span>
       <div>
@@ -58,7 +58,7 @@ function ContactNote({
   const t = useTranslations('store');
   return (
     <section className="border-border bg-card flex flex-col justify-center rounded-lg border p-7 sm:p-9">
-      <span className="bg-primary-soft text-primary grid size-12 place-items-center rounded-xl">
+      <span className="bg-primary-soft text-primary-ink grid size-12 place-items-center rounded-xl">
         <MessageCircle className="size-6" />
       </span>
       <h2 className="text-foreground mt-5 text-xl font-bold tracking-tight">{t('con_note_t')}</h2>
@@ -87,7 +87,7 @@ function ContactNote({
       {email && (
         <p className="text-muted-foreground mt-4 text-[0.82rem]">
           {t('con_email_l')}:{' '}
-          <a href={`mailto:${email}`} className="text-primary font-medium hover:underline">
+          <a href={`mailto:${email}`} className="text-primary-ink font-medium hover:underline">
             {email}
           </a>
         </p>

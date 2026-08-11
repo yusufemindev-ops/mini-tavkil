@@ -72,7 +72,7 @@ export function SiteHeaderNav({
                 className={cn(
                   'relative rounded-md px-3.5 py-2 text-[0.94rem] font-medium transition-colors',
                   active
-                    ? 'text-primary after:bg-primary after:absolute after:inset-x-3.5 after:bottom-1 after:h-0.5 after:rounded-full'
+                    ? 'text-primary-ink after:bg-primary after:absolute after:inset-x-3.5 after:bottom-1 after:h-0.5 after:rounded-full'
                     : 'text-foreground-soft hover:bg-background-2 hover:text-foreground',
                 )}
               >

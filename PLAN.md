@@ -697,15 +697,31 @@ without a valid token are rejected.
 | 14b Playwright    | 22/22 against the **deployed** URL. Admin flows still need a Google session — see below.                  |
 | 14c Browser sweep | 22 pages × view-source: zero price/supplier occurrences. Console clean, no overflow at 375px.             |
 | 14d UI rules      | No inline SVG except 4 brand marks lucide doesn't ship; no hardcoded strings; empty states on every list. |
-| 14e Accessibility | **axe: 0 violations**, WCAG 2.1 AA, six pages × three locales including Arabic. Was 87.                   |
+| 14e Accessibility | WCAG 2.1 AA, six pages × three locales including Arabic. 87 → 3–5 nodes/page, all the accepted brand-orange fill. |
 | 14f Lighthouse    | A11y **100**, Best Practices **100**, SEO 66→**100** with indexing on. LCP **292 ms**, CLS **0.00**.      |
 | 14g SEO substance | JSON-LD server-rendered; canonical per-locale; hreflang reciprocal + x-default; real `lastmod`.           |
 | 14h Security      | 7 headers live. Secrets-in-bundle finding recorded below.                                                 |
 
-**The a11y pass earned its place.** 87 contrast violations, all from the brand
-orange: white on it measured 2.61–3.18:1 where 4.5 is required. Fixed by deepening
-light-mode `--primary` and flipping dark-mode's foreground to near-black — the
-brand survives, the glare doesn't.
+**The a11y pass earned its place — but its first fix was wrong.** 87 contrast
+violations, all from the brand orange: white on it measured 2.61–3.18:1 where 4.5
+is required. I fixed it by deepening light-mode `--primary` from `#f2640c` to
+`#c24e06`. That cleared axe and quietly changed the brand on every page of a
+project whose entire purpose is to carry the Tavkil brand forward. The owner
+caught it (2026-08-11) and chose the right split:
+
+- **`--primary` is a fill colour.** Restored to Tavkil's exact `#f2640c`, along
+  with `--primary-hover`, `--primary-ink`, `--ring`, `--chart-1` and the sidebar
+  pair. All 97 brand tokens now match `packages/tokens/tokens.css` byte for byte,
+  except dark-mode `--primary-foreground` (kept near-black; white on `#ff7a1a` is
+  2.61:1 and reads as glare).
+- **Orange as text goes through `--primary-ink`** (`#c24e06`, 4.79:1 on white) —
+  the token Tavkil already defines for exactly this. 17 call sites moved.
+- **Large text keeps the vivid orange**: the hero `<em>`, the 404 numeral and the
+  stat figures are ≥24px, where the AA bar is 3:1 and `#f2640c` passes at 3.18.
+
+What remains is 3–5 nodes per page, all one pairing: white on the orange fill
+(primary buttons, the active language pill). `e2e/public/a11y.spec.ts` allows that
+pairing and nothing else, so a new contrast regression still fails the run.
 
 **Two of my own checks were wrong before the code was.** A leak sweep appeared to
 cover 20 pages but ran three times, because zsh doesn't word-split unquoted

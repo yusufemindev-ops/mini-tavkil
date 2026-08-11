@@ -31,7 +31,7 @@ export function CategoryTile({
       {category.imageUrl ? (
         <Thumb src={category.imageUrl} className="size-[50px] flex-none rounded-lg" />
       ) : (
-        <div className="bg-primary-soft text-primary group-hover:bg-primary grid size-[50px] flex-none place-items-center rounded-lg transition-colors group-hover:text-white">
+        <div className="bg-primary-soft text-primary-ink group-hover:bg-primary grid size-[50px] flex-none place-items-center rounded-lg transition-colors group-hover:text-white">
           <PackageIcon className="size-6" />
         </div>
       )}
@@ -43,7 +43,7 @@ export function CategoryTile({
           </p>
         )}
         {productCount !== undefined && (
-          <span className="text-primary mt-2.5 inline-flex items-center gap-1.5 font-mono text-[0.78rem] font-semibold">
+          <span className="text-primary-ink mt-2.5 inline-flex items-center gap-1.5 font-mono text-[0.78rem] font-semibold">
             {productCount.toLocaleString()} {t('skus')}
           </span>
         )}

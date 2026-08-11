@@ -20,7 +20,7 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
           node = <span className={last ? 'text-foreground-soft' : undefined}>{item.label}</span>;
         } else {
           node = (
-            <Link href={item.href} className="hover:text-primary">
+            <Link href={item.href} className="hover:text-primary-ink">
               {item.label}
             </Link>
           );

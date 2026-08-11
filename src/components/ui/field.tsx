@@ -24,7 +24,7 @@ export function Field({
         <label htmlFor={htmlFor} className="text-foreground text-[0.82rem] font-semibold">
           {label}
         </label>
-        {action ? <span className="text-primary text-[0.8rem]">{action}</span> : null}
+        {action ? <span className="text-primary-ink text-[0.8rem]">{action}</span> : null}
       </div>
       {children}
       {error ? <p className="text-destructive mt-1.5 text-[0.8rem]">{error}</p> : null}

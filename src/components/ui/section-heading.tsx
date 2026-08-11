@@ -17,8 +17,10 @@ export function Kicker({
     <span
       className={cn(
         'inline-flex items-center gap-2 text-[0.78rem] font-bold uppercase tracking-wider',
-        // text-primary measures 4.43:1 on the tinted section background; the ink
-        // shade clears 4.5 in both themes.
+        // 0.78rem is normal-size text, so it needs 4.5:1. The brand orange is a
+        // fill colour — it measures 3.18:1 on white and 2.94:1 on the tinted
+        // section background. --primary-ink is the text-safe shade of the same
+        // orange (4.79:1 / 4.43:1) and is what Tavkil defines the token for.
         tone === 'onDark' ? 'text-white' : 'text-primary-ink',
         'before:h-0.5 before:w-[18px] before:rounded-full before:content-[""]',
         tone === 'onDark' ? 'before:bg-white' : 'before:bg-primary',
@@ -54,7 +56,7 @@ export function SectionHeading({
       {viewAll && (
         <Link
           href={viewAll.href}
-          className="text-primary group inline-flex items-center gap-1.5 text-[0.92rem] font-semibold"
+          className="text-primary-ink group inline-flex items-center gap-1.5 text-[0.92rem] font-semibold"
         >
           {viewAll.label}
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />

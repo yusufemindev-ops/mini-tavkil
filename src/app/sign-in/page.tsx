@@ -87,7 +87,7 @@ export default async function SignInPage({
 
         <p className="border-border text-muted-foreground mt-8 border-t pt-5 text-[0.8rem] leading-relaxed">
           Looking for the catalogue?{' '}
-          <Link href="/en" className="text-primary font-medium hover:underline">
+          <Link href="/en" className="text-primary-ink font-medium hover:underline">
             Go to the storefront
           </Link>
           .

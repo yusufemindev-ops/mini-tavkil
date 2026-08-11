@@ -85,7 +85,7 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
           <p className="text-muted-foreground mt-3 text-lg">
             {t.rich('cat_lead', {
               contact: (chunks) => (
-                <Link href="/contact" className="text-primary font-medium hover:underline">
+                <Link href="/contact" className="text-primary-ink font-medium hover:underline">
                   {chunks}
                 </Link>
               ),
@@ -131,7 +131,7 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
                       </h2>
                       <Link
                         href={`/catalogue/${category.slug}`}
-                        className="text-primary inline-flex shrink-0 items-center gap-1 text-sm font-medium hover:underline"
+                        className="text-primary-ink inline-flex shrink-0 items-center gap-1 text-sm font-medium hover:underline"
                       >
                         {t('cat_viewall')}
                         <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />

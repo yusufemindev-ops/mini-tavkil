@@ -59,7 +59,7 @@ export function Toaster(props: ToasterProps) {
           success: 'border-ok/30 border-s-ok bg-ok/[0.12] [&_[data-title]]:text-ok',
           error:
             'border-destructive/30 border-s-destructive bg-destructive/[0.12] [&_[data-title]]:text-destructive',
-          info: 'border-primary/30 border-s-primary bg-primary/[0.1] [&_[data-title]]:text-primary',
+          info: 'border-primary/30 border-s-primary bg-primary/[0.1] [&_[data-title]]:text-primary-ink',
           warning:
             'border-amber-500/30 border-s-amber-500 bg-amber-500/[0.12] [&_[data-title]]:text-amber-700 dark:[&_[data-title]]:text-amber-400',
         },

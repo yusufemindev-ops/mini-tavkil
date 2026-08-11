@@ -18,7 +18,7 @@ export function CtaPanel() {
   const t = useTranslations('store');
   return (
     <section className="mx-auto max-w-[var(--width-container)] px-5 py-14 sm:px-6">
-      <Reveal className="relative overflow-hidden rounded-lg bg-[linear-gradient(120deg,#a8420a,#c24e06)] px-8 py-12 sm:px-12 sm:py-14">
+      <Reveal className="relative overflow-hidden rounded-lg bg-[linear-gradient(120deg,var(--primary),var(--primary-hover))] px-8 py-12 sm:px-12 sm:py-14">
         {/* dotted overlay */}
         <span
           aria-hidden
