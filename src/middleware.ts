@@ -54,13 +54,13 @@ export default function middleware(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
-  // `/admin` and `/sign-in` live outside `[locale]` — they are staff surfaces, not
-  // storefront pages. But a visitor arriving from `/en/...` naturally reaches for
+  // `/admin` lives outside `[locale]` — it is a staff surface, not a storefront
+  // page. But a visitor arriving from `/en/...` naturally reaches for
   // `/en/admin`, and next-intl's matcher claims `/(tr|ar|en)/:path*`, so that URL
-  // fell through to the i18n handler, found no route, and **404'd**. Same for
-  // `/en/sign-in`. A 404 is the worst possible answer here: it looks like the
-  // admin is broken rather than like the address is wrong.
-  const localePrefixed = pathname.match(/^\/(?:en|tr|ar)(\/(?:admin|sign-in)(?:\/.*)?)$/);
+  // fell through to the i18n handler, found no route, and **404'd**. A 404 is the
+  // worst possible answer here: it looks like the admin is broken rather than
+  // like the address is wrong.
+  const localePrefixed = pathname.match(/^\/(?:en|tr|ar)(\/admin(?:\/.*)?)$/);
   if (localePrefixed) {
     const url = request.nextUrl.clone();
     url.pathname = localePrefixed[1];
@@ -69,17 +69,19 @@ export default function middleware(request: NextRequest): NextResponse {
 
   if (pathname.startsWith('/admin')) {
     // The SPA's own JS, CSS and fonts must not be gated. They carry no data — the
-    // bundle is identical for every visitor — and redirecting them to /sign-in
-    // breaks the page for a signed-in admin whose *first* request is an asset
-    // (a hard refresh, or a cached shell re-fetching a chunk).
+    // bundle is identical for every visitor — and redirecting them breaks the page
+    // for a signed-in admin whose *first* request is an asset (a hard refresh, or
+    // a cached shell re-fetching a chunk).
     if (ADMIN_ASSET.test(pathname)) return NextResponse.next();
+
+    // `/admin/login` is the SPA's own login screen and must stay reachable while
+    // signed out — that is the whole point of it.
+    if (pathname === '/admin/login') return NextResponse.next();
 
     if (!SESSION_COOKIE.test(request.headers.get('cookie') ?? '')) {
       const url = request.nextUrl.clone();
-      url.pathname = '/sign-in';
+      url.pathname = '/admin/login';
       url.search = '';
-      // So sign-in can send them back where they were going.
-      url.searchParams.set('next', pathname);
       return NextResponse.redirect(url);
     }
     return NextResponse.next();

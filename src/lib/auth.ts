@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/lib/db';
 import { authAccount, authSession, authUser, authVerification } from '@/lib/db/schema';
+import { isAllowlisted } from '@/lib/permissions/allowlist';
 
 /**
  * Better Auth, Google only, admins only.
@@ -32,12 +33,35 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: { enabled: false },
+  /**
+   * Stamp `userType` on the row, because the admin SPA reads it.
+   *
+   * Tavkil's Nest backend set this at signup and its dashboard gates on it —
+   * `features/auth/me-api.ts` throws `unauthorized` unless the session user is
+   * `userType: 'admin'`, which sends the SPA to its own /login. The column
+   * defaults to `'buyer'`, so every Google sign-in here produced a valid session
+   * that the dashboard then rejected: sign in, land on /admin/dashboard, bounce
+   * straight back to the login screen.
+   *
+   * Setting it from the allowlist keeps that ported check meaningful instead of
+   * deleting it. It is not the security boundary — `requireAdmin()` re-reads
+   * ADMIN_ALLOWLIST on every request, so a stale `'admin'` here grants nothing.
+   */
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => ({
+          data: { ...user, userType: isAllowlisted(user.email) ? 'admin' : 'buyer' },
+        }),
+      },
+    },
+  },
   // Where a failed OAuth round-trip lands. Without this, Better Auth redirects to
   // its own /api/auth/error, which redirects to `/`, which the i18n middleware
   // then rewrites to `/en?error=…` — so a failed sign-in dropped the admin on the
   // storefront homepage with the reason hidden in a query string nothing reads.
-  // Sending it to /sign-in puts the message on the page that can act on it.
-  onAPIError: { errorURL: '/sign-in' },
+  // Sending it to /admin/login puts the message on the page that can act on it.
+  onAPIError: { errorURL: '/admin/login' },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',

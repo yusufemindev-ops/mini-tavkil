@@ -40,12 +40,20 @@ export async function GET(request: Request) {
     return new Response('Not found', { status: 404 });
   }
 
-  // The shell is gated. A signed-out visitor is redirected by the middleware;
-  // this catches anyone who got past it with a forged cookie, and is a real
-  // session check rather than the cookie-presence test middleware can afford.
-  const admin = await getAdmin(request);
-  if (!admin) {
-    return Response.redirect(new URL('/sign-in?error=not-allowed', url.origin), 307);
+  // `/admin/login` is the SPA's own sign-in screen. It has to render for a
+  // signed-out visitor — gating it would redirect the login page to itself.
+  // It carries no data: the shell is identical for everyone, and every API call
+  // the SPA makes afterwards is still checked server-side.
+  const isLoginScreen = url.pathname === '/admin/login';
+
+  // Every other admin path is gated. A signed-out visitor is redirected by the
+  // middleware; this catches anyone who got past it with a forged cookie, and is
+  // a real session check rather than the cookie-presence test middleware affords.
+  if (!isLoginScreen) {
+    const admin = await getAdmin(request);
+    if (!admin) {
+      return Response.redirect(new URL('/admin/login?error=not-allowed', url.origin), 307);
+    }
   }
 
   return new Response(ADMIN_SHELL, {
