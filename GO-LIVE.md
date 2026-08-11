@@ -148,33 +148,41 @@ why they had never executed once — and every bug the first real login found li
 in that gap. `e2e/.auth/admin.json` (gitignored) holds one; regenerate it when
 the admin specs start redirecting to `/admin/login`.
 
-## Resolved: the brand orange no longer fails AA on button labels
+## Accepted, on the record: brand colours fail AA on labels
 
-Recorded here on 2026-08-11 as an accepted exception, and fixed on your call the
-same day. Kept in the record rather than deleted, because the reasoning is why
-the fix looks the way it does.
+Decided by the owner on 2026-08-11, reversed once, and re-affirmed the same day
+after seeing the alternative built. It stays visible here rather than buried as a
+silent exception in a test file.
 
-The problem was real in both themes, not just light: white on `#f2640c` measured
-**3.18:1** and white on the dark-mode `#ff7a1a` measured **2.61:1**, against the
-4.5:1 AA wants for normal text.
+| surface | fill | label | ratio | AA (4.5:1) |
+| --- | --- | --- | --- | --- |
+| Primary button, light | `#f2640c` | white | 3.18:1 | fails |
+| Primary button, dark | `#ff7a1a` | white | 2.61:1 | fails |
+| WhatsApp button | `#25D366` | white | 1.98:1 | fails |
 
-What made it awkward was that deepening `--primary` fixed text on buttons by
-restyling the logo, rings and glows too. So the fill a button uses is now its own
-token, `--primary-button`, and the brand orange is untouched everywhere it is not
-carrying words:
+Both were fixed at one point and both fixes were rejected on sight:
 
-| | fill | label | ratio |
-| --- | --- | --- | --- |
-| Light | `#bd4c06` (already the palette's `--primary-ink`) | white | 5.00:1 |
-| Dark | `#ff7a1a` (unchanged brand orange) | `#1a1005` | 7.19:1 |
+- The button fill was deepened to `#bd4c06` (5.00:1 with white). It cleared AA
+  and stopped being Tavkil's orange, which is the thing customers recognise.
+- WhatsApp was tried with a dark label on the exact green (9.38:1) and then with
+  white on a deepened `#098540` (4.73:1). Neither reads as a WhatsApp button.
 
-Dark mode darkens the label rather than the fill, because an orange dark enough
-to carry white text stops reading as an accent on a dark page.
+The reasoning is the same in both cases and worth stating plainly: **the colour
+is what identifies the control.** A button nobody recognises has an accessibility
+problem of its own.
 
-The allowance in `e2e/public/a11y.spec.ts` is gone with it — the suite now runs
-with no contrast exception of any kind, and passes 17/17. An allowance left
-behind after its cause is fixed is a hole waiting for the next regression.
-Lighthouse accessibility went 96 → 100.
+What is *not* covered: orange used as text goes through `--primary-ink`
+(`#bd4c06`), which clears 4.5:1 on white, on `--primary-soft` and on
+`--background-2`. Large display text passes the 3:1 large-text bar.
+
+`e2e/public/a11y.spec.ts` allows exactly three pairings — white on either
+theme's orange, and white on WhatsApp green — and nothing else. Any other
+contrast regression still fails the run. Lighthouse accessibility reads 96
+instead of 100, and that number is the price of the decision, not a defect.
+
+If it is ever revisited, the move is dark ink on the orange fill
+(`#15181d` on `#f2640c` ≈ 6.3:1). It changes how every button looks, which is
+exactly why it was rejected.
 
 ## Worth doing, not blocking
 

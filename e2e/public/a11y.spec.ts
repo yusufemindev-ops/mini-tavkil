@@ -17,6 +17,40 @@ import { expect, test } from '@playwright/test';
 const LOCALES = ['en', 'tr', 'ar'] as const;
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
+/**
+ * One accepted pairing, and it is a brand decision rather than an oversight.
+ *
+ * Tavkil's orange is `#f2640c` (`#ff7a1a` in dark mode). White on it measures
+ * 3.18:1 and 2.61:1, where AA wants 4.5:1 — so primary button labels and the
+ * active language pill miss.
+ *
+ * This has now been decided twice. It was fixed once, by deepening the button
+ * fill to #bd4c06 and darkening the dark-mode label; the owner looked at the
+ * result and rejected it both times. The brand orange is the brand, and a button
+ * that is not that colour is not Tavkil's button. Lighthouse accessibility sits
+ * at 96 rather than 100 as a result, which is the cost of that call.
+ *
+ * The exception is exactly three pairings — white on either theme's orange, and
+ * white on WhatsApp's green — and nothing else. Orange used as *text* goes through `--primary-ink` (#bd4c06),
+ * which clears 4.5:1 on white, on --primary-soft and on --background-2, so it
+ * needs no exception at all. Any other contrast regression still fails the run.
+ */
+const ACCEPTED_FILLS = [
+  '#f2640c', // brand orange, light
+  '#ff7a1a', // brand orange, dark
+  '#25d366', // WhatsApp green — same decision, same reasoning
+];
+
+function isAcceptedBrandContrast(node: { any: { id: string; data?: unknown }[] }): boolean {
+  const data = node.any.find((check) => check.id === 'color-contrast')?.data as
+    { fgColor?: string; bgColor?: string } | undefined;
+  if (!data) return false;
+  return (
+    data.fgColor?.toLowerCase() === '#ffffff' &&
+    ACCEPTED_FILLS.includes(data.bgColor?.toLowerCase() ?? '')
+  );
+}
+
 async function scan(page: import('@playwright/test').Page, path: string) {
   // `load`, not `networkidle`. Networkidle waits for 500ms of silence, which five
   // workers hammering a remote Worker never reliably reach — the suite failed a
@@ -24,14 +58,17 @@ async function scan(page: import('@playwright/test').Page, path: string) {
   // parsed DOM and applied styles, which `load` guarantees; network quiet is
   // neither necessary nor obtainable here.
   await page.goto(path, { waitUntil: 'load' });
-  const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
 
-  // No exceptions. There used to be one — white on the brand orange measured
-  // 3.18:1 and was accepted as a brand decision — but it is fixed rather than
-  // excused now: button labels sit on `--primary-button`, a deeper orange
-  // already in the palette, and the brand orange is untouched everywhere it is
-  // not carrying words. An allowance left behind after its cause is gone is
-  // just a hole waiting for the next regression to fall through.
+  // Drop only the nodes covered by the brand exception; a violation whose nodes
+  // are all accepted disappears, one with any other node still fails.
+  const violations = results.violations
+    .map((v) =>
+      v.id === 'color-contrast'
+        ? { ...v, nodes: v.nodes.filter((n) => !isAcceptedBrandContrast(n)) }
+        : v,
+    )
+    .filter((v) => v.nodes.length > 0);
 
   // Name the rule and the first offending element — "3 violations" is useless
   // when the run is red six weeks later.

@@ -2,6 +2,7 @@ import { NavLink } from 'react-router';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/features/auth/use-permissions';
 import { NAV_GROUPS } from './nav-items';
+import { BrandSeal } from '@/components/brand-seal';
 
 // Grouped sidebar (prototype `.sidebar`): brand + labelled nav groups, orange
 // active state, teal count badges.
@@ -19,9 +20,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     <div className="bg-sidebar text-sidebar-foreground border-sidebar-border flex h-full w-[244px] flex-col border-r">
       {/* Brand */}
       <div className="border-sidebar-border flex h-14 flex-none items-center gap-2.5 border-b px-5">
-        <span className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md text-sm font-bold">
-          T
-        </span>
+        <BrandSeal className="size-7 flex-none" />
         <div className="leading-tight">
           <div className="text-[0.95rem] font-semibold">Tavkil</div>
         </div>

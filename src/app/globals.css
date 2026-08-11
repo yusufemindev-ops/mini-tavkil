@@ -28,14 +28,15 @@
   --primary: #f2640c;
   --primary-foreground: #ffffff;
   --primary-soft: #fff1e7;
-  /* The fill a button actually uses, kept apart from --primary on purpose.
-     White on the brand orange is 3.18:1 — below the 4.5 AA wants for a label —
-     but deepening --primary itself would restyle the logo, rings and glows to
-     fix text on a button. This is the deeper brand orange (the same value as
-     --primary-ink) and clears 5.00:1 with white, while the brand orange stays
-     exactly as it is everywhere it is not carrying words. */
-  --primary-button: #bd4c06;
-  --primary-button-foreground: #ffffff;
+  /* The fill a button uses. It is Tavkil's exact orange with white on it, which
+     measures 3.18:1 — below the 4.5 AA wants for a label.
+
+     This was briefly deepened to #bd4c06 to clear AA. The owner looked at it and
+     rejected it twice: the brand orange is the brand, and a button that is not
+     that colour is not Tavkil's button. Kept as its own token so the decision
+     lives in one line rather than being spread across ten components. */
+  --primary-button: var(--primary);
+  --primary-button-foreground: var(--primary-foreground);
   /* Tavkil's ink is #c24e06. Five points darker, because #c24e06 measures
      4.33:1 on --primary-soft and 4.43:1 on --background-2 — both just under the
      4.5 AA needs for normal text, and both are real surfaces this sits on (chips,
@@ -101,16 +102,10 @@
   --foreground-soft: #c2c7d0;
   --primary: #ff7a1a;
   --primary-foreground: #ffffff;
-  /* Dark mode keeps the bright orange and darkens the label instead — 7.19:1,
-     and the standard move for a light accent on a dark surface. Going the other
-     way would need an orange dark enough for white text, which on a dark page
-     stops reading as an accent at all.
-
-     This gap was previously accepted in GO-LIVE.md rather than fixed, on the
-     grounds that changing it would alter the brand. It does not: the fill is
-     still Tavkil's orange, and only the words on top of it changed. */
-  --primary-button: #ff7a1a;
-  --primary-button-foreground: #1a1005;
+  /* Same decision in dark mode: Tavkil's orange, white label. 2.61:1, accepted
+     on the owner's call — see GO-LIVE.md. */
+  --primary-button: var(--primary);
+  --primary-button-foreground: var(--primary-foreground);
   --primary-soft: #2a1c12;
   --primary-ink: #ffb37a;
   --primary-hover: #ff8c38;

@@ -4,6 +4,7 @@ import { Building2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { GoogleButton } from '@/components/auth/google-button';
 import { authClient } from '@/lib/auth-client';
+import { BrandSeal } from '@/components/brand-seal';
 
 export function LoginPage() {
   const [pending, setPending] = useState(false);
@@ -31,9 +32,7 @@ export function LoginPage() {
       {/* Minimal top bar — brand + theme toggle (no full nav on the login screen) */}
       <header className="border-border flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-center gap-2">
-          <span className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md text-sm font-bold">
-            T
-          </span>
+          <BrandSeal className="size-7 flex-none" />
           <span className="text-foreground text-[0.95rem] font-semibold">Tavkil</span>
         </div>
         <ThemeToggle />

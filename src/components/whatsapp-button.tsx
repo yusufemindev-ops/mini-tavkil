@@ -2,24 +2,23 @@ import { WhatsAppIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 /**
- * WhatsApp's brand green, and a dark ink to put on it.
+ * WhatsApp's exact green, with a white label — the button everyone recognises.
  *
- * White on #25D366 is 1.98:1 — it fails AA text contrast (4.5:1) and even the
- * 3:1 that non-text graphics need. That is how every WhatsApp button on the web
- * looks, and it stayed invisible here only because the button hides itself until
- * a number is configured; the moment one was, three pages started failing the
- * accessibility suite.
+ * It measures 1.98:1, which fails AA text contrast and even the 3:1 non-text
+ * graphics need. Two alternatives were built and both rejected on sight: a dark
+ * label on the brand green (9.38:1) did not read as WhatsApp, and a deepened
+ * green carrying white (#098540, 4.73:1) was worse again. The owner's call, and
+ * the same one made for the brand orange — the colour is what identifies the
+ * button, so the colour stays.
  *
- * Keeping the exact brand green and darkening the foreground gives 9.38:1, which
- * is the better trade than inventing a darker green nobody recognises: the colour
- * is what makes the button read as WhatsApp at a glance, the glyph is what makes
- * it legible.
+ * Recorded rather than hidden: GO-LIVE.md carries it, and a11y.spec.ts allows
+ * this exact pairing and no other.
  *
  * The link target comes from the caller via `waUrl(settings.whatsappNumber)`, so
  * an unset number → empty href → nothing renders.
  */
 const WA_GREEN = '#25D366';
-const WA_INK = '#0b141a';
+const WA_INK = '#ffffff';
 
 // Reusable WhatsApp link. `icon` = bordered square for the header; `full` = the
 // labelled green button used on the contact page. Renders nothing when `href` is
