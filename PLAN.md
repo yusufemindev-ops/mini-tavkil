@@ -847,6 +847,30 @@ serving the old entry after the 300 s stale window, scope the cache per build wi
   JPEG/PNG/WebP, and sniff the actual bytes, not just the declared MIME type.
 - Enforce `MAX_UPLOAD_MB` server-side
 
+**⚠ FINDING — secrets are inlined into the Worker bundle at build time**
+
+`.open-next/cloudflare/next-env.mjs` contains `DATABASE_URL` (with password),
+`BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET` and `INDEXNOW_API_KEY` in plaintext.
+OpenNext captures `.env` at build time because Next does.
+
+What was checked, and what is _not_ affected:
+
+- **No secret value reaches the browser.** `.open-next/assets/` and `public/admin/`
+  contain zero matches for `npg_`, `GOCSPX-` or `postgresql://`. The one
+  `BETTER_AUTH_SECRET` string in the admin bundle is better-auth's env _accessor_
+  — the variable name in `process.env` lookup code, not a value.
+- The deployed Worker does not serve the file (checked directly).
+- `.open-next/` is gitignored, so nothing is committed.
+
+Why it still matters: the Worker's _code_ now carries the secrets rather than
+reading them from `wrangler secret` bindings, so **rotating a secret needs a
+rebuild and redeploy, not just `wrangler secret put`** — and a stale build
+artifact is a full credential dump.
+
+Fix before launch: build with an `.env` holding only the three public
+`NEXT_PUBLIC_*` values, and let every real secret arrive from `wrangler secret` at
+runtime. Then re-run the grep below and expect silence.
+
 **Secrets & exposure:**
 
 - **Audit every `NEXT_PUBLIC_*` var** — that prefix means it is compiled into client
