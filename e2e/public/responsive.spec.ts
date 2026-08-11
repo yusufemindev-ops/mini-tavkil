@@ -94,26 +94,29 @@ test('the catalogue rail becomes a dropdown below lg', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Categories' })).toBeVisible();
 });
 
-test('tap targets on a phone are big enough to hit', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto('/en/catalogue');
+for (const path of ['', '/catalogue', '/about', '/contact']) {
+  test(`tap targets on a phone are big enough to hit${path || ' (home)'}`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(`/en${path}`, { waitUntil: 'networkidle' });
 
-  // 24px is the WCAG 2.2 minimum (2.5.8); 44px is Apple's guidance. Inline links
-  // inside a paragraph are exempt — the rule targets standalone controls.
-  const small = await page.evaluate(() => {
-    const offenders: string[] = [];
-    for (const el of document.querySelectorAll('button, a[href]')) {
-      const inParagraph = el.closest('p') !== null;
-      if (inParagraph) continue;
-      const rect = el.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) continue;
-      if (rect.height < 24 || rect.width < 24) {
-        offenders.push(
-          `${el.tagName.toLowerCase()} ${Math.round(rect.width)}×${Math.round(rect.height)}`,
-        );
+    // 24px is the WCAG 2.2 minimum (2.5.8). Inline links inside a paragraph are
+    // exempt — the rule targets standalone controls. This found the hero's 9px
+    // carousel dots, 20px breadcrumbs and 22px "View all" links.
+    const small = await page.evaluate(() => {
+      const offenders: string[] = [];
+      for (const el of document.querySelectorAll('button, a[href]')) {
+        if (el.closest('p')) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) continue;
+        if (rect.height < 24 || rect.width < 24) {
+          offenders.push(
+            `${el.tagName.toLowerCase()} "${(el.textContent ?? '').trim().slice(0, 20)}" ` +
+              `${Math.round(rect.width)}×${Math.round(rect.height)}`,
+          );
+        }
       }
-    }
-    return offenders;
+      return offenders;
+    });
+    expect(small, `/en${path}`).toEqual([]);
   });
-  expect(small).toEqual([]);
-});
+}

@@ -385,12 +385,19 @@
   display: flex;
   gap: 8px;
 }
+/* The dot stays 9px; the BUTTON is padded out to a 24px hit area and pulled back
+   with a negative margin, so WCAG 2.2 (2.5.8) is satisfied without changing the
+   spacing. A 9px touch target is a real problem on a phone — this is the one
+   control that advances the hero. */
 .scDots button {
   inline-size: 9px;
   block-size: 9px;
+  box-sizing: content-box;
+  padding: 7.5px;
+  margin: -7.5px;
+  background-clip: content-box;
   border-radius: 50%;
   background: var(--border);
-  padding: 0;
   border: 0;
   cursor: pointer;
   transition:

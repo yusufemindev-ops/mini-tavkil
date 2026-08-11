@@ -20,7 +20,9 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
           node = <span className={last ? 'text-foreground-soft' : undefined}>{item.label}</span>;
         } else {
           node = (
-            <Link href={item.href} className="hover:text-primary-ink">
+            // inline-block + py-1 gives a 24px hit area (WCAG 2.2, 2.5.8); at the
+            // inherited line-height alone these measured 20px.
+            <Link href={item.href} className="hover:text-primary-ink inline-block py-1">
               {item.label}
             </Link>
           );

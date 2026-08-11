@@ -56,7 +56,7 @@ export function SectionHeading({
       {viewAll && (
         <Link
           href={viewAll.href}
-          className="text-primary-ink group inline-flex items-center gap-1.5 text-[0.92rem] font-semibold"
+          className="text-primary-ink group inline-flex items-center gap-1.5 py-1 text-[0.92rem] font-semibold"
         >
           {viewAll.label}
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
