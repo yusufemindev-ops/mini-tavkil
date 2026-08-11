@@ -52,7 +52,7 @@ export function Toaster(props: ToasterProps) {
           toast: 'rounded-lg border border-s-4 bg-card font-sans shadow-card !gap-3.5',
           title: 'text-sm font-semibold',
           description: 'text-muted-foreground',
-          actionButton: 'rounded-sm bg-primary text-primary-foreground',
+          actionButton: 'rounded-sm bg-primary-button text-primary-button-foreground',
           cancelButton: 'rounded-sm bg-muted text-muted-foreground',
           closeButton: 'border-border bg-card text-muted-foreground hover:text-foreground',
           // Stronger per-state color: tinted surface, colored accent + title.

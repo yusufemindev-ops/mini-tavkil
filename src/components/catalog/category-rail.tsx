@@ -76,7 +76,7 @@ export function CategoryPill({ hint, active }: { hint?: string; active?: boolean
       className={cn(
         'grid size-[30px] flex-none place-items-center overflow-hidden rounded-lg transition-colors',
         active
-          ? 'bg-primary text-primary-foreground'
+          ? 'bg-primary-button text-primary-button-foreground'
           : 'bg-primary-soft text-primary-ink group-hover:bg-primary group-hover:text-primary-foreground',
       )}
     >

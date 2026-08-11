@@ -21,7 +21,7 @@ export function SkipLink() {
   return (
     <a
       href="#main"
-      className="bg-primary text-primary-foreground focus-visible:ring-ring/50 sr-only text-sm font-semibold focus-visible:not-sr-only focus-visible:absolute focus-visible:start-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded-sm focus-visible:px-4 focus-visible:py-2 focus-visible:ring-3"
+      className="bg-primary-button text-primary-button-foreground focus-visible:ring-ring/50 sr-only text-sm font-semibold focus-visible:not-sr-only focus-visible:absolute focus-visible:start-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded-sm focus-visible:px-4 focus-visible:py-2 focus-visible:ring-3"
     >
       {t('skip_to_content')}
     </a>

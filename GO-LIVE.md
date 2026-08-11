@@ -148,24 +148,33 @@ why they had never executed once — and every bug the first real login found li
 in that gap. `e2e/.auth/admin.json` (gitignored) holds one; regenerate it when
 the admin specs start redirecting to `/admin/login`.
 
-## Accepted, on the record: the brand orange fails AA on button labels
+## Resolved: the brand orange no longer fails AA on button labels
 
-Your call on 2026-08-11, and it should stay a visible decision rather than a
-silent exception in a test file.
+Recorded here on 2026-08-11 as an accepted exception, and fixed on your call the
+same day. Kept in the record rather than deleted, because the reasoning is why
+the fix looks the way it does.
 
-`--primary` is Tavkil's exact `#f2640c`. **White text on it measures 3.18:1**,
-where WCAG 2.1 AA wants 4.5:1 for normal text. That affects primary button labels
-and the active language pill — 3–5 elements per page. Everything else is clean:
-orange used as _text_ goes through `--primary-ink` (`#bd4c06`, 5.00:1 on white and
-≥4.5 on every tinted surface it sits on), and large
-display text passes the 3:1 large-text bar at 3.18.
+The problem was real in both themes, not just light: white on `#f2640c` measured
+**3.18:1** and white on the dark-mode `#ff7a1a` measured **2.61:1**, against the
+4.5:1 AA wants for normal text.
 
-`e2e/public/a11y.spec.ts` allows exactly one pairing — white on `#f2640c` — so any
-other contrast regression still fails the run. It is not a blanket suppression.
+What made it awkward was that deepening `--primary` fixed text on buttons by
+restyling the logo, rings and glows too. So the fill a button uses is now its own
+token, `--primary-button`, and the brand orange is untouched everywhere it is not
+carrying words:
 
-If you ever want it fully AA-clean without touching the brand, the move is dark
-ink on the orange fill (`#15181d` on `#f2640c` ≈ 6.3:1), which is already what
-dark mode does. It changes how buttons look; that's why I didn't do it.
+| | fill | label | ratio |
+| --- | --- | --- | --- |
+| Light | `#bd4c06` (already the palette's `--primary-ink`) | white | 5.00:1 |
+| Dark | `#ff7a1a` (unchanged brand orange) | `#1a1005` | 7.19:1 |
+
+Dark mode darkens the label rather than the fill, because an orange dark enough
+to carry white text stops reading as an accent on a dark page.
+
+The allowance in `e2e/public/a11y.spec.ts` is gone with it — the suite now runs
+with no contrast exception of any kind, and passes 17/17. An allowance left
+behind after its cause is fixed is a hole waiting for the next regression.
+Lighthouse accessibility went 96 → 100.
 
 ## Worth doing, not blocking
 

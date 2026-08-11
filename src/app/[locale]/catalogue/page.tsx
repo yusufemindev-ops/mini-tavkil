@@ -111,7 +111,7 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
             </p>
             <Link
               href="/contact"
-              className="bg-primary text-primary-foreground hover:bg-primary-hover mt-5 inline-flex items-center rounded-sm px-4 py-2 text-sm font-medium transition-colors"
+              className="bg-primary-button text-primary-button-foreground hover:bg-primary-hover mt-5 inline-flex items-center rounded-sm px-4 py-2 text-sm font-medium transition-colors"
             >
               {t('cat_empty_cta')}
             </Link>

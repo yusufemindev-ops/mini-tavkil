@@ -45,7 +45,7 @@ export function LocaleSwitcher() {
               'flex h-full items-center px-[9px]',
               'border-border not-first:border-s',
               active
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary-button text-primary-button-foreground'
                 : 'text-muted-foreground hover:bg-background-2 hover:text-foreground',
             )}
           >

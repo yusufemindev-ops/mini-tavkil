@@ -95,7 +95,7 @@ function ContactNote({
           {email && (
             <a
               href={mailto}
-              className="bg-primary text-primary-foreground flex w-full items-center justify-center gap-2.5 rounded-sm px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+              className="bg-primary-button text-primary-button-foreground flex w-full items-center justify-center gap-2.5 rounded-sm px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
             >
               <Mail className="size-[18px]" />
               {t('con_email_cta')}

@@ -117,7 +117,7 @@ function ModeTab({
       className={cn(
         'inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[0.82rem] font-semibold transition-colors',
         active
-          ? 'bg-primary text-primary-foreground'
+          ? 'bg-primary-button text-primary-button-foreground'
           : 'text-muted-foreground hover:text-foreground',
         disabled && 'hover:text-muted-foreground cursor-not-allowed opacity-40',
       )}

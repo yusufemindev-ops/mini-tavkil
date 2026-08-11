@@ -28,6 +28,14 @@
   --primary: #f2640c;
   --primary-foreground: #ffffff;
   --primary-soft: #fff1e7;
+  /* The fill a button actually uses, kept apart from --primary on purpose.
+     White on the brand orange is 3.18:1 — below the 4.5 AA wants for a label —
+     but deepening --primary itself would restyle the logo, rings and glows to
+     fix text on a button. This is the deeper brand orange (the same value as
+     --primary-ink) and clears 5.00:1 with white, while the brand orange stays
+     exactly as it is everywhere it is not carrying words. */
+  --primary-button: #bd4c06;
+  --primary-button-foreground: #ffffff;
   /* Tavkil's ink is #c24e06. Five points darker, because #c24e06 measures
      4.33:1 on --primary-soft and 4.43:1 on --background-2 — both just under the
      4.5 AA needs for normal text, and both are real surfaces this sits on (chips,
@@ -92,11 +100,17 @@
   --foreground: #f3f5f8;
   --foreground-soft: #c2c7d0;
   --primary: #ff7a1a;
-  /* Tavkil's value. White on this orange is 2.61:1 and a near-black would be
-     6.82:1 — but swapping it made every dark-mode button read as a different
-     brand, which is the one thing this project cannot afford. The AA gap on
-     button labels is recorded in GO-LIVE.md as an accepted, deliberate call. */
   --primary-foreground: #ffffff;
+  /* Dark mode keeps the bright orange and darkens the label instead — 7.19:1,
+     and the standard move for a light accent on a dark surface. Going the other
+     way would need an orange dark enough for white text, which on a dark page
+     stops reading as an accent at all.
+
+     This gap was previously accepted in GO-LIVE.md rather than fixed, on the
+     grounds that changing it would alter the brand. It does not: the fill is
+     still Tavkil's orange, and only the words on top of it changed. */
+  --primary-button: #ff7a1a;
+  --primary-button-foreground: #1a1005;
   --primary-soft: #2a1c12;
   --primary-ink: #ffb37a;
   --primary-hover: #ff8c38;
@@ -184,6 +198,8 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-button: var(--primary-button);
+  --color-primary-button-foreground: var(--primary-button-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
