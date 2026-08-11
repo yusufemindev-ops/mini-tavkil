@@ -26,16 +26,58 @@ test.describe('admin', () => {
   test('price and supplier ARE visible here — the other half of the rule', async ({ request }) => {
     const response = await request.get('/api/admin/products?pageSize=5');
     expect(response.status()).toBe(200);
-    const body = await response.text();
-    // The public shape has no field for these at all; the admin shape must.
-    expect(body).toContain('basePriceAmount');
-    expect(body).toContain('supplierId');
+    const { data } = await response.json();
+    const [product] = data.items;
+    // The public shape has no field for these at all; the admin shape must, and
+    // as OBJECTS — `basePrice.amount`, `supplier.name` — because that is what
+    // Tavkil's admin SPA reads. Asserting on the raw string missed the day these
+    // were `basePriceAmount` / `supplierId` and every table cell showed "—".
+    expect(product.basePrice).toMatchObject({ amount: expect.any(Number) });
+    expect(product.supplier).toMatchObject({ id: expect.any(String) });
+    expect(product.category).toMatchObject({ id: expect.any(String) });
+  });
+
+  test('every admin response is wrapped in { data } — the SPA unwraps it', async ({ request }) => {
+    // admin/src/lib/api/client.ts returns `payload.data`. A bare body resolves to
+    // `undefined` in the SPA with a 200 and no error: the dashboard renders its
+    // empty state and the sidebar hides every entry. Cheap to assert, expensive
+    // to rediscover.
+    for (const path of ['/api/admin/categories', '/api/admin/suppliers', '/api/admin/me']) {
+      const response = await request.get(path);
+      expect(response.status(), path).toBe(200);
+      expect(await response.json(), path).toHaveProperty('data');
+    }
   });
 
   test('categories are listable and the catalogue is editable', async ({ request }) => {
     const response = await request.get('/api/admin/categories');
     expect(response.status()).toBe(200);
-    expect(Array.isArray(await response.json())).toBe(true);
+    const { data } = await response.json();
+    expect(Array.isArray(data)).toBe(true);
+  });
+
+  test('the sidebar shows every section an Owner may reach', async ({ page }) => {
+    // The permissions round-trip is what decides this. When /admin/me returned
+    // nothing usable, RequirePermission hid all of these and the dashboard looked
+    // like an unfinished build.
+    await page.goto('/admin/dashboard');
+    for (const label of ['Products', 'Categories', 'Suppliers', 'User management', 'Settings']) {
+      await expect(page.getByRole('link', { name: label })).toBeVisible();
+    }
+  });
+
+  test('the dashboard shows real catalogue numbers, not an empty state', async ({ page }) => {
+    await page.goto('/admin/dashboard');
+    await expect(page.getByText('No catalog metrics yet.')).toHaveCount(0);
+    await expect(page.getByText('Published products').first()).toBeVisible();
+  });
+
+  test('the users table renders — it crashed to a white screen once', async ({ page }) => {
+    // `STATUS_BADGE[member.status].variant` threw when the DTO had no `status`,
+    // killing the whole route rather than one cell.
+    await page.goto('/admin/users');
+    await expect(page.getByRole('heading', { name: 'User management' })).toBeVisible();
+    await expect(page.getByText('row(s)')).toBeVisible();
   });
 
   test('a non-existent product is a 404, not a 500', async ({ request }) => {
