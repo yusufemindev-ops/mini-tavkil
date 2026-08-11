@@ -15,12 +15,25 @@ export function JsonLd({ schema }: { schema: Schema | Schema[] }) {
   );
 }
 
+/**
+ * The entity behind the site.
+ *
+ * `name` and `url` alone give an answer engine nothing to say about us beyond the
+ * domain. `description` and `areaServed` are what a "what is Tavkil / who supplies
+ * X from Türkiye" answer can actually be built from. `sameAs` is deliberately
+ * absent until the profiles exist — pointing it at pages that do not resolve is
+ * worse than omitting it.
+ */
 export function organizationSchema(): Schema {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: SITE_NAME,
     url: BASE_URL,
+    description:
+      'A wholesale showcase for verified Turkish manufacturers. Full specifications, pack sizes and minimum order quantities are published for every product; pricing is by quote.',
+    logo: { '@type': 'ImageObject', url: `${BASE_URL}/icon.png` },
+    areaServed: 'Worldwide',
   };
 }
 
@@ -53,7 +66,10 @@ export function breadcrumbSchema(locale: string, trail: BreadcrumbLink[]): Schem
       '@type': 'ListItem',
       position: index + 1,
       name: crumb.name,
-      ...(crumb.path ? { item: `${BASE_URL}/${locale}${crumb.path}` } : {}),
+      // `path !== undefined`, not truthiness: the Home crumb's path is the empty
+      // string, so a truthy test silently dropped `item` from position 1 and left
+      // Google without a complete trail to build a breadcrumb result from.
+      ...(crumb.path !== undefined ? { item: `${BASE_URL}/${locale}${crumb.path}` } : {}),
     })),
   };
 }
@@ -78,6 +94,7 @@ export function productSchema({
   countryOfOrigin,
   images,
   attributes,
+  updatedAt,
 }: {
   locale: string;
   slug: string;
@@ -91,6 +108,8 @@ export function productSchema({
   countryOfOrigin: string | null;
   images: string[];
   attributes: { label: string; value: string }[];
+  /** The row's own `updated_at` — the same source the sitemap's lastModified uses. */
+  updatedAt?: Date;
 }): Schema {
   return {
     '@context': 'https://schema.org',
@@ -103,6 +122,7 @@ export function productSchema({
     ...(brandName ? { brand: { '@type': 'Brand', name: brandName } } : {}),
     ...(categoryName ? { category: categoryName } : {}),
     ...(countryOfOrigin ? { countryOfOrigin } : {}),
+    ...(updatedAt ? { dateModified: updatedAt.toISOString() } : {}),
     ...(images.length > 0 ? { image: images } : {}),
     ...(attributes.length > 0
       ? {

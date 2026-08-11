@@ -9,20 +9,42 @@ import { decodeSlug, localizedPathMap } from '@/lib/catalog/localized-path';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { CategoryProductGrid } from '@/components/catalog/category-product-grid';
 import { CategoryFilters } from '@/components/catalog/category-filters';
-import { CategorySort } from '@/components/catalog/category-sort';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { breadcrumbSchema, collectionSchema, JsonLd } from '@/lib/seo/json-ld';
-import { parseProductSort } from '@/lib/catalog/product-sort';
 import {
   publicCategories,
   publicCategory,
   publicProductCount,
   publicProducts,
+  publicSitemapEntries,
   type Locale,
   type PublicCategory,
 } from '@/lib/queries/public-product';
 
 export const revalidate = 3600;
+
+/**
+ * Prerender every published category, in every locale it is translated into that exists at build time.
+ *
+ * Without this the route has a dynamic segment Next cannot enumerate, so it is
+ * marked `ƒ Dynamic` and every request answers
+ * `Cache-Control: private, no-cache, no-store` — no edge cache, and a Neon round
+ * trip on every crawler hit. `revalidate = 3600` alone does not fix that: there
+ * has to be something to revalidate.
+ *
+ * `dynamicParams` stays at its default of `true` on purpose. A product published
+ * in the admin after this build must appear without a redeploy; it renders on
+ * demand the first time and is cached from then on.
+ *
+ * The query is the sitemap's, so both surfaces enumerate the catalogue the same
+ * way — published rows, and only locales with a complete translation.
+ */
+export async function generateStaticParams() {
+  const rows = await publicSitemapEntries();
+  return rows
+    .filter((row) => row.type === 'category')
+    .map((row) => ({ locale: row.locale, category: row.slug }));
+}
 
 // Sibling subcategories, and the top-level category the "All" filter points at.
 // A root category filters on itself and offers its own children; a child filters
@@ -59,10 +81,8 @@ export async function generateMetadata({
 
 export default async function CategoryPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string; category: string }>;
-  searchParams: Promise<{ sort?: string }>;
 }) {
   const { locale, category } = await params;
   setRequestLocale(locale);
@@ -74,13 +94,14 @@ export default async function CategoryPage({
   // would be indexable and would dilute the site.
   if (!found) notFound();
 
-  const sort = parseProductSort((await searchParams).sort);
   const filter = {
     category: found.slug,
     // A root category lists everything beneath it; otherwise a parent whose
     // products all live in children would render an empty grid.
     includeDescendants: found.parent === null,
-    sort,
+    // Always the recommended order. Sorting moved to the browser so that reading
+    // `?sort=` no longer opts this route out of static rendering — see
+    // `CategoryListing` for the reasoning.
   };
 
   const [products, total, { parentSlug, siblings }] = await Promise.all([
@@ -132,23 +153,9 @@ export default async function CategoryPage({
             siblings.length > 0 && 'lg:grid-cols-[300px_1fr]',
           )}
         >
-          <CategoryFilters
-            siblings={siblings}
-            parentSlug={parentSlug}
-            activeSlug={found.slug}
-            sort={sort}
-          />
+          <CategoryFilters siblings={siblings} parentSlug={parentSlug} activeSlug={found.slug} />
 
-          <div>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-muted-foreground font-mono text-sm">
-                {total} {t('cat_results')}
-              </p>
-              {products.length > 0 && <CategorySort value={sort} />}
-            </div>
-
-            <CategoryProductGrid products={products} />
-          </div>
+          <CategoryProductGrid products={products} total={total} locale={locale} />
         </div>
       </main>
       <SiteFooter />

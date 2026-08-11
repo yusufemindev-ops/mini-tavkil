@@ -9,6 +9,7 @@ import * as schema from '../../src/lib/db/schema';
 import { CATEGORIES } from '../catalogue-tree';
 import { CATEGORY_BY_TR, PRODUCTS, type Locale, type Tri } from './catalogue';
 import { attributesFor } from './attributes';
+import { DESCRIPTIONS } from './descriptions';
 
 /**
  * Imports Temsan's real catalogue: 82 products, 104 variants, 243 photographs.
@@ -325,9 +326,15 @@ async function main() {
         productId: row.id,
         locale: l,
         name: copy.name[l],
-        description: copy.desc[l],
+        // Long-form copy where it has been written, else the one-line summary
+        // from catalogue.ts. Kept separate so a locale can be filled in without
+        // touching the other two.
+        description: DESCRIPTIONS[copy.code]?.[l] ?? copy.desc[l],
         slug: slugify(copy.name[l]),
         seoTitle: copy.name[l],
+        // The meta description stays the short line: it has ~155 characters to
+        // work with, and truncating a 75-word paragraph produces a worse snippet
+        // than a sentence written to fit.
         seoDescription: copy.desc[l],
         isComplete: true,
       })),

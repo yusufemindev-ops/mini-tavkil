@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { PackageOpen } from 'lucide-react';
 import { ProductCard } from '@/components/catalog/product-card';
+import { CategoryListing } from '@/components/catalog/category-listing';
 import { Link } from '@/i18n/navigation';
 
 import type { PublicProduct } from '@/lib/queries/public-product';
@@ -15,8 +16,21 @@ import type { PublicProduct } from '@/lib/queries/public-product';
  *
  * An empty grid is a state, not a blank area: a category with nothing published
  * yet gets a real explanation and a route onward.
+ *
+ * The cards are rendered here, on the server, and handed to `CategoryListing`
+ * already built. That component reorders them when the visitor sorts; it never
+ * renders a card itself, so nothing about product markup crosses into the client
+ * bundle just to make a `<select>` work.
  */
-export async function CategoryProductGrid({ products }: { products: PublicProduct[] }) {
+export async function CategoryProductGrid({
+  products,
+  total,
+  locale,
+}: {
+  products: PublicProduct[];
+  total: number;
+  locale: string;
+}) {
   const t = await getTranslations('store');
 
   if (products.length === 0) {
@@ -38,12 +52,19 @@ export async function CategoryProductGrid({ products }: { products: PublicProduc
   }
 
   return (
-    <div className="grid grid-cols-2 gap-[18px] sm:grid-cols-3 lg:grid-cols-4">
-      {products.map((product, index) => (
-        // The first row is above the fold on most viewports — eager-load it so the
-        // LCP image isn't waiting on the lazy-load heuristic.
-        <ProductCard key={product.id} product={product} priority={index < 4} />
-      ))}
-    </div>
+    <CategoryListing
+      total={total}
+      locale={locale}
+      cards={products.map((product, index) => ({
+        id: product.id,
+        // The sort keys, so the browser can reproduce `orderFor()` exactly.
+        moq: product.moq,
+        name: product.name,
+        // Only the first card is eager-loaded. It is the LCP candidate; giving
+        // four images high priority at once makes them compete for the same
+        // connection budget and delays the one that actually paints.
+        node: <ProductCard key={product.id} product={product} priority={index === 0} />,
+      }))}
+    />
   );
 }

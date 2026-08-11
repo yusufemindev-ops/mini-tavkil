@@ -1,7 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { cn } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
-import { DEFAULT_PRODUCT_SORT } from '@/lib/catalog/product-sort';
 import type { PublicCategory } from '@/lib/queries/public-product';
 
 // Prototype `.filters` — a carded, single-select list of sibling subcategories.
@@ -14,18 +13,13 @@ export async function CategoryFilters({
   siblings,
   parentSlug,
   activeSlug,
-  sort,
 }: {
   siblings: PublicCategory[];
   /** The top-level category — the "All" target. */
   parentSlug: string;
   activeSlug: string;
-  sort: string;
 }) {
   const t = await getTranslations('store');
-  // Carry a non-default sort across filter navigation; the default view keeps a
-  // clean canonical URL.
-  const suffix = sort !== DEFAULT_PRODUCT_SORT ? `?sort=${sort}` : '';
 
   if (siblings.length === 0) return null;
 
@@ -37,14 +31,14 @@ export async function CategoryFilters({
       <div className="flex flex-col gap-0.5">
         <FilterRow
           label={t('sub_all')}
-          href={`/catalogue/${parentSlug}${suffix}`}
+          href={`/catalogue/${parentSlug}`}
           active={activeSlug === parentSlug}
         />
         {siblings.map((category) => (
           <FilterRow
             key={category.id}
             label={category.name}
-            href={`/catalogue/${category.slug}${suffix}`}
+            href={`/catalogue/${category.slug}`}
             active={activeSlug === category.slug}
           />
         ))}

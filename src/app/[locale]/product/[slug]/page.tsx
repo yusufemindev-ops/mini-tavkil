@@ -13,9 +13,32 @@ import { RegisterLocalizedPaths } from '@/components/localized-paths';
 import { decodeSlug, localizedPathMap } from '@/lib/catalog/localized-path';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { breadcrumbSchema, JsonLd, productSchema } from '@/lib/seo/json-ld';
-import { publicProduct, type Locale } from '@/lib/queries/public-product';
+import { publicProduct, publicSitemapEntries, type Locale } from '@/lib/queries/public-product';
 
 export const revalidate = 3600;
+
+/**
+ * Prerender every published product, in every locale it is translated into that exists at build time.
+ *
+ * Without this the route has a dynamic segment Next cannot enumerate, so it is
+ * marked `ƒ Dynamic` and every request answers
+ * `Cache-Control: private, no-cache, no-store` — no edge cache, and a Neon round
+ * trip on every crawler hit. `revalidate = 3600` alone does not fix that: there
+ * has to be something to revalidate.
+ *
+ * `dynamicParams` stays at its default of `true` on purpose. A product published
+ * in the admin after this build must appear without a redeploy; it renders on
+ * demand the first time and is cached from then on.
+ *
+ * The query is the sitemap's, so both surfaces enumerate the catalogue the same
+ * way — published rows, and only locales with a complete translation.
+ */
+export async function generateStaticParams() {
+  const rows = await publicSitemapEntries();
+  return rows
+    .filter((row) => row.type === 'product')
+    .map((row) => ({ locale: row.locale, slug: row.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -30,8 +53,12 @@ export async function generateMetadata({
     locale,
     path: `/product/${product.slug}`,
     title: `${product.name} · Tavkil`,
-    description: product.description || product.name,
-    ogType: 'article',
+    // The short line first: a 75-word paragraph cut at 155 characters reads as a
+    // truncation, which is what a searcher sees before deciding to click.
+    description: product.seoDescription || product.description || product.name,
+    // Not 'article': that vertical means time-stamped editorial and invites
+    // parsers to look for an author and a publish date this page does not have.
+    ogType: 'website',
     ogImage: product.images[0]?.url,
     // Only locales with a genuine complete translation are advertised.
     alternateLocales: Object.keys(product.localizedSlugs),
@@ -107,6 +134,7 @@ export default async function ProductPage({
       <JsonLd
         schema={[
           productSchema({
+            updatedAt: product.updatedAt,
             locale,
             slug: product.slug,
             name: product.name,

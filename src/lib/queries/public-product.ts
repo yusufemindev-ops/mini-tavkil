@@ -61,6 +61,8 @@ export type PublicProduct = {
   description: string;
   /** Markdown spec sheet, rendered on the product page's Specs tab. */
   specsMd: string | null;
+  /** Short line for the meta description; `description` is the on-page copy. */
+  seoDescription: string | null;
   sku: string | null;
   brandName: string | null;
   countryOfOrigin: string | null;
@@ -168,6 +170,15 @@ const productColumns = {
   name: productTranslations.name,
   description: productTranslations.description,
   specsMd: productTranslations.specsMd,
+  /**
+   * The short line written to fit a search snippet.
+   *
+   * `description` is now a 60–75 word paragraph, and Google shows roughly 155
+   * characters — truncating a paragraph mid-clause produces a worse snippet than
+   * a sentence written to length. Both are kept: the paragraph is the page, this
+   * is the meta tag.
+   */
+  seoDescription: productTranslations.seoDescription,
   slug: productTranslations.slug,
 } as const;
 
@@ -435,6 +446,7 @@ function toPublicProduct(
     name: row.name,
     description: row.description ?? '',
     specsMd: row.specsMd,
+    seoDescription: row.seoDescription,
     sku: row.sku,
     brandName: row.brandName,
     countryOfOrigin: row.countryOfOrigin,

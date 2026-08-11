@@ -79,6 +79,10 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // Nothing needs to know which framework serves this, and the header is one
+  // fewer detail an attacker gets for free.
+  poweredByHeader: false,
+
   async headers() {
     return [{ source: '/:path*', headers: SECURITY_HEADERS }];
   },

@@ -12,16 +12,32 @@ import '../globals.css';
 
 // Inter for Latin/Turkish text, JetBrains Mono for figures (SKUs, stats), and
 // IBM Plex Sans Arabic for the RTL locale.
+//
+// **`preload: false` on all three, deliberately.** Which sans a page uses depends
+// on the locale, but these are module-scope constants — they are created before
+// any request, so `next/font` cannot know that an English page will never render
+// a glyph of IBM Plex Arabic. It emitted `<link rel="preload">` for all seven
+// files on every page, and the browser said so: seven "preloaded but not used
+// within a few seconds" warnings per load, on both /en and /ar.
+//
+// Preloading exists to protect an LCP made of text. The LCP element on every page
+// here is a product photograph, and `display: swap` (next/font's default) paints
+// the text immediately in the fallback either way. So the preload was buying very
+// little and costing every visitor roughly half its font bytes in downloads for a
+// script it cannot read. Without it each locale fetches only the faces its own CSS
+// actually references.
 const inter = Inter({
   variable: '--font-sans',
   subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700', '800'],
+  preload: false,
 });
 
 const plexArabic = IBM_Plex_Sans_Arabic({
   variable: '--font-sans',
   subsets: ['arabic'],
   weight: ['400', '500', '600', '700'],
+  preload: false,
 });
 
 // Tabular figures for SKUs and stats.
@@ -29,6 +45,7 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
   subsets: ['latin'],
   weight: ['400', '500', '600'],
+  preload: false,
 });
 
 /**
