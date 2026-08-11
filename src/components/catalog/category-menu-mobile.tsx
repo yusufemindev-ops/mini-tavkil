@@ -41,7 +41,10 @@ export function CategoryMenuMobile({
                   onClick={() => setOpen(false)}
                   className="text-foreground-soft hover:bg-background-2 hover:text-foreground group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[0.92rem] font-medium transition-colors"
                 >
-                  <CategoryPill imageUrl={item.imageUrl} />
+                  <CategoryPill
+                    imageUrl={item.imageUrl}
+                    hint={`${item.slug ?? ''} ${item.label}`}
+                  />
                   {item.label}
                 </a>
               </li>

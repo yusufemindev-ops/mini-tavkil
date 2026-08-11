@@ -82,10 +82,11 @@
   --foreground: #f3f5f8;
   --foreground-soft: #c2c7d0;
   --primary: #ff7a1a;
-  /* Dark ink, not white. White on this orange is 2.61:1; the near-black is
-     6.82:1. Dark text on a bright orange is the conventional pairing anyway —
-     white on vivid orange reads as glare. */
-  --primary-foreground: #15181d;
+  /* Tavkil's value. White on this orange is 2.61:1 and a near-black would be
+     6.82:1 — but swapping it made every dark-mode button read as a different
+     brand, which is the one thing this project cannot afford. The AA gap on
+     button labels is recorded in GO-LIVE.md as an accepted, deliberate call. */
+  --primary-foreground: #ffffff;
   --primary-soft: #2a1c12;
   --primary-ink: #ffb37a;
   --primary-hover: #ff8c38;

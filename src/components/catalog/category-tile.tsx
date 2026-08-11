@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { ArrowRight } from 'lucide-react';
-import { PackageIcon } from '@/components/icons';
+import { CategoryIcon } from '@/components/icons';
 import { Thumb } from '@/components/catalog/thumb';
 import { Link } from '@/i18n/navigation';
 import type { PublicCategory } from '@/lib/queries/public-product';
@@ -32,7 +32,7 @@ export function CategoryTile({
         <Thumb src={category.imageUrl} className="size-[50px] flex-none rounded-lg" />
       ) : (
         <div className="bg-primary-soft text-primary-ink group-hover:bg-primary grid size-[50px] flex-none place-items-center rounded-lg transition-colors group-hover:text-white">
-          <PackageIcon className="size-6" />
+          <CategoryIcon hint={`${category.slug} ${category.name}`} className="size-6" />
         </div>
       )}
       <div className="min-w-0 flex-1 pe-6">

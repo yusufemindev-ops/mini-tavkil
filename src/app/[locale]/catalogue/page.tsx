@@ -72,6 +72,7 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
     label: category.name,
     href: `#cat-${category.id}`,
     imageUrl: category.imageUrl,
+    slug: category.slug,
   }));
 
   return (

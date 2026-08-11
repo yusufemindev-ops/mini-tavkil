@@ -54,6 +54,19 @@ export default function middleware(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
+  // `/admin` and `/sign-in` live outside `[locale]` — they are staff surfaces, not
+  // storefront pages. But a visitor arriving from `/en/...` naturally reaches for
+  // `/en/admin`, and next-intl's matcher claims `/(tr|ar|en)/:path*`, so that URL
+  // fell through to the i18n handler, found no route, and **404'd**. Same for
+  // `/en/sign-in`. A 404 is the worst possible answer here: it looks like the
+  // admin is broken rather than like the address is wrong.
+  const localePrefixed = pathname.match(/^\/(?:en|tr|ar)(\/(?:admin|sign-in)(?:\/.*)?)$/);
+  if (localePrefixed) {
+    const url = request.nextUrl.clone();
+    url.pathname = localePrefixed[1];
+    return NextResponse.redirect(url);
+  }
+
   if (pathname.startsWith('/admin')) {
     // The SPA's own JS, CSS and fonts must not be gated. They carry no data — the
     // bundle is identical for every visitor — and redirecting them to /sign-in
