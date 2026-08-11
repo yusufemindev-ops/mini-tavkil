@@ -873,37 +873,3 @@ async function hydrate(ids: string[]): Promise<AdminProduct[]> {
       })),
     }));
 }
-
-/** Category and supplier labels for the admin list's filter dropdowns. */
-export async function productFilterOptions() {
-  const [categoryRows, supplierRows] = await Promise.all([
-    db
-      .select({ id: categories.id, name: categoryTranslations.name })
-      .from(categories)
-      .leftJoin(
-        categoryTranslations,
-        and(
-          eq(categoryTranslations.categoryId, categories.id),
-          eq(categoryTranslations.locale, DEFAULT_LOCALE),
-        ),
-      )
-      .where(isNull(categories.deletedAt))
-      .orderBy(asc(categories.displayOrder)),
-    db
-      .select({ id: suppliers.id, name: supplierTranslations.name })
-      .from(suppliers)
-      .leftJoin(
-        supplierTranslations,
-        and(
-          eq(supplierTranslations.supplierId, suppliers.id),
-          eq(supplierTranslations.locale, DEFAULT_LOCALE),
-        ),
-      )
-      .where(isNull(suppliers.deletedAt)),
-  ]);
-
-  return {
-    categories: categoryRows.map((row) => ({ id: row.id, name: row.name ?? '—' })),
-    suppliers: supplierRows.map((row) => ({ id: row.id, name: row.name ?? '—' })),
-  };
-}

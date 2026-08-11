@@ -292,14 +292,3 @@ function toAdminCategory(
     translations,
   };
 }
-
-/** Product counts per category, for the admin list. */
-export async function categoryProductCounts(): Promise<Map<string, number>> {
-  const rows = await db.execute<{ category_id: string; n: number }>(
-    sql`select category_id, count(*)::int as n
-          from products
-         where deleted_at is null and category_id is not null
-      group by category_id`,
-  );
-  return new Map(rows.rows.map((row) => [row.category_id, row.n]));
-}

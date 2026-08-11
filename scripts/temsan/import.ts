@@ -21,10 +21,10 @@ import { CATEGORY_BY_TR, PRODUCTS, type Locale, type Tri } from './catalogue';
  * Runs over DIRECT_URL (TCP), so real transactions are available — this is a
  * script, not a request path (CLAUDE.md §3).
  *
- * Idempotent. Every row it writes has a `temsan-` slug and it clears those first,
- * so re-running after a price change is safe. It also clears the `seed-` demo
- * catalogue this replaces. It never touches a row it did not create — one live
- * database, no staging (CLAUDE.md §7).
+ * Idempotent. It clears the products belonging to this supplier and writes them
+ * again, so re-running after a price change is safe. Categories are shared and
+ * are upserted, never deleted. It touches nothing belonging to another supplier —
+ * one live database, no staging (CLAUDE.md §7).
  *
  *   pnpm import:temsan
  */

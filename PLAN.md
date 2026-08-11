@@ -153,7 +153,8 @@ introspection doesn't recognise it.
 ## ✅ 3. Deploy + seed — DONE
 
 Live on Workers, 6 secrets set, Google OAuth configured for 4 origins.
-`pnpm seed` → 3 categories, 12 products, 2 suppliers, 51 translations EN/TR/AR.
+Seeded with a demo catalogue at the time; since replaced by the real one —
+`pnpm import:temsan` → 15 categories, 82 products, 31 variants, 243 photographs.
 `/api/health` returns real counts.
 
 ## ✅ 4. i18n + storefront shell — DONE

@@ -1,4 +1,7 @@
+import 'dotenv/config';
 import { expect, test } from '@playwright/test';
+import { db } from '../../src/lib/db';
+import { supplierTranslations } from '../../src/lib/db/schema';
 
 /**
  * TESTING.md flow 2 — the one that must never be skipped or muted.
@@ -13,25 +16,52 @@ import { expect, test } from '@playwright/test';
 
 const LOCALES = ['en', 'tr', 'ar'] as const;
 
-/** Values that must never appear. Supplier names come from scripts/seed.ts. */
-const FORBIDDEN = [
+/**
+ * Column names that must never reach rendered HTML, whatever the data.
+ */
+const FORBIDDEN_KEYS = [
   'basePrice',
   'base_price',
   'supplierId',
   'supplier_id',
   'internalNotes',
   'contactEmailInternal',
-  'Anatolia Chemicals',
-  'Anadolu Kimya',
-  'الأناضول للكيماويات',
-  'Marmara Packaging',
-  'Marmara Ambalaj',
-  'مرمرة للتغليف',
 ];
+
+/**
+ * Supplier names, read from the database instead of written down here.
+ *
+ * This was a hardcoded list copied from the seed script. When the seeded
+ * catalogue was replaced by a real supplier the list still named suppliers that
+ * no longer existed, so the guard passed every run while the actual supplier
+ * name went unchecked — a leak test that cannot fail, which reads like coverage
+ * and is worse than none.
+ *
+ * Note what is deliberately NOT in here: the brand. A product's `brandName` is
+ * public and rendered on the page, and for this supplier the brand ("Temsan")
+ * is a prefix of the supplier's legal name ("Temsan Global"). Forbidding the
+ * brand would fail on correct output; forbidding the full supplier name catches
+ * the leak that matters.
+ */
+let supplierNames: string[] = [];
+
+test.beforeAll(async () => {
+  supplierNames = [
+    ...new Set(
+      (await db.select({ name: supplierTranslations.name }).from(supplierTranslations))
+        .map((row) => row.name.trim())
+        .filter(Boolean),
+    ),
+  ];
+  expect(
+    supplierNames.length,
+    'no suppliers in the database — this guard would pass without checking anything',
+  ).toBeGreaterThan(0);
+});
 
 async function assertClean(html: string, where: string) {
   const lower = html.toLowerCase();
-  for (const needle of FORBIDDEN) {
+  for (const needle of [...FORBIDDEN_KEYS, ...supplierNames]) {
     expect(lower.includes(needle.toLowerCase()), `${where} leaked "${needle}"`).toBe(false);
   }
 }

@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { routing } from '@/i18n/routing';
+import { db } from '@/lib/db';
+import { supplierTranslations } from '@/lib/db/schema';
 import { findLeaks, formatLeaks } from './no-leak';
 import {
   publicCategories,
@@ -13,26 +15,29 @@ import {
 } from './public-product';
 
 // Runs against the real Neon database (there is only one — CLAUDE.md §7). Read-only
-// throughout: it asserts on the rows `pnpm seed` created and creates nothing, so
+// throughout: it asserts on whatever rows are published and creates nothing, so
 // there is nothing to tear down and no chance of a stray delete.
 //
 // The leak assertions here are the ones that matter. The unit suite proves the
 // module never *names* a price column; this proves the objects that actually come
 // back off the wire carry no price and no supplier, nested and arrays included.
 
-// Supplier names from scripts/seed.ts. If one of these ever appears in a public
-// string, a join leaked it into a description or an attribute.
-const SEEDED_SUPPLIER_NAMES = [
-  'Anatolia Chemicals',
-  'Anadolu Kimya',
-  'الأناضول للكيماويات',
-  'Marmara Packaging',
-  'Marmara Ambalaj',
-  'مرمرة للتغليف',
-];
+/**
+ * The supplier names to hunt for, read from the database rather than written down.
+ *
+ * They used to be a hardcoded list copied from the seed script. When the seeded
+ * catalogue was replaced by a real supplier, the list kept naming suppliers that
+ * no longer existed — so the guard passed on every run while the actual supplier
+ * name went unchecked. A leak test that cannot fail is worse than no leak test,
+ * because it reads like coverage.
+ *
+ * Reading the table means this tracks whoever is in it, including suppliers added
+ * long after anyone remembers this file.
+ */
+let supplierNames: string[] = [];
 
 function expectNoLeaks(value: unknown, label: string) {
-  const hits = findLeaks(value, SEEDED_SUPPLIER_NAMES);
+  const hits = findLeaks(value, supplierNames);
   expect(hits, `${label} leaked:\n${formatLeaks(hits)}`).toEqual([]);
 }
 
@@ -43,13 +48,27 @@ describe('public query layer', () => {
   let categorySlugs: Record<Locale, string>;
 
   beforeAll(async () => {
+    // Every supplier name in every locale, so the hunt matches the data rather
+    // than a list someone has to remember to update.
+    supplierNames = [
+      ...new Set(
+        (await db.select({ name: supplierTranslations.name }).from(supplierTranslations))
+          .map((row) => row.name.trim())
+          .filter(Boolean),
+      ),
+    ];
+    expect(
+      supplierNames.length,
+      'no suppliers in the database — this guard would pass without checking anything',
+    ).toBeGreaterThan(0);
+
     sampleSlugs = {} as Record<Locale, string>;
     categorySlugs = {} as Record<Locale, string>;
     for (const locale of LOCALES) {
       const [product] = await publicProducts({ limit: 1 }, locale);
       const [category] = await publicCategories(locale);
-      expect(product, `no published product in ${locale} — run \`pnpm seed\``).toBeTruthy();
-      expect(category, `no published category in ${locale} — run \`pnpm seed\``).toBeTruthy();
+      expect(product, `no published product in ${locale} — import a catalogue`).toBeTruthy();
+      expect(category, `no published category in ${locale} — import a catalogue`).toBeTruthy();
       sampleSlugs[locale] = product.slug;
       categorySlugs[locale] = category.slug;
     }

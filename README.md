@@ -52,8 +52,8 @@ cp .env.example .env          # fill in; [carry] values come from tavkil/.env
 cp .env .dev.vars             # wrangler reads this for local Cloudflare runs
 
 pnpm db:migrate               # drizzle-kit, uses DIRECT_URL
-pnpm seed
 pnpm sync:permissions         # fills the Permission table — no boot hook exists
+pnpm import:temsan            # the real catalogue; see scripts/temsan/
 
 pnpm dev                      # Next dev server
 pnpm preview                  # Workers runtime locally, via wrangler
@@ -83,8 +83,8 @@ client; it's the same domain.
 | `pnpm test:watch`       | Vitest, watch                                   |
 | `pnpm e2e`              | Playwright                                      |
 | `pnpm e2e:report`       | Open the last Playwright report                 |
-| `pnpm db:studio`        | Prisma Studio                                   |
-| `pnpm seed`             | Seed catalog data                               |
+| `pnpm db:studio`        | Drizzle Studio                                  |
+| `pnpm import:temsan`    | Import the Temsan catalogue from its price list |
 | `pnpm sync:permissions` | Sync `Permission` table from `catalog.ts`       |
 | `pnpm fx:refresh`       | Fetch USD→TRY now (also runs on a Cron Trigger) |
 
