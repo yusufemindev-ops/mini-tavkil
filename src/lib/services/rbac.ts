@@ -283,7 +283,6 @@ export async function listRoles(): Promise<AdminRole[]> {
       .from(authUserRoles)
       .groupBy(authUserRoles.roleId),
   ]);
-  cacheRoleIds(rows);
   const idByCode = new Map(rows.map((row) => [row.code, row.id]));
   const countById = new Map(counts.map((row) => [row.roleId, Number(row.n)]));
 
@@ -323,22 +322,19 @@ export function permissionCatalog() {
 /**
  * Resolve a role's database id OR its code to a code.
  *
- * Populated on first use from the roles table; the set is three rows fixed in
- * code, so a module-level cache is safe and saves a query per call.
+ * Reads the table rather than a module-level cache. A cache warmed by
+ * `listRoles()` looked fine locally and failed in production: Workers do not
+ * share module state between invocations, so the request that POSTed a new
+ * member ran in a cold isolate, the map was empty, and every add was rejected
+ * with "That role does not exist." Three rows, one indexed lookup — the cache
+ * was never worth it.
  */
-let roleIdCache: Map<string, RoleCode> | null = null;
-export function roleCodeFromIdOrCode(value: string): RoleCode | null {
+export async function roleCodeFromIdOrCode(value: string): Promise<RoleCode | null> {
   if ((ASSIGNABLE_ROLES as string[]).includes(value)) return value as RoleCode;
-  return roleIdCache?.get(value) ?? null;
-}
-
-/** Warm the id→code map. Called by listRoles, which every role UI loads first. */
-export function cacheRoleIds(rows: { id: string; code: string }[]): void {
-  roleIdCache = new Map(
-    rows
-      .filter((row): row is { id: string; code: RoleCode } =>
-        (ASSIGNABLE_ROLES as string[]).includes(row.code),
-      )
-      .map((row) => [row.id, row.code]),
-  );
+  const [row] = await db
+    .select({ code: roles.code })
+    .from(roles)
+    .where(eq(roles.id, value))
+    .limit(1);
+  return row && (ASSIGNABLE_ROLES as string[]).includes(row.code) ? (row.code as RoleCode) : null;
 }

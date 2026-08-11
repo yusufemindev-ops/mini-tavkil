@@ -16,7 +16,7 @@ export const PATCH = adminRoute<Params, AssignRoleInput>(
   'users:assign_role',
   assignRoleSchema,
   async ({ params, body }) => {
-    const code = body.role ?? roleCodeFromIdOrCode(body.roleId!);
+    const code = body.role ?? (await roleCodeFromIdOrCode(body.roleId!));
     if (!code) throw invalid('That role does not exist.');
     return assignRole(params.id, code);
   },

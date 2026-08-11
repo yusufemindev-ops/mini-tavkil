@@ -91,9 +91,9 @@ async function writeInvites(invites: TeamInvite[], actorId: string): Promise<voi
 export async function inviteMember(
   input: CreateMemberInput,
   actorId: string,
-  resolveRole: (roleIdOrCode: string) => RoleCode | null,
+  resolveRole: (roleIdOrCode: string) => Promise<RoleCode | null>,
 ): Promise<TeamInvite> {
-  const role = resolveRole(input.roleId);
+  const role = await resolveRole(input.roleId);
   if (!role) throw invalid('That role does not exist.');
 
   const email = input.email.toLowerCase();
