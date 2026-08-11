@@ -34,6 +34,24 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: { enabled: false },
   /**
+   * `userType` has to be DECLARED, not just written.
+   *
+   * Better Auth serialises only the columns it knows about into the session
+   * payload. Writing `userType` to the row (see the create hook below) was not
+   * enough: `authClient.getSession()` returned a user object without the field,
+   * so the admin SPA's `user.userType !== 'admin'` test compared against
+   * `undefined` and failed on every single load — sign in, land on the
+   * dashboard, bounce back to login, forever.
+   *
+   * `input: false` keeps it server-owned: a client cannot send `userType` in a
+   * sign-up or update payload and promote itself.
+   */
+  user: {
+    additionalFields: {
+      userType: { type: 'string', input: false, required: false },
+    },
+  },
+  /**
    * Stamp `userType` on the row, because the admin SPA reads it.
    *
    * Tavkil's Nest backend set this at signup and its dashboard gates on it —
