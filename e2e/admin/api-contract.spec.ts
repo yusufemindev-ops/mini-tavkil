@@ -18,7 +18,15 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
  * Every row created here is prefixed `e2e-` and deleted in teardown whether the
  * test passed or failed. There is one database and no staging (CLAUDE.md §7).
  */
-const E2E = 'e2e-contract';
+/**
+ * Unique per run.
+ *
+ * A fixed prefix collided with the previous run's rows: delete is a SOFT delete,
+ * so the slug stayed taken and the next create failed. That surfaced a real bug
+ * — a duplicate slug returned 500 instead of a conflict — but as a test it was
+ * simply not repeatable.
+ */
+const E2E = `e2e-contract-${Date.now().toString(36)}`;
 
 /** Unwrap and assert the envelope in one step. */
 async function get<T = unknown>(request: APIRequestContext, path: string): Promise<T> {
@@ -253,6 +261,31 @@ test.describe('admin API contract', () => {
         expect(deleted.status(), 'teardown must remove the row').toBe(200);
         expect((await request.get(`/api/admin/categories/${id}`)).status()).toBe(404);
       }
+    }
+  });
+
+  test('a duplicate slug is a conflict, not a 500', async ({ request }) => {
+    // The most ordinary mistake an admin makes. It used to answer 500
+    // "Something went wrong." because Drizzle wraps the driver error and the
+    // SQLSTATE sits on `cause`, which the check did not look at.
+    const slug = `${E2E}-dup`;
+    const body = {
+      countryCode: 'TR',
+      translations: [{ locale: 'en', name: `${E2E} dup`, slug, isComplete: true }],
+    };
+    let id: string | undefined;
+    try {
+      const first = await request.post('/api/admin/suppliers', { data: body });
+      expect(first.status()).toBe(200);
+      id = ((await first.json()).data as { id: string }).id;
+
+      const second = await request.post('/api/admin/suppliers', { data: body });
+      expect(second.status(), 'a taken slug must not 500').toBeLessThan(500);
+      expect(second.status(), 'a taken slug is a conflict').toBe(409);
+      const payload = await second.json();
+      expect(payload.error.message, 'the message must name the problem').toMatch(/slug/i);
+    } finally {
+      if (id) await request.delete(`/api/admin/suppliers/${id}`);
     }
   });
 

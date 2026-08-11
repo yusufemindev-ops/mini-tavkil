@@ -88,11 +88,32 @@ export function assertUuid(id: string, what: string): void {
   if (!UUID.test(id)) throw notFound(`${what} not found.`);
 }
 
+const UNIQUE_VIOLATION = '23505';
+
+/**
+ * Postgres unique-violation detection, through Drizzle's wrapper.
+ *
+ * Drizzle re-throws with its own message — `Failed query: insert into …` — and
+ * puts the driver error on `cause`. So the SQLSTATE lives at `error.cause.code`,
+ * the original text at `error.cause.message`, and the top-level `code` is
+ * `undefined` while the top-level message never contains "duplicate key".
+ *
+ * Checking only the top level meant every duplicate slug fell through to a
+ * **500 "Something went wrong."** — for the most ordinary mistake an admin can
+ * make, where the answer is "that slug is taken". Both levels are checked now,
+ * by code and by message, so a driver change cannot silently reintroduce it.
+ */
 export function isUniqueViolation(error: unknown): boolean {
-  const code = (error as { code?: unknown })?.code;
-  if (code === '23505') return true;
-  // The Neon HTTP driver wraps the original; fall back to the message.
-  return /duplicate key value violates unique constraint/i.test(String((error as Error)?.message));
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current && typeof current === 'object' && !seen.has(current)) {
+    seen.add(current);
+    const { code, message } = current as { code?: unknown; message?: unknown };
+    if (code === UNIQUE_VIOLATION) return true;
+    if (/duplicate key value violates unique constraint/i.test(String(message ?? ''))) return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
 }
 
 /**
