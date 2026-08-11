@@ -16,7 +16,7 @@
     "test:integration": "vitest run --passWithNoTests --project integration",
     "e2e": "playwright test",
     "e2e:report": "playwright show-report",
-    "cf:build": "pnpm admin:build && opennextjs-cloudflare build",
+    "cf:build": "pnpm admin:build && opennextjs-cloudflare build && node scripts/strip-build-secrets.mjs",
     "preview": "pnpm cf:build && opennextjs-cloudflare preview",
     "deploy": "pnpm cf:build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",

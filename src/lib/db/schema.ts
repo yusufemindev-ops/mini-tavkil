@@ -186,17 +186,27 @@ export const auditLog = pgTable(
   ],
 );
 
+/*
+ * The four auth* tables use camelCase COLUMN names in Postgres — Tavkil's Prisma
+ * models never mapped them, unlike every other table here, which is snake_case.
+ *
+ * That matters because src/lib/db.ts sets `casing: 'snake_case'`, which rewrites
+ * any property that has no explicit column name. Every column below therefore
+ * states its name outright: without it, `expiresAt` was being queried as
+ * `expires_at`, which does not exist, and Google sign-in failed with a 500 on the
+ * very first insert.
+ */
 export const authVerification = pgTable(
   'authVerification',
   {
     id: text().primaryKey().notNull(),
     identifier: text().notNull(),
     value: text().notNull(),
-    expiresAt: timestamp({ precision: 3, mode: 'string' }).notNull(),
-    createdAt: timestamp({ precision: 3, mode: 'string' })
+    expiresAt: timestamp('expiresAt', { precision: 3, mode: 'string' }).notNull(),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp({ precision: 3, mode: 'string' }).notNull(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).notNull(),
   },
   (table) => [
     index('authVerification_identifier_idx').using(
@@ -210,16 +220,16 @@ export const authSession = pgTable(
   'authSession',
   {
     id: text().primaryKey().notNull(),
-    expiresAt: timestamp({ precision: 3, mode: 'string' }).notNull(),
+    expiresAt: timestamp('expiresAt', { precision: 3, mode: 'string' }).notNull(),
     token: text().notNull(),
-    createdAt: timestamp({ precision: 3, mode: 'string' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp({ precision: 3, mode: 'string' }).notNull(),
-    ipAddress: text(),
-    userAgent: text(),
-    userId: text().notNull(),
-    impersonatedBy: text(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).notNull(),
+    ipAddress: text('ipAddress'),
+    userAgent: text('userAgent'),
+    userId: text('userId').notNull(),
+    impersonatedBy: text('impersonatedBy'),
   },
   (table) => [
     uniqueIndex('authSession_token_key').using(
@@ -241,20 +251,20 @@ export const authAccount = pgTable(
   'authAccount',
   {
     id: text().primaryKey().notNull(),
-    accountId: text().notNull(),
-    providerId: text().notNull(),
-    userId: text().notNull(),
-    accessToken: text(),
-    refreshToken: text(),
-    idToken: text(),
-    accessTokenExpiresAt: timestamp({ precision: 3, mode: 'string' }),
-    refreshTokenExpiresAt: timestamp({ precision: 3, mode: 'string' }),
+    accountId: text('accountId').notNull(),
+    providerId: text('providerId').notNull(),
+    userId: text('userId').notNull(),
+    accessToken: text('accessToken'),
+    refreshToken: text('refreshToken'),
+    idToken: text('idToken'),
+    accessTokenExpiresAt: timestamp('accessTokenExpiresAt', { precision: 3, mode: 'string' }),
+    refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt', { precision: 3, mode: 'string' }),
     scope: text(),
     password: text(),
-    createdAt: timestamp({ precision: 3, mode: 'string' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp({ precision: 3, mode: 'string' }).notNull(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).notNull(),
   },
   (table) => [
     index('authAccount_userId_idx').using('btree', table.userId.asc().nullsLast().op('text_ops')),
@@ -302,29 +312,29 @@ export const authUser = pgTable(
     id: text().primaryKey().notNull(),
     name: text().notNull(),
     email: text().notNull(),
-    emailVerified: boolean().default(false).notNull(),
+    emailVerified: boolean('emailVerified').default(false).notNull(),
     image: text(),
-    createdAt: timestamp({ precision: 3, mode: 'string' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp({ precision: 3, mode: 'string' }).notNull(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).notNull(),
     role: text(),
     banned: boolean().default(false),
-    banReason: text(),
-    banExpires: timestamp({ precision: 3, mode: 'string' }),
-    userType: text().default('buyer'),
-    companyName: text(),
-    contactName: text(),
-    preferredLocale: text().default('en'),
+    banReason: text('banReason'),
+    banExpires: timestamp('banExpires', { precision: 3, mode: 'string' }),
+    userType: text('userType').default('buyer'),
+    companyName: text('companyName'),
+    contactName: text('contactName'),
+    preferredLocale: text('preferredLocale').default('en'),
     address: text(),
     city: text(),
     country: text(),
-    firstName: text(),
-    jobTitle: text(),
-    lastName: text(),
+    firstName: text('firstName'),
+    jobTitle: text('jobTitle'),
+    lastName: text('lastName'),
     phone: text(),
     verified: boolean().default(false),
-    lastSeenAt: timestamp({ precision: 3, mode: 'string' }),
+    lastSeenAt: timestamp('lastSeenAt', { precision: 3, mode: 'string' }),
   },
   (table) => [
     uniqueIndex('authUser_email_key').using('btree', table.email.asc().nullsLast().op('text_ops')),
