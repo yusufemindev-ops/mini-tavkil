@@ -97,6 +97,16 @@ export async function permissionsFor(userId: string): Promise<Set<string>> {
   return new Set(granted.map((row) => row.code));
 }
 
+/** The role codes this user actually holds — for display, not for authorisation. */
+export async function rolesFor(userId: string): Promise<string[]> {
+  const assigned = await db
+    .select({ code: roles.code })
+    .from(authUserRoles)
+    .innerJoin(roles, eq(roles.id, authUserRoles.roleId))
+    .where(eq(authUserRoles.authUserId, userId));
+  return assigned.map((row) => row.code);
+}
+
 /**
  * Guard for an admin route handler. Returns the user so the handler can use it.
  *

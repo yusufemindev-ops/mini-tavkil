@@ -39,11 +39,16 @@ export async function fetchCurrentAdmin(): Promise<CurrentAdmin> {
   let permissions: string[] = [];
   let roles: string[] = [];
   try {
-    const res = await api.get<{ permissions: string[]; roles: { code: string; name: string }[] }>(
-      '/admin/permissions',
-    );
+    // `/admin/me`, not `/admin/permissions` — Tavkil's Nest backend exposed the
+    // latter; this app answers the same question at /api/admin/me. The wrong path
+    // 404'd, the catch below swallowed it, and every admin loaded with zero
+    // permissions, so RequirePermission hid the entire sidebar.
+    const res = await api.get<{
+      permissions: string[];
+      assignedRoles: { code: string; label: string }[];
+    }>('/admin/me');
     permissions = res.permissions;
-    roles = res.roles.map((r) => r.name);
+    roles = res.assignedRoles.map((r) => r.label);
   } catch {
     // Keep the empty fallbacks — dashboard stays read-only rather than wrongly granting.
   }

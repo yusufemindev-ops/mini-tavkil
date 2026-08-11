@@ -1,8 +1,17 @@
 import { betterAuth } from 'better-auth';
+import { eq } from 'drizzle-orm';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/lib/db';
-import { authAccount, authSession, authUser, authVerification } from '@/lib/db/schema';
+import {
+  authAccount,
+  authSession,
+  authUser,
+  authUserRoles,
+  authVerification,
+  roles,
+} from '@/lib/db/schema';
 import { isAllowlisted } from '@/lib/permissions/allowlist';
+import { OWNER_ROLE } from '@/lib/permissions/catalog';
 
 /**
  * Better Auth, Google only, admins only.
@@ -71,6 +80,34 @@ export const auth = betterAuth({
         before: async (user) => ({
           data: { ...user, userType: isAllowlisted(user.email) ? 'admin' : 'buyer' },
         }),
+        /**
+         * Give an allowlisted admin the Owner role on first sign-in.
+         *
+         * Without this the project cannot be bootstrapped. `permissionsFor()`
+         * reads `auth_user_roles`, which starts empty, so a brand-new admin
+         * signs in with **zero** permissions and the SPA hides every nav item
+         * but Dashboard. The only way to grant a role is the Users page, which
+         * itself requires `users:assign_role` — nobody can ever hold it. That
+         * deadlock is exactly what the first real sign-in hit.
+         *
+         * The allowlist is already the "who runs this site" list (CLAUDE.md §6),
+         * so deriving Owner from it introduces no new authority: an address that
+         * is not on it fails `requireAdmin()` on every request regardless of any
+         * role row.
+         */
+        after: async (user) => {
+          if (!isAllowlisted(user.email)) return;
+          const [owner] = await db
+            .select({ id: roles.id })
+            .from(roles)
+            .where(eq(roles.code, OWNER_ROLE))
+            .limit(1);
+          if (!owner) return; // `pnpm sync:permissions` has not run yet.
+          await db
+            .insert(authUserRoles)
+            .values({ authUserId: user.id, roleId: owner.id })
+            .onConflictDoNothing();
+        },
       },
     },
   },

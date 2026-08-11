@@ -19,12 +19,12 @@ export const dashboardKeys = {
 export function useDashboard() {
   return useQuery({
     queryKey: dashboardKeys.all,
-    // The backend `/dashboard` endpoint isn't built yet (deferred to its own
-    // ticket). Until it exists, treat 404 as "no metrics yet" so the page shows
-    // its empty states instead of surfacing an error on every load.
+    // `/admin/dashboard`. Tavkil's Nest backend served this at `/dashboard`; the
+    // bare path 404'd here and the catch below turned that into a permanently
+    // empty dashboard. The 404 fallback stays as a genuine safety net.
     queryFn: async () => {
       try {
-        return await api.get<DashboardData>('/dashboard');
+        return await api.get<DashboardData>('/admin/dashboard');
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) return EMPTY_DASHBOARD;
         throw err;
