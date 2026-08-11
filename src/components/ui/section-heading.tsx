@@ -17,7 +17,9 @@ export function Kicker({
     <span
       className={cn(
         'inline-flex items-center gap-2 text-[0.78rem] font-bold uppercase tracking-wider',
-        tone === 'onDark' ? 'text-white' : 'text-primary',
+        // text-primary measures 4.43:1 on the tinted section background; the ink
+        // shade clears 4.5 in both themes.
+        tone === 'onDark' ? 'text-white' : 'text-primary-ink',
         'before:h-0.5 before:w-[18px] before:rounded-full before:content-[""]',
         tone === 'onDark' ? 'before:bg-white' : 'before:bg-primary',
         className,

@@ -115,7 +115,7 @@ function AboutContent({ stats }: { stats: AboutStat[] }) {
                 key={principle.titleKey}
                 className="border-border bg-card hover:border-primary group grid grid-cols-[auto_1fr] gap-[18px] rounded-lg border p-[22px] transition-colors"
               >
-                <span className="bg-primary-soft text-primary group-hover:bg-primary grid size-11 place-items-center rounded-lg font-mono text-lg font-semibold transition-colors group-hover:text-white">
+                <span className="bg-primary-soft text-primary-ink group-hover:bg-primary grid size-11 place-items-center rounded-lg font-mono text-lg font-semibold transition-colors group-hover:text-white">
                   {index + 1}
                 </span>
                 <div>

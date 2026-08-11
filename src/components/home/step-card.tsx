@@ -15,7 +15,7 @@ export function StepCard({
 }) {
   return (
     <div className="border-border bg-card hover:border-primary group relative z-[1] rounded-lg border p-[26px] transition-colors">
-      <span className="bg-primary-soft text-primary group-hover:bg-primary grid size-[42px] place-items-center rounded-[11px] font-mono text-[1.05rem] font-semibold transition-colors group-hover:text-white">
+      <span className="bg-primary-soft text-primary-ink group-hover:bg-primary grid size-[42px] place-items-center rounded-[11px] font-mono text-[1.05rem] font-semibold transition-colors group-hover:text-white">
         {number}
       </span>
       {connector && (

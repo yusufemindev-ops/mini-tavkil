@@ -16,11 +16,11 @@ const buttonVariants = cva(
         ink: 'bg-foreground text-background hover:shadow-card',
         outline: 'border-border bg-card text-foreground hover:border-foreground',
         ghost: 'px-3 text-foreground-soft hover:text-foreground',
-        // Always white on the always-orange CTA panel, so its colors must be
-        // theme-independent: --primary-ink flips to pale peach in dark mode (and
-        // reads as dark-red in light), so use the fixed brand orange for text and
-        // a constant dark (--footer) for hover, matching the prototype's `--ink`.
-        light: 'bg-white text-[#f2640c] hover:bg-footer hover:text-white',
+        // Fixed shades rather than tokens: this variant sits on the always-orange
+        // CTA panel in both themes, and --primary-ink flips to pale peach in dark
+        // mode. The old #f2640c measured 3.18:1 as text on white; #a8420a is
+        // 6.09:1 and reads as the same brand orange.
+        light: 'bg-white text-[#a8420a] hover:bg-footer hover:text-white',
         line: 'border-white/50 bg-transparent text-white hover:bg-white/15',
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive/20',

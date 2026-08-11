@@ -8,13 +8,17 @@ import { Link } from '@/i18n/navigation';
 // Prototype `.cta` — orange gradient panel with a dotted overlay and two inverted
 // buttons (light + line). Shared by the home and about pages.
 //
+// The gradient is fixed rather than token-driven: this panel carries white text
+// in both themes, and the dark theme's brighter --primary would put that white at
+// 2.61:1. These two shades keep white above 4.5:1 whichever theme is active.
+//
 // The primary button pointed at /request (buyer account signup), which no longer
 // exists. The one conversion path here is the contact form.
 export function CtaPanel() {
   const t = useTranslations('store');
   return (
     <section className="mx-auto max-w-[var(--width-container)] px-5 py-14 sm:px-6">
-      <Reveal className="relative overflow-hidden rounded-lg bg-[linear-gradient(120deg,var(--primary),var(--primary-hover))] px-8 py-12 sm:px-12 sm:py-14">
+      <Reveal className="relative overflow-hidden rounded-lg bg-[linear-gradient(120deg,#a8420a,#c24e06)] px-8 py-12 sm:px-12 sm:py-14">
         {/* dotted overlay */}
         <span
           aria-hidden

@@ -28,7 +28,11 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
         return (
           <Fragment key={`${item.label}-${i}`}>
             {node}
-            {!last && <span className="text-border">/</span>}
+            {!last && (
+              <span aria-hidden className="text-muted-foreground">
+                /
+              </span>
+            )}
           </Fragment>
         );
       })}
