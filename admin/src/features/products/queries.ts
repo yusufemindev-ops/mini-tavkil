@@ -27,7 +27,8 @@ export interface AdminProductAttribute {
 export interface AdminProductImage {
   id: string;
   url: string;
-  alt: string | null;
+  /** Per-locale alt text (`{en, tr, ar}`), not one string — see ImageDraft. */
+  alt: Record<string, string> | null;
   isPrimary: boolean;
   sortOrder: number;
 }
@@ -127,7 +128,7 @@ export interface ProductAttributePayload {
 
 export interface ProductImagePayload {
   url: string;
-  alt?: string;
+  alt?: Record<string, string>;
   isPrimary?: boolean;
   sortOrder?: number;
 }

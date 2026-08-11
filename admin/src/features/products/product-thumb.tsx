@@ -6,6 +6,16 @@ import type { AdminProduct } from './queries';
 // BEHIND the image and stays visible while it loads; the image itself fades in on
 // load (no flash, no sudden pop). The `ref` check covers cached images —
 // otherwise a cached image whose `onLoad` never fires would stay at opacity-0.
+/**
+ * A row thumbnail sits next to the product name that already says what it is, so
+ * an empty alt is the correct outcome when there is no real alt text — never the
+ * stringified translation record, which is what `image.alt ?? ''` produced.
+ */
+function altText(alt: Record<string, string> | null): string {
+  if (!alt) return '';
+  return (alt.en ?? Object.values(alt)[0] ?? '').trim();
+}
+
 export function ProductThumb({
   product,
   className,
@@ -30,7 +40,7 @@ export function ProductThumb({
     >
       <img
         src={image.url}
-        alt={image.alt ?? ''}
+        alt={altText(image.alt)}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}

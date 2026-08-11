@@ -100,11 +100,41 @@ interface AttributeDraft {
   value: string;
 }
 
+/**
+ * Alt text is per-locale, like every other piece of product copy.
+ *
+ * Tavkil's admin typed this `alt: string` because Tavkil's API returned one
+ * string. Here the column is `alt_translations` and the storefront renders it
+ * through `altFor(row.altTranslations, locale)` — an Arabic visitor gets Arabic
+ * alt text. Keeping the draft a plain string meant the object arrived from the
+ * API untouched, so the field rendered the literal text "[object Object]" and
+ * `buildImages()` called `.trim()` on an object — which is why "Save changes"
+ * on any product that had an image did nothing but say "Could not save the
+ * product."
+ *
+ * The one alt input follows the EN/TR/AR tab, so it edits the locale you are
+ * already looking at and leaves the other two alone.
+ */
 interface ImageDraft {
   key: string;
   url: string;
-  alt: string;
+  alt: Record<string, string>;
   isPrimary: boolean;
+}
+
+/**
+ * Drop blank locales so an untouched image sends `{}` rather than
+ * `{en: '', tr: '', ar: ''}`, and `undefined` rather than an empty object — the
+ * backend stores whatever it is given, and empty strings would render as
+ * `alt=""` on the storefront for locales nobody ever wrote copy for.
+ */
+export function cleanAlt(alt: Record<string, string>): Record<string, string> | undefined {
+  const out: Record<string, string> = {};
+  for (const [code, text] of Object.entries(alt)) {
+    const trimmed = text?.trim();
+    if (trimmed) out[code] = trimmed;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 let rowSeq = 0;
@@ -161,7 +191,7 @@ function toImageDrafts(product: AdminProduct | null): ImageDraft[] {
   return (product?.images ?? []).map((i) => ({
     key: nextKey(),
     url: i.url,
-    alt: i.alt ?? '',
+    alt: { ...(i.alt ?? {}) },
     isPrimary: i.isPrimary,
   }));
 }
@@ -177,7 +207,7 @@ export function appendImageRows(existing: ImageDraft[], urls: string[]): ImageDr
   const rows = urls.map((url) => {
     const isPrimary = !hasPrimary;
     hasPrimary = true;
-    return { key: nextKey(), url, alt: '', isPrimary };
+    return { key: nextKey(), url, alt: {}, isPrimary };
   });
   return [...existing, ...rows];
 }
@@ -367,8 +397,10 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
     setImages((prev) => appendImageRows(prev, urls));
   }
 
-  function updateImage(key: string, field: 'alt', value: string) {
-    setImages((prev) => prev.map((i) => (i.key === key ? { ...i, [field]: value } : i)));
+  function updateImageAlt(key: string, forLocale: LocaleCode, value: string) {
+    setImages((prev) =>
+      prev.map((i) => (i.key === key ? { ...i, alt: { ...i.alt, [forLocale]: value } } : i)),
+    );
   }
 
   function setPrimary(key: string) {
@@ -414,7 +446,7 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
       .filter((i) => i.url.trim())
       .map((i, idx) => ({
         url: i.url.trim(),
-        alt: i.alt.trim() || undefined,
+        alt: cleanAlt(i.alt),
         isPrimary: i.isPrimary,
         sortOrder: idx,
       }));
@@ -1163,7 +1195,7 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
                   >
                     <img
                       src={img.url}
-                      alt={img.alt}
+                      alt={img.alt[locale]?.trim() || img.alt.en?.trim() || ''}
                       className="border-border size-14 flex-none rounded-md border object-cover"
                     />
                     <Button
@@ -1176,9 +1208,10 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
                       <Star className="size-4" fill={img.isPrimary ? 'currentColor' : 'none'} />
                     </Button>
                     <Input
-                      value={img.alt}
-                      onChange={(e) => updateImage(img.key, 'alt', e.target.value)}
-                      placeholder="Alt text (for SEO & accessibility)"
+                      value={img.alt[locale] ?? ''}
+                      onChange={(e) => updateImageAlt(img.key, locale, e.target.value)}
+                      placeholder={`Alt text in ${LOCALE_LABELS[locale]} (for SEO & accessibility)…`}
+                      aria-label={`Alt text (${LOCALE_LABELS[locale]})`}
                       className="flex-1"
                     />
                     <Button
