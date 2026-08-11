@@ -14,12 +14,35 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/**
+ * Sign-in failures, in the admin's words.
+ *
+ * `not-allowed` is ours — the allowlist rejection from the /admin handler. The
+ * rest are Better Auth's own OAuth codes, which reach us because `onAPIError`
+ * points at this page. Anything unrecognised still gets a message rather than a
+ * silent bounce, with the raw code shown so it can be reported.
+ */
+const ERRORS: Record<string, string> = {
+  'not-allowed':
+    'That Google account is not on the admin allowlist. Ask an owner to add it, then sign in again.',
+  state_mismatch:
+    'The sign-in took too long and expired — the link is only valid for five minutes. Try again and complete the Google step without pausing.',
+  invalid_state: 'The sign-in could not be verified. Try again from this page.',
+  please_restart_the_process: 'The sign-in expired before it finished. Try again.',
+  access_denied: 'Google sign-in was cancelled.',
+  internal_server_error: 'Something went wrong on our side. Try again in a moment.',
+  unable_to_create_user: 'Your Google account could not be linked. Ask an owner to check the logs.',
+};
+
 export default async function SignInPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const { next, error } = await searchParams;
+  const message = error
+    ? (ERRORS[error] ?? `Sign-in failed (${error}). Try again, or send this code to an owner.`)
+    : null;
 
   // Only ever redirect to a path on this origin. Taking `next` at face value would
   // be an open redirect: /sign-in?next=https://evil.example lands a signed-in admin
@@ -51,13 +74,12 @@ export default async function SignInPage({
           This is the admin for tavkil.com. Access is limited to allowlisted Google accounts.
         </p>
 
-        {error === 'not-allowed' && (
+        {message && (
           <p
             role="alert"
-            className="border-destructive/30 bg-destructive/10 text-destructive mt-5 rounded-sm border p-3 text-sm"
+            className="border-destructive/30 bg-destructive/10 text-destructive mt-5 rounded-sm border p-3 text-sm leading-relaxed"
           >
-            That Google account is not on the admin allowlist. Ask an owner to add it, then sign in
-            again.
+            {message}
           </p>
         )}
 

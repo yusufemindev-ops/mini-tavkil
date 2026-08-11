@@ -18,7 +18,13 @@ const handleI18n = createMiddleware(routing);
  * Doing it this way keeps a database round-trip off every asset request while
  * losing nothing: a forged cookie gets past this line and straight into a 401.
  */
-const SESSION_COOKIE = /(^|;\s*)(__Secure-)?better-auth\.session_token=/;
+// `__Secure-` is added whenever the cookie is Secure, and Better Auth splits a
+// cookie that grows past the browser's 4 KB limit into `.0`, `.1`, … chunks. The
+// session token is small enough today that chunking never triggers, but if it
+// ever did, an exact-name test would stop matching and bounce a signed-in admin
+// back to /sign-in forever — a redirect loop is a bad price for a stricter regex
+// on a check that is only a convenience.
+const SESSION_COOKIE = /(^|;\s*)(__Secure-)?better-auth\.session_token(\.\d+)?=/;
 
 // Anything under /admin whose last segment has a file extension is a build
 // artefact of the SPA, not a route.

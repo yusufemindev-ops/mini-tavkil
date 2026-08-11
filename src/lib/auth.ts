@@ -32,6 +32,12 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: { enabled: false },
+  // Where a failed OAuth round-trip lands. Without this, Better Auth redirects to
+  // its own /api/auth/error, which redirects to `/`, which the i18n middleware
+  // then rewrites to `/en?error=…` — so a failed sign-in dropped the admin on the
+  // storefront homepage with the reason hidden in a query string nothing reads.
+  // Sending it to /sign-in puts the message on the page that can act on it.
+  onAPIError: { errorURL: '/sign-in' },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
