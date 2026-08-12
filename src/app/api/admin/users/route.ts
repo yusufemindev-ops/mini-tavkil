@@ -26,6 +26,11 @@ export const POST = adminRoute<Record<string, never>, CreateMemberInput>(
   async ({ body, admin }) => {
     await inviteMember(body, admin.id, roleCodeFromIdOrCode);
     const members = await listAdminUsers(admin.id);
-    return members.find((member) => member.email === body.email.toLowerCase()) ?? members[0];
+    // Case-insensitively: the row carries the address as it was typed, while
+    // `body.email` is whatever the admin entered. Comparing them directly
+    // returned `members[0]` — a different person — the moment either had a
+    // capital letter in it.
+    const wanted = body.email.trim().toLowerCase();
+    return members.find((member) => member.email.toLowerCase() === wanted) ?? members[0];
   },
 );

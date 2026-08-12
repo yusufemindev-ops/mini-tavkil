@@ -115,7 +115,19 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
           .where(inArray(authUserRoles.authUserId, ids));
 
   const roleByUser = new Map(assignments.map((row) => [row.userId, row.code]));
-  const roleIdByCode = new Map(assignments.map((row) => [row.code, row.roleId]));
+
+  /**
+   * Every role's database id, read from `roles` rather than from the assignments
+   * above.
+   *
+   * Deriving it from assignments only knows about roles somebody already holds,
+   * and an invited member holds none — so their `role.id` fell back to the role
+   * *code*. The drawer's `<SelectMenu>` keys its options on the role id, nothing
+   * matched, and "Manage member" showed an empty Role box over a row the table
+   * had just labelled "Catalog manager".
+   */
+  const allRoles = await db.select({ id: roles.id, code: roles.code }).from(roles);
+  const roleIdByCode = new Map(allRoles.map((row) => [row.code, row.id]));
 
   // Which accounts have a Google identity linked. The users table shows this as a
   // column, and it is the only sign-in method here, so it doubles as "can this
@@ -138,13 +150,18 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
     .filter((invite) => !signedInEmails.has(invite.email.toLowerCase()))
     .map((invite) => ({
       id: `invite:${invite.email}`,
-      email: invite.email,
+      // The address as it was typed; `invite.email` is the lowercased match key.
+      email: invite.displayEmail ?? invite.email,
       name: `${invite.firstName} ${invite.lastName}`.trim() || invite.email,
       firstName: invite.firstName || null,
       lastName: invite.lastName || null,
       image: null,
       banned: false,
-      role: { id: invite.role, code: invite.role, name: ROLE_LABELS[invite.role] ?? invite.role },
+      role: {
+        id: roleIdByCode.get(invite.role) ?? invite.role,
+        code: invite.role,
+        name: ROLE_LABELS[invite.role] ?? invite.role,
+      },
       status: 'invited' as const,
       googleConnected: false,
       allowlisted: true,

@@ -57,28 +57,13 @@ function GeneralForm({ initial }: { initial: GeneralSettings }) {
   });
   return (
     <div className="flex flex-col gap-[18px]">
-      {/* Branding */}
-      <Panel>
-        <PanelHead title="Branding" />
-        <PanelBody>
-          <Field>
-            <FieldLabel>Site name</FieldLabel>
-            <Input value={form.siteName} onChange={(e) => set('siteName', e.target.value)} />
-          </Field>
-          <Field className="mb-0">
-            <FieldLabel>Logo</FieldLabel>
-            <SingleImageUpload
-              value={form.logoUrl}
-              onChange={(url) => set('logoUrl', url)}
-              size="md"
-            />
-            <FieldHelp>
-              Drag &amp; drop or click to upload. No logo → the storefront shows the site
-              name&apos;s first letter.
-            </FieldHelp>
-          </Field>
-        </PanelBody>
-      </Panel>
+      {/* Branding is deliberately not editable here.
+          The site name and logo are the brand — they belong with the code that
+          draws the wordmark and the seal, not behind a text input an operator
+          can empty by accident on a live storefront. `siteName` and `logoUrl`
+          still exist in settings and are still read by the storefront; they are
+          simply not something the dashboard offers to change. Fixed-in-code
+          config over a runtime editor (CLAUDE.md §5). */}
 
       {/* SEO defaults */}
       <Panel>
@@ -389,7 +374,7 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-[880px]">
-      <PageHeader title="Settings" subtitle="Branding, contact details, and currencies" />
+      <PageHeader title="Settings" subtitle="Contact details, SEO defaults, and currencies" />
 
       {/* Sub-tab nav */}
       <div

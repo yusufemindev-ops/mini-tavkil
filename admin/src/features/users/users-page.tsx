@@ -13,13 +13,14 @@ import { Table } from '@/components/ui/table';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import { SelectMenu } from '@/components/ui/select-menu';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldHelp, FieldLabel } from '@/components/ui/field';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import {
   assignUserRole,
+  updateMember,
   createUser,
   rbacKeys,
   setUserSuspended,
@@ -127,7 +128,7 @@ function buildMemberColumns(onManage: (m: AdminTeamMember) => void): ColumnDef<A
     {
       id: 'lastActive',
       accessorFn: lastActiveText,
-      header: 'Last active',
+      header: 'Last sign-in',
       enableSorting: false,
       enableColumnFilter: false,
       cell: ({ getValue }) => (
@@ -259,7 +260,7 @@ export function UsersPage() {
                     { header: 'Role', cell: 'badge' },
                     { header: 'Sign-in', cell: 'text' },
                     { header: 'Status', cell: 'badge' },
-                    { header: 'Last active', cell: 'text' },
+                    { header: 'Last sign-in', cell: 'text' },
                     { header: '', cell: 'actions' },
                   ]}
                 />
@@ -516,6 +517,29 @@ function ManageMemberPanel({
   onChanged: (m: AdminTeamMember) => void;
 }) {
   const suspended = member.status === 'suspended';
+  // Name and email are editable only until the invite is accepted. After that
+  // Google owns them and anything typed here would be overwritten on next
+  // sign-in; the API enforces the same rule.
+  const editable = member.status === 'invited' && member.id.startsWith('invite:');
+
+  const [firstName, setFirstName] = useState(member.firstName ?? '');
+  const [lastName, setLastName] = useState(member.lastName ?? '');
+  const [email, setEmail] = useState(member.email);
+
+  const dirty =
+    firstName !== (member.firstName ?? '') ||
+    lastName !== (member.lastName ?? '') ||
+    email !== member.email;
+
+  const save = useMutation({
+    mutationFn: () => updateMember(member.id, { firstName, lastName, email: email.trim() }),
+    onSuccess: (m) => {
+      onChanged(m);
+      toast.success('Member updated');
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : 'Could not update the member.'),
+  });
 
   const assign = useMutation({
     mutationFn: (roleId: string) => assignUserRole(member.id, roleId),
@@ -536,7 +560,7 @@ function ManageMemberPanel({
     onError: () => toast.error('Could not update the member.'),
   });
 
-  const busy = assign.isPending || suspend.isPending;
+  const busy = assign.isPending || suspend.isPending || save.isPending;
 
   return (
     <SheetContent>
@@ -566,6 +590,53 @@ function ManageMemberPanel({
           </div>
         </div>
 
+        {editable ? (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <Field>
+                <FieldLabel htmlFor="mng-first">First name</FieldLabel>
+                <Input
+                  id="mng-first"
+                  value={firstName}
+                  disabled={busy}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="mng-last">Last name</FieldLabel>
+                <Input
+                  id="mng-last"
+                  value={lastName}
+                  disabled={busy}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field>
+              <FieldLabel htmlFor="mng-email">Email</FieldLabel>
+              <Input
+                id="mng-email"
+                type="email"
+                value={email}
+                disabled={busy}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <FieldHelp>
+                The Google account they will sign in with. Editable until they accept.
+              </FieldHelp>
+            </Field>
+            <div className="mb-4">
+              <Button size="sm" disabled={!dirty || busy} onClick={() => save.mutate()}>
+                Save changes
+              </Button>
+            </div>
+          </>
+        ) : (
+          <FieldHelp className="mb-4 block">
+            Name and email come from this member&apos;s Google account and change when they do.
+          </FieldHelp>
+        )}
+
         <Field>
           <FieldLabel htmlFor="mng-role">Role</FieldLabel>
           <SelectMenu
@@ -592,7 +663,7 @@ function ManageMemberPanel({
         </div>
 
         <div>
-          <div className="text-muted-foreground mb-1 text-xs font-medium">Last active</div>
+          <div className="text-muted-foreground mb-1 text-xs font-medium">Last sign-in</div>
           <div className="text-sm">{lastActiveText(member)}</div>
         </div>
       </div>

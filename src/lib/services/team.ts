@@ -27,7 +27,24 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, type RoleCode } from '@/lib/permissions/
 export const TEAM_INVITES_KEY = 'admin_invites';
 
 export interface TeamInvite {
+  /**
+   * Lowercased. This is the matching key — `allowedEmails()`, `invitedRoleFor()`
+   * and the duplicate check all compare against it, so it must stay canonical.
+   */
   email: string;
+  /**
+   * What the admin actually typed, for display only.
+   *
+   * Addresses were stored lowercased and then shown that way, so inviting
+   * `Omar.Assad99@gmail.com` listed a person as `omar.assad99@gmail.com` — the
+   * team page was quietly correcting someone's own name back at them. Mail
+   * providers treat the local part case-insensitively in practice, so matching
+   * must stay lowercase; only the rendering was wrong.
+   *
+   * Optional because invites written before this existed have no value for it,
+   * and those fall back to `email`.
+   */
+  displayEmail?: string;
   role: RoleCode;
   firstName: string;
   lastName: string;
@@ -35,7 +52,9 @@ export interface TeamInvite {
 }
 
 export const createMemberSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
+  // Not `.toLowerCase()` here: the casing the admin typed is kept for display
+  // and lowercased where it is compared. See `TeamInvite.displayEmail`.
+  email: z.string().trim().email('Enter a valid email address.'),
   firstName: z.string().trim().max(80).default(''),
   lastName: z.string().trim().max(80).default(''),
   // The SPA sends the role's database id; it also accepts a bare code so the API
@@ -108,6 +127,7 @@ export async function inviteMember(
 
   const invite: TeamInvite = {
     email,
+    displayEmail: input.email.trim(),
     role,
     firstName: input.firstName,
     lastName: input.lastName,
@@ -115,6 +135,60 @@ export async function inviteMember(
   };
   await writeInvites([...invites, invite], actorId);
   return invite;
+}
+
+export const updateMemberSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address.').optional(),
+  firstName: z.string().trim().max(80).optional(),
+  lastName: z.string().trim().max(80).optional(),
+});
+export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;
+
+/**
+ * Correct an invite that has not been accepted yet.
+ *
+ * Only invites. Once someone signs in, their name and address come from Google
+ * on every sign-in, so a value edited here would be silently overwritten the
+ * next time they logged in — and the address is the identity the account is
+ * matched on, which makes editing it a way to hand one person's access to
+ * another. The dashboard therefore offers this only while `status === 'invited'`,
+ * and the endpoint enforces the same rule rather than trusting it.
+ *
+ * Before this existed, a typo in an invited address could only be fixed by
+ * revoking and re-inviting.
+ */
+export async function updateInvite(
+  currentEmail: string,
+  input: UpdateMemberInput,
+  actorId: string,
+): Promise<TeamInvite> {
+  const key = currentEmail.trim().toLowerCase();
+  const invites = await listInvites();
+  const index = invites.findIndex((entry) => entry.email.toLowerCase() === key);
+  if (index === -1) throw invalid('That invite no longer exists.');
+
+  const next = { ...invites[index] };
+
+  if (input.email !== undefined) {
+    const email = input.email.toLowerCase();
+    if (email !== key) {
+      if (adminAllowlist().includes(email)) {
+        throw conflict('That address is already on the deployment allowlist.');
+      }
+      if (invites.some((entry, i) => i !== index && entry.email.toLowerCase() === email)) {
+        throw conflict('That address has already been added.');
+      }
+    }
+    next.email = email;
+    next.displayEmail = input.email.trim();
+  }
+  if (input.firstName !== undefined) next.firstName = input.firstName;
+  if (input.lastName !== undefined) next.lastName = input.lastName;
+
+  const updated = [...invites];
+  updated[index] = next;
+  await writeInvites(updated, actorId);
+  return next;
 }
 
 /** Remove an invite. Takes effect on their next request, not their next login. */

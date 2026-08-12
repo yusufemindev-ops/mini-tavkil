@@ -80,6 +80,19 @@ export interface CreateUserPayload {
 export function createUser(payload: CreateUserPayload): Promise<AdminTeamMember> {
   return api.post<AdminTeamMember>('/admin/users', payload);
 }
+/**
+ * Correct an invited member's name or address.
+ *
+ * Invited members only — the API refuses a real user id, because a signed-in
+ * member's name and email are Google's copy and are refreshed on every sign-in.
+ */
+export function updateMember(
+  id: string,
+  payload: { email?: string; firstName?: string; lastName?: string },
+): Promise<AdminTeamMember> {
+  return api.patch<AdminTeamMember>(`/admin/users/${encodeURIComponent(id)}`, payload);
+}
+
 export function assignUserRole(id: string, roleId: string): Promise<AdminTeamMember> {
   return api.patch<AdminTeamMember>(`/admin/users/${id}/role`, { roleId });
 }
