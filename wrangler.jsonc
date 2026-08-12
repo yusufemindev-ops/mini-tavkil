@@ -68,7 +68,20 @@
     "crons": ["0 */2 * * *"],
   },
 
+  // The live domain. Declared here rather than added in the dashboard so the
+  // deployment target is version-controlled and a fresh clone deploys to the same
+  // place. `custom_domain` makes Cloudflare own the apex DNS record and issue the
+  // certificate; it replaces whatever A records the zone had.
+  //
+  // `www` is a redirect handled at the DNS/Rules layer, not a second origin — two
+  // hostnames serving identical content is a duplicate-content problem, and the
+  // canonical tags all point at the apex.
+  "routes": [{ "pattern": "tavkil.com", "custom_domain": true }],
+
   "vars": {
+    // Still false. Attaching the domain does not make the site indexable — this
+    // is the only switch that does, and flipping it needs a rebuild because it is
+    // baked into the prerendered HTML, robots.txt and the sitemap.
     "SITE_INDEXABLE": "false",
   },
 
