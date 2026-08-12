@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { routing } from '@/i18n/routing';
+import { getSiteSettings } from '@/lib/settings';
+import { resolveImageUrl } from '@/lib/media/image-url';
 import { env } from '@/lib/env';
 
 export const SITE_NAME = 'Tavkil';
@@ -23,7 +25,10 @@ interface PageMetaInput {
   title: string;
   description: string;
   ogType?: 'website' | 'article';
-  /** Relative to BASE_URL (resolved via metadataBase). */
+  /**
+   * The page's own share image. When absent, the site-wide default from
+   * Settings → SEO defaults is used, so every page has one.
+   */
   ogImage?: string;
   index?: boolean;
   /**
@@ -52,7 +57,7 @@ interface PageMetaInput {
  * `noindex`, regardless of the per-page `index` flag: a staging URL that gets
  * indexed is very hard to un-index.
  */
-export function buildMetadata({
+export async function buildMetadata({
   locale,
   path = '',
   title,
@@ -62,7 +67,7 @@ export function buildMetadata({
   index = true,
   alternateLocales,
   localizedPaths,
-}: PageMetaInput): Metadata {
+}: PageMetaInput): Promise<Metadata> {
   const pathFor = (code: string): string => localizedPaths?.[code] ?? path;
   const canonicalPath = pathFor(locale);
 
@@ -74,7 +79,21 @@ export function buildMetadata({
   for (const code of allowed) languages[code] = localizedUrl(code, pathFor(code));
   languages['x-default'] = localizedUrl(routing.defaultLocale, pathFor(routing.defaultLocale));
 
-  const images = ogImage ? [{ url: ogImage, width: 1200, height: 630 }] : undefined;
+  /**
+   * The share image, falling back to the site-wide default.
+   *
+   * Only the product page ever passed one, so every other page — the homepage
+   * included — shipped no `og:image` at all, and WhatsApp and the rest fell back
+   * to scraping the favicon. That is why a shared link showed a 180px app icon
+   * instead of a card. `ogImageUrl` already existed in Settings and was written
+   * by the dashboard's "Default OG image" field; nothing read it.
+   *
+   * `resolveImageUrl` because settings may hold either a bare R2 key or a full
+   * URL depending on how it was set.
+   */
+  const settings = await getSiteSettings();
+  const shareImage = ogImage || (settings.ogImageUrl ? resolveImageUrl(settings.ogImageUrl) : '');
+  const images = shareImage ? [{ url: shareImage, width: 1200, height: 630 }] : undefined;
   const indexable = SITE_INDEXABLE && index;
 
   return {
@@ -95,7 +114,7 @@ export function buildMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: ogImage ? [ogImage] : undefined,
+      images: shareImage ? [shareImage] : undefined,
     },
     // A page kept out of the index stays crawlable (`follow`) so crawlers still
     // reach its real-translation alternates.
