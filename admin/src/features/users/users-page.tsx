@@ -53,9 +53,47 @@ function roleBadgeVariant(code: string | undefined): 'accent' | 'primary' {
   return code === 'super_admin' ? 'accent' : 'primary';
 }
 
+/**
+ * How recently someone must have been seen to count as online.
+ *
+ * The server refreshes `lastSeenAt` at most once a minute, so a live admin can
+ * legitimately look up to a minute stale. Five minutes absorbs that without
+ * calling someone online who closed the tab twenty minutes ago.
+ */
+const ONLINE_WINDOW_MS = 5 * 60_000;
+
+function isOnline(m: AdminTeamMember): boolean {
+  if (!m.lastSeenAt || m.status !== 'active') return false;
+  return Date.now() - new Date(m.lastSeenAt).getTime() < ONLINE_WINDOW_MS;
+}
+
 function lastActiveText(m: AdminTeamMember): string {
   if (m.lastSeenAt) return formatDistanceToNow(new Date(m.lastSeenAt), { addSuffix: true });
   return m.status === 'invited' ? 'Not signed in yet' : '—';
+}
+
+/**
+ * Presence: a green dot and "Online", or a grey dot and how long ago.
+ *
+ * A dot as well as the words, because colour alone is not a status — the same
+ * reason the Published/Draft badges carry text.
+ */
+function Presence({ member }: { member: AdminTeamMember }) {
+  const online = isOnline(member);
+  return (
+    <span className="flex items-center gap-1.5">
+      <span
+        aria-hidden
+        className={cn(
+          'size-1.5 flex-none rounded-full',
+          online ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+        )}
+      />
+      <span className={cn('text-xs', online ? 'text-emerald-500' : 'text-muted-foreground')}>
+        {online ? 'Online' : lastActiveText(member)}
+      </span>
+    </span>
+  );
 }
 
 // No email invite (admins use Google sign-in) — copy the steps to share out-of-band.
@@ -128,12 +166,10 @@ function buildMemberColumns(onManage: (m: AdminTeamMember) => void): ColumnDef<A
     {
       id: 'lastActive',
       accessorFn: lastActiveText,
-      header: 'Last sign-in',
+      header: 'Activity',
       enableSorting: false,
       enableColumnFilter: false,
-      cell: ({ getValue }) => (
-        <span className="text-muted-foreground text-xs">{getValue<string>()}</span>
-      ),
+      cell: ({ row }) => <Presence member={row.original} />,
     },
     {
       id: 'actions',
@@ -663,8 +699,8 @@ function ManageMemberPanel({
         </div>
 
         <div>
-          <div className="text-muted-foreground mb-1 text-xs font-medium">Last sign-in</div>
-          <div className="text-sm">{lastActiveText(member)}</div>
+          <div className="text-muted-foreground mb-1 text-xs font-medium">Activity</div>
+          <Presence member={member} />
         </div>
       </div>
 

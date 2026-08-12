@@ -80,6 +80,26 @@ export interface AdminUserRow {
  * flagged rather than hidden: they still have a row and a role, and knowing the
  * allowlist is what is actually blocking them beats wondering where they went.
  */
+/**
+ * Stamp a naive timestamp as UTC.
+ *
+ * `lastSeenAt` is a Postgres `timestamp` (no time zone) read in `mode: 'string'`,
+ * so it arrives as `2026-08-12 11:08:50.341` — no `Z`, no offset. `new Date()` in
+ * the browser reads that as *local* time, so in UTC+3 the dashboard reported an
+ * admin's last activity three hours earlier than it happened: someone signed in,
+ * refreshed, and was told they had last been seen three hours ago.
+ *
+ * The stored value is UTC (it is written from `toISOString()`), so the only thing
+ * missing was saying so. Done at the boundary rather than by migrating the column,
+ * because a migration here is a deliberate act with no staging behind it
+ * (CLAUDE.md §8) and this fixes the whole class of it for every consumer.
+ */
+function asUtcIso(value: string | null): string | null {
+  if (!value) return null;
+  const hasZone = /[Zz]$|[+-]\d{2}:?\d{2}$/.test(value);
+  return hasZone ? value : `${value.replace(' ', 'T')}Z`;
+}
+
 export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]> {
   const invites = await listInvites();
   // Both sources of access: the env allowlist that bootstraps owners, and people
@@ -191,7 +211,7 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
       googleConnected: googleLinked.has(row.id),
       allowlisted: allowed.has(row.email.toLowerCase()),
       isYou: row.id === viewerId,
-      lastSeenAt: row.lastSeenAt,
+      lastSeenAt: asUtcIso(row.lastSeenAt),
       createdAt: row.createdAt,
     };
   });

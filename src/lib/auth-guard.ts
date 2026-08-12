@@ -48,12 +48,16 @@ export async function getAdmin(request: Request): Promise<AdminUser | null> {
   if (!allowed.has(user.email.trim().toLowerCase())) return null;
 
   // A banned user keeps a valid cookie until it expires; check the row.
+  // `lastSeenAt` rides along on the same read — it is needed a line below and a
+  // second query for it would double the cost of every admin request.
   const [row] = await db
-    .select({ banned: authUser.banned })
+    .select({ banned: authUser.banned, lastSeenAt: authUser.lastSeenAt })
     .from(authUser)
     .where(eq(authUser.id, user.id))
     .limit(1);
   if (row?.banned) return null;
+
+  await touchLastSeen(user.id, row?.lastSeenAt ?? null);
 
   return {
     id: user.id,
@@ -62,6 +66,40 @@ export async function getAdmin(request: Request): Promise<AdminUser | null> {
     image: user.image ?? null,
     banned: false,
   };
+}
+
+/**
+ * How recently `lastSeenAt` must have been written before it is written again.
+ *
+ * Presence needs to be roughly live, and a write on every request would put a
+ * round trip on the hot path to record something that changed by a second. A
+ * minute is fine either way: the dashboard calls anything inside five minutes
+ * "online", so the reading is never more than a minute stale.
+ */
+const SEEN_WRITE_INTERVAL_MS = 60_000;
+
+/**
+ * Record that this admin is active, at most once a minute.
+ *
+ * Previously the column was stamped only in Better Auth's session-create hook,
+ * which is *sign-in*, not activity: someone signed in at nine and worked all day
+ * still read "last seen 09:00". The hook stays — it covers the first request of
+ * a session — and this keeps the value honest for the rest of it.
+ *
+ * Awaited rather than left dangling. A Worker may be torn down as soon as the
+ * response is sent, so a floating promise here would land or not depending on
+ * timing, which is worse than a predictable few milliseconds.
+ */
+async function touchLastSeen(userId: string, current: string | null): Promise<void> {
+  if (current) {
+    // The column is a naive UTC timestamp; parse it as such, not as local time.
+    const seen = Date.parse(`${current.replace(' ', 'T')}Z`);
+    if (Number.isFinite(seen) && Date.now() - seen < SEEN_WRITE_INTERVAL_MS) return;
+  }
+  await db
+    .update(authUser)
+    .set({ lastSeenAt: new Date().toISOString() })
+    .where(eq(authUser.id, userId));
 }
 
 /** Throws AuthError(401) when there is no allowlisted, unbanned session. */
