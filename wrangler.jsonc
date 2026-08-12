@@ -78,6 +78,19 @@
   // canonical tags all point at the apex.
   "routes": [{ "pattern": "tavkil.com", "custom_domain": true }],
 
+  // Do not let a deploy delete variables it does not know about.
+  //
+  // `wrangler deploy` defaults to `keep_vars: false`, which means it replaces the
+  // Worker's entire variable set with whatever this file declares. This file
+  // declares one variable and no secrets — so a deploy silently removed
+  // DATABASE_URL, BETTER_AUTH_SECRET and the rest, and the site answered
+  // `{"ok":false,"error":"DATABASE_URL is not set"}` while every prerendered page
+  // carried on working perfectly. The failure is invisible until something tries
+  // to reach the database.
+  //
+  // Secrets are restored with `pnpm exec node scripts/restore-secrets.mjs`.
+  "keep_vars": true,
+
   "vars": {
     // Still false. Attaching the domain does not make the site indexable — this
     // is the only switch that does, and flipping it needs a rebuild because it is
