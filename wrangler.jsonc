@@ -76,7 +76,14 @@
   // `www` is a redirect handled at the DNS/Rules layer, not a second origin — two
   // hostnames serving identical content is a duplicate-content problem, and the
   // canonical tags all point at the apex.
-  "routes": [{ "pattern": "tavkil.com", "custom_domain": true }],
+  // `www` is here so the Worker receives it and `middleware.ts` can 308 it to the
+  // apex. Without a route the hostname falls through to whatever DNS answers —
+  // which is how www kept serving a Squarespace placeholder for a day after the
+  // apex had moved.
+  "routes": [
+    { "pattern": "tavkil.com", "custom_domain": true },
+    { "pattern": "www.tavkil.com", "custom_domain": true },
+  ],
 
   // Do not let a deploy delete variables it does not know about.
   //

@@ -1,13 +1,31 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { GoogleButton } from '@/components/auth/google-button';
 import { authClient } from '@/lib/auth-client';
 import { BrandSeal } from '@/components/brand-seal';
+import { useSession } from '@/features/auth/use-session';
 
 export function LoginPage() {
   const [pending, setPending] = useState(false);
+
+  /**
+   * A signed-in admin who lands here goes to the dashboard.
+   *
+   * `/admin/login` used to render its sign-in card to anyone, including someone
+   * already signed in — so navigating back to it offered a second sign-in for an
+   * account that was already active, which reads as though the session had been
+   * lost.
+   *
+   * The decision is made from `/api/admin/me`, the same source `ProtectedRoute`
+   * uses, rather than from the presence of a cookie. That distinction is what
+   * keeps it from looping: a stale or revoked cookie fails the session query, so
+   * this falls through and shows the form instead of bouncing to a page that
+   * would only send the visitor straight back.
+   */
+  const { data: session, isLoading } = useSession();
 
   const signInGoogle = async () => {
     setPending(true);
@@ -26,6 +44,16 @@ export function LoginPage() {
     }
     // On success the browser is redirected to Google; nothing else to do here.
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-muted-foreground flex min-h-screen items-center justify-center">
+        Loading…
+      </div>
+    );
+  }
+
+  if (session) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="bg-background flex min-h-screen flex-col">

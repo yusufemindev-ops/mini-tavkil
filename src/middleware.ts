@@ -35,6 +35,27 @@ const ADMIN_ASSET = /\.(?!html?$)[a-z0-9]+$/i;
 export default function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
+  /**
+   * `www` is not a second site — send it to the apex.
+   *
+   * Both hostnames serving the same pages is a duplicate-content problem, and
+   * every canonical, hreflang and sitemap URL here names the apex. Permanent
+   * (308) rather than temporary, because unlike `/` — whose target depends on
+   * Accept-Language and must never be cached — this destination is fixed, so a
+   * browser and a crawler should both be allowed to remember it.
+   *
+   * The path and query ride along, so a link someone shared as
+   * `www.tavkil.com/en/product/x` lands on the product rather than the homepage.
+   */
+  const host = request.headers.get('host') ?? '';
+  if (host.toLowerCase().startsWith('www.')) {
+    const url = request.nextUrl.clone();
+    url.host = host.slice(4);
+    url.protocol = 'https';
+    url.port = '';
+    return NextResponse.redirect(url, 308);
+  }
+
   // IndexNow verification file. It has to live at `/<key>.txt`, which is a
   // dynamic segment at the app root — and `app/[key]/route.ts` collides with
   // `app/[locale]`, since Next forbids two different slug names at the same
