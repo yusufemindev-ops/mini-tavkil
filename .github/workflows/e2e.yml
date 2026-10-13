@@ -13,8 +13,17 @@ concurrency:
 jobs:
   test-e2e:
     name: Public E2E & Leak Tests
-    timeout-minutes: 30
+    timeout-minutes: 15
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'ci-build-secret-dummy-padding-32-chars-long' }}
+      BETTER_AUTH_URL: http://localhost:3000
+      # Public values — they ship in every page's HTML, so they are not secrets.
+      # .env.production is gitignored, so CI has to be given them here.
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_R2_PUBLIC_URL: https://images.tavkil.com
+      SITE_INDEXABLE: 'false'
     steps:
       - uses: actions/checkout@v4
 
@@ -27,22 +36,51 @@ jobs:
           node-version: 22
           cache: 'pnpm'
 
+      - name: Require DATABASE_URL
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::DATABASE_URL is not set in GitHub Secrets (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Cache the browser binary keyed on the Playwright version, so a version
+      # bump downloads a fresh one and every other run skips the download.
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
       - name: Install Playwright Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Run Public E2E Tests
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'ci-build-secret-dummy-padding-32-chars-long' }}
+      # The cache holds the browser, not the OS libraries it links against.
+      - name: Install Playwright system deps
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+
+      # Production build: `next start` serves prerendered pages instantly, where
+      # `next dev` compiles each route on first hit and times tests out.
+      # admin:build first — next build typechecks, and /admin imports its output.
+      - name: Build
         run: |
-          if [ -z "${DATABASE_URL:-}" ]; then
-            echo "⚠️  DATABASE_URL secret is not configured in GitHub Secrets. Skipping browser E2E tests."
-            exit 1
-          fi
-          pnpm e2e --project=public
+          pnpm admin:build
+          pnpm build
+
+      # `playwright test`, not `pnpm e2e`: that script defaults E2E_BASE_URL to the
+      # deployed Worker, which would test whatever is live instead of this PR.
+      # With E2E_BASE_URL unset, playwright.config.ts starts `pnpm start` itself.
+      - name: Run Public E2E Tests
+        run: pnpm exec playwright test --project=public
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4

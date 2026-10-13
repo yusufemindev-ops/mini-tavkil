@@ -34,6 +34,14 @@ function contentSecurityPolicy(): string {
   // Development only — see the note above. `next build` sets NODE_ENV to
   // production, so this can never reach a deployed response.
   const evalForReactDev = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'";
+  // On an https site this is a no-op safety net. On a plain-http server — the
+  // production build E2E runs against in CI — Chrome rewrites same-origin
+  // requests to https://localhost and they fail with ERR_SSL_PROTOCOL_ERROR.
+  // Dropped only when the site URL is explicitly http, so a missing value
+  // still ships the directive.
+  const upgradeInsecure = process.env.NEXT_PUBLIC_SITE_URL?.startsWith('http://')
+    ? ''
+    : 'upgrade-insecure-requests';
 
   return [
     "default-src 'self'",
@@ -48,7 +56,7 @@ function contentSecurityPolicy(): string {
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-    'upgrade-insecure-requests',
+    upgradeInsecure,
   ]
     .filter(Boolean)
     .join('; ');
