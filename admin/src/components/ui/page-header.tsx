@@ -18,10 +18,10 @@ export function PageHeader({
         {/* break-words so a long, space-less name/SKU wraps instead of blowing
             out the layout (min-w-0 lets the flex child actually shrink). */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-foreground break-words text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-foreground text-2xl font-bold tracking-tight break-words">{title}</h1>
           {badge}
         </div>
-        {subtitle && <p className="text-muted-foreground mt-1 break-words text-sm">{subtitle}</p>}
+        {subtitle && <p className="text-muted-foreground mt-1 text-sm break-words">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>

@@ -1,6 +1,3 @@
-import { betterAuth } from 'better-auth';
-import { eq } from 'drizzle-orm';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/lib/db';
 import {
   authAccount,
@@ -11,8 +8,11 @@ import {
   roles,
 } from '@/lib/db/schema';
 import { isAllowlisted } from '@/lib/permissions/allowlist';
-import { invitedRoleFor } from '@/lib/services/team';
 import { OWNER_ROLE } from '@/lib/permissions/catalog';
+import { invitedRoleFor } from '@/lib/services/team';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { eq } from 'drizzle-orm';
 
 /**
  * Better Auth, Google only, admins only.

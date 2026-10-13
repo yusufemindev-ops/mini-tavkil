@@ -53,7 +53,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         <ThemeToggle />
         {admin && (
           <DropdownMenu>
-            <DropdownMenuTrigger className="border-border hover:border-primary/40 hover:bg-muted/60 data-[popup-open]:border-primary/40 flex items-center gap-2.5 rounded-full border py-1 pe-2.5 ps-1 transition-colors">
+            <DropdownMenuTrigger className="border-border hover:border-primary/40 hover:bg-muted/60 data-[popup-open]:border-primary/40 flex items-center gap-2.5 rounded-full border py-1 ps-1 pe-2.5 transition-colors">
               <span className="bg-primary-soft text-primary grid size-8 place-items-center rounded-full text-xs font-semibold">
                 {initials(admin.fullName)}
               </span>

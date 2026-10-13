@@ -34,7 +34,7 @@ export function Pagination({
   const pages = getPageWindow(page, pageCount);
 
   return (
-    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-3 px-1.5 pb-1 pt-3.5 text-[13px]">
+    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-3 px-1.5 pt-3.5 pb-1 text-[13px]">
       <span>
         Showing <strong className="text-foreground font-semibold">{from}</strong>–
         <strong className="text-foreground font-semibold">{to}</strong> of{' '}

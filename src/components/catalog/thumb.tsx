@@ -59,7 +59,7 @@ export function Thumb({
           }}
           onError={() => setFailed(true)}
           className={cn(
-            'pointer-events-none absolute inset-0 size-full select-none object-cover transition-opacity duration-500',
+            'pointer-events-none absolute inset-0 size-full object-cover transition-opacity duration-500 select-none',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
         />

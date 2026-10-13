@@ -1,7 +1,7 @@
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 
 // The admin is a Vite SPA served by the Worker under /admin, so every asset URL
 // must be prefixed — hence `base`. It builds straight into the Next app's

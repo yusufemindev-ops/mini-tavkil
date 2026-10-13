@@ -16,7 +16,7 @@ export function Kicker({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-2 text-[0.78rem] font-bold uppercase tracking-wider',
+        'inline-flex items-center gap-2 text-[0.78rem] font-bold tracking-wider uppercase',
         // 0.78rem is normal-size text, so it needs 4.5:1. The brand orange is a
         // fill colour — it measures 3.18:1 on white and 2.94:1 on the tinted
         // section background. --primary-ink is the text-safe shade of the same

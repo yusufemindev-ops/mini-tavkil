@@ -47,7 +47,7 @@ function AboutContent({ stats }: { stats: AboutStat[] }) {
         <div className={CONTAINER}>
           <Breadcrumb items={[{ label: t('nav_home'), href: '/' }, { label: t('nav_about') }]} />
           <Kicker className="mb-4">{t('ab_kicker')}</Kicker>
-          <h1 className="text-foreground max-w-[17ch] text-[clamp(2.3rem,5vw,3.7rem)] font-extrabold leading-[1.05] tracking-tight">
+          <h1 className="text-foreground max-w-[17ch] text-[clamp(2.3rem,5vw,3.7rem)] leading-[1.05] font-extrabold tracking-tight">
             {t('ab_title')}
           </h1>
           <p className="text-foreground-soft mt-4 max-w-[58ch] text-[clamp(1.1rem,1.6vw,1.32rem)] leading-relaxed">
@@ -106,7 +106,7 @@ function AboutContent({ stats }: { stats: AboutStat[] }) {
       <section className="bg-background-2 py-14 sm:py-20">
         <div className={CONTAINER}>
           <Kicker>{t('ab_pr_k')}</Kicker>
-          <h2 className="text-foreground mb-6 mt-3 max-w-[20ch] text-[clamp(1.6rem,2.6vw,2.2rem)] font-bold tracking-tight">
+          <h2 className="text-foreground mt-3 mb-6 max-w-[20ch] text-[clamp(1.6rem,2.6vw,2.2rem)] font-bold tracking-tight">
             {t('ab_pr_h')}
           </h2>
           <div className="grid gap-3.5">

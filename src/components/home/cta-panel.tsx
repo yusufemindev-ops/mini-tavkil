@@ -22,7 +22,7 @@ export function CtaPanel() {
         {/* dotted overlay */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(80%_130%_at_100%_0%,#000,transparent_70%)]"
+          className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(80%_130%_at_100%_0%,#000,transparent_70%)] opacity-50"
           style={{
             background:
               'radial-gradient(circle at 1px 1px, rgba(255,255,255,.16) 1px, transparent 1.6px) 0 0 / 22px 22px',

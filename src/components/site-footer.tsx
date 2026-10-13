@@ -30,7 +30,7 @@ export async function SiteFooter() {
 
   return (
     <footer className="border-footer-border bg-footer text-footer-foreground mt-auto border-t">
-      <div className="mx-auto max-w-[var(--width-container)] px-5 pb-7 pt-[50px] sm:px-6">
+      <div className="mx-auto max-w-[var(--width-container)] px-5 pt-[50px] pb-7 sm:px-6">
         <div className="grid gap-9 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
           {/* Brand */}
           <div>
@@ -84,7 +84,7 @@ export async function SiteFooter() {
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="mb-3 text-[0.76rem] font-bold uppercase tracking-wider text-white">{title}</h2>
+      <h2 className="mb-3 text-[0.76rem] font-bold tracking-wider text-white uppercase">{title}</h2>
       {children}
     </div>
   );

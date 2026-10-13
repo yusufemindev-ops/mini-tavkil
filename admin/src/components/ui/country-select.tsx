@@ -131,7 +131,7 @@ export function CountrySelect({
                 <Combobox.Item
                   key={opt.country.code}
                   value={opt}
-                  className="data-[highlighted]:bg-foreground/[0.07] flex cursor-default select-none items-center justify-between gap-3 rounded-sm py-1.5 pe-2 ps-2 text-sm outline-none transition-colors"
+                  className="data-[highlighted]:bg-foreground/[0.07] flex cursor-default items-center justify-between gap-3 rounded-sm py-1.5 ps-2 pe-2 text-sm transition-colors outline-none select-none"
                 >
                   <span className="flex items-center gap-2">
                     {opt.label}

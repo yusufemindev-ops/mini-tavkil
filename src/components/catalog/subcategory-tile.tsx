@@ -18,8 +18,8 @@ export function SubcategoryTile({
       className="border-border bg-card hover:border-primary group flex flex-col overflow-hidden rounded-lg border text-start transition-colors"
     >
       <Thumb src={category.imageUrl} color={color} className="aspect-[16/10]" />
-      <div className="border-border border-t px-3 pb-3 pt-2.5">
-        <div className="text-foreground text-[0.9rem] font-semibold leading-tight">
+      <div className="border-border border-t px-3 pt-2.5 pb-3">
+        <div className="text-foreground text-[0.9rem] leading-tight font-semibold">
           {category.name}
         </div>
       </div>

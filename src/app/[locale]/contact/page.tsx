@@ -32,7 +32,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         {icon}
       </span>
       <div>
-        <div className="text-muted-foreground text-[0.72rem] font-bold uppercase tracking-wide">
+        <div className="text-muted-foreground text-[0.72rem] font-bold tracking-wide uppercase">
           {label}
         </div>
         <div className="text-foreground mt-0.5 text-[0.95rem] font-medium">{value}</div>

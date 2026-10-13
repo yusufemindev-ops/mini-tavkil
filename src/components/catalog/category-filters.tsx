@@ -25,7 +25,7 @@ export async function CategoryFilters({
 
   return (
     <aside className="border-border bg-card top-[calc(var(--height-nav)+1rem)] rounded-lg border p-3.5 lg:sticky">
-      <h2 className="text-muted-foreground mb-2 px-[11px] text-[0.72rem] font-bold uppercase tracking-wide">
+      <h2 className="text-muted-foreground mb-2 px-[11px] text-[0.72rem] font-bold tracking-wide uppercase">
         {t('cat_type')}
       </h2>
       <div className="flex flex-col gap-0.5">

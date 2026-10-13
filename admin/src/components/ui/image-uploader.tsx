@@ -28,7 +28,7 @@ export function ImageUploader({ images, onAdd }: { images: UploadImage[]; onAdd?
           }}
         >
           {img.primary && (
-            <span className="bg-primary text-primary-foreground absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase">
+            <span className="bg-primary text-primary-foreground absolute top-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase">
               Primary
             </span>
           )}

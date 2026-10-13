@@ -84,7 +84,7 @@ export function WhatsAppFab({ href }: { href: string }) {
       aria-label="WhatsApp"
       title="WhatsApp"
       style={{ backgroundColor: WA_GREEN, color: WA_INK }}
-      className="wa-fab fixed bottom-5 right-5 z-40 grid size-14 place-items-center rounded-full shadow-[0_10px_24px_-6px_rgba(0,0,0,0.35)] transition-transform hover:scale-110"
+      className="wa-fab fixed right-5 bottom-5 z-40 grid size-14 place-items-center rounded-full shadow-[0_10px_24px_-6px_rgba(0,0,0,0.35)] transition-transform hover:scale-110"
     >
       <WhatsAppIcon className="size-7" />
     </a>

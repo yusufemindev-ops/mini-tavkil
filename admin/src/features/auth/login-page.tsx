@@ -67,7 +67,7 @@ export function LoginPage() {
       </header>
 
       {/* Centered sign-in card */}
-      <main className="flex flex-1 flex-col items-center justify-start px-4 pb-4 pt-[14vh]">
+      <main className="flex flex-1 flex-col items-center justify-start px-4 pt-[14vh] pb-4">
         <div className="border-border bg-card w-full max-w-md rounded-2xl border p-8 shadow-sm sm:p-10">
           <div className="bg-primary/10 text-primary mb-6 grid size-12 place-items-center rounded-xl">
             <Building2 className="size-6" />

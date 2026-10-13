@@ -33,7 +33,7 @@ export function CategoryRail({
       className={cn('border-border bg-card rounded-lg border p-3.5', className)}
       aria-label={title}
     >
-      <p className="text-muted-foreground mb-2 px-1 text-[0.72rem] font-bold uppercase tracking-wide">
+      <p className="text-muted-foreground mb-2 px-1 text-[0.72rem] font-bold tracking-wide uppercase">
         {title}
       </p>
       <ul className="flex flex-col gap-0.5">
@@ -44,7 +44,7 @@ export function CategoryRail({
               className={cn(
                 // leading-snug tightens the wrap when a longer category name
                 // spills onto a second line.
-                'group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[0.92rem] font-medium leading-snug transition-colors',
+                'group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[0.92rem] leading-snug font-medium transition-colors',
                 item.active
                   ? 'bg-background-2 text-foreground'
                   : 'text-foreground-soft hover:bg-background-2 hover:text-foreground',

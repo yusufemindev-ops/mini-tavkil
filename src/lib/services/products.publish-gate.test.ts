@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AppError } from '@/lib/api/errors';
+import type { AppError } from '@/lib/api/errors';
 import { assertProductPublishable, type PublishableProduct } from './publish-gates';
 
 // Six clauses, each preventing a distinct failure that nothing downstream can fix.

@@ -79,7 +79,7 @@ export function MultiSelect({
                   key={o.value}
                   value={o.value}
                   className={cn(
-                    'flex cursor-default select-none items-center justify-between gap-2 rounded-md py-1.5 pe-2 ps-2.5 text-sm outline-none',
+                    'flex cursor-default items-center justify-between gap-2 rounded-md py-1.5 ps-2.5 pe-2 text-sm outline-none select-none',
                     'data-[highlighted]:bg-muted data-[highlighted]:text-foreground',
                   )}
                 >

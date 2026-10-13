@@ -181,7 +181,7 @@ function SwatchButton({
           alt={label}
           draggable={false}
           onError={() => setImgOk(false)}
-          className="pointer-events-none size-full select-none object-cover"
+          className="pointer-events-none size-full object-cover select-none"
         />
       )}
     </button>

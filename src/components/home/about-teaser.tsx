@@ -23,7 +23,7 @@ export function AboutTeaser() {
             <Tag variant="verified" className="absolute start-3 top-3">
               <CheckIcon className="size-3" /> {t('verified')}
             </Tag>
-            <span className="absolute bottom-3 end-3 rounded-full bg-black/55 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-white">
+            <span className="absolute end-3 bottom-3 rounded-full bg-black/55 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-white">
               İzmir · Bursa · Gaziantep
             </span>
           </div>

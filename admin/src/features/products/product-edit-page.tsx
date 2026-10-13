@@ -880,7 +880,7 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
                     Feeds JSON-LD additionalProperty[]
                   </span>
                 </div>
-                <div className="text-muted-foreground bg-muted/50 mb-2 flex gap-2 rounded px-3 py-2 text-[11px] font-semibold uppercase tracking-wide">
+                <div className="text-muted-foreground bg-muted/50 mb-2 flex gap-2 rounded px-3 py-2 text-[11px] font-semibold tracking-wide uppercase">
                   <div className="flex-1">Attribute name</div>
                   <div className="flex-1">Value</div>
                   <div className="w-9" />
@@ -1397,14 +1397,14 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
                   href={storefrontUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-primary break-all text-[12.5px] hover:underline"
+                  className="text-primary text-[12.5px] break-all hover:underline"
                 >
                   {storefrontUrl.replace(/^https?:\/\//, '')}
                 </a>
               ) : (
                 // Draft/new products 404 on the storefront (not published), so the
                 // link is inert until published.
-                <span className="text-muted-foreground/60 cursor-not-allowed break-all text-[12.5px]">
+                <span className="text-muted-foreground/60 cursor-not-allowed text-[12.5px] break-all">
                   {storefrontUrl.replace(/^https?:\/\//, '')}
                 </span>
               )}

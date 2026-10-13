@@ -180,7 +180,7 @@ export default async function ProductPage({
                   key={fact.label}
                   className={cn('min-w-[8rem] flex-1 p-3.5', index > 0 && 'border-border border-s')}
                 >
-                  <dt className="text-muted-foreground text-[0.72rem] uppercase tracking-wide">
+                  <dt className="text-muted-foreground text-[0.72rem] tracking-wide uppercase">
                     {fact.label}
                   </dt>
                   <dd

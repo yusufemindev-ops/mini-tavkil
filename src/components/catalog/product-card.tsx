@@ -42,7 +42,7 @@ export function ProductCard({
         )}
         <h3
           dir="auto"
-          className="text-foreground my-1 text-base font-bold leading-tight tracking-tight"
+          className="text-foreground my-1 text-base leading-tight font-bold tracking-tight"
         >
           {product.name}
         </h3>

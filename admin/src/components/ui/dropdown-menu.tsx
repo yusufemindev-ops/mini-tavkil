@@ -40,7 +40,7 @@ export function DropdownMenuItem({
   return (
     <MenuPrimitive.Item
       className={cn(
-        'data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex cursor-pointer select-none items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium outline-none',
+        'data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium outline-none select-none',
         className,
       )}
       {...props}

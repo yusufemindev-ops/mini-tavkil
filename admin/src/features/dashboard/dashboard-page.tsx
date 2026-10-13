@@ -90,7 +90,7 @@ export function DashboardPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {publishSummary.map((s) => (
                 <div key={s.label}>
-                  <div className="text-muted-foreground text-[0.7rem] font-semibold uppercase tracking-wide">
+                  <div className="text-muted-foreground text-[0.7rem] font-semibold tracking-wide uppercase">
                     {s.label}
                   </div>
                   <div
