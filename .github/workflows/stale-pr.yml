@@ -1,0 +1,21 @@
+name: Stale PRs
+on:
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-pr-message: 'This PR has had no activity for 30 days. It will be closed in 7 days if no further activity occurs.'
+          close-pr-message: 'This PR was closed because it has been stalled for 37 days with no activity.'
+          days-before-stale: 30
+          days-before-close: 7
+          stale-pr-label: 'stale'

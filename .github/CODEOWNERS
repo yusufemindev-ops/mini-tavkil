@@ -1,0 +1,7 @@
+# Code ownership — auto-requests review from project owners
+*               @yusufemindev-ops
+src/            @yusufemindev-ops
+admin/          @yusufemindev-ops
+messages/       @yusufemindev-ops
+scripts/        @yusufemindev-ops
+.github/        @yusufemindev-ops

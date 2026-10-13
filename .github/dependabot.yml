@@ -1,0 +1,41 @@
+version: 2
+updates:
+  # Root (Next.js + Drizzle + Workers)
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore'
+      include: scope
+    labels: ['dependencies', 'core']
+    groups:
+      next:
+        patterns: ['next', 'next-intl']
+      react:
+        patterns: ['react', 'react-dom', '@types/react*']
+      drizzle:
+        patterns: ['drizzle-orm', 'drizzle-kit']
+      testing:
+        patterns: ['vitest', '@playwright/*', '@testing-library/*']
+
+  # Admin (Vite + React)
+  - package-ecosystem: npm
+    directory: '/admin'
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore'
+      include: scope
+    labels: ['dependencies', 'admin']
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: monthly
+    labels: ['dependencies', 'ci']

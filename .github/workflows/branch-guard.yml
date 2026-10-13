@@ -1,0 +1,44 @@
+name: Branch guard
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        run: |
+          branch="${{ github.head_ref }}"
+          base="${{ github.base_ref }}"
+
+          # Allow Dependabot and automated bot branches
+          if [[ "$branch" =~ ^dependabot/ || "${{ github.actor }}" == "dependabot[bot]" ]]; then
+            echo "✅ Automated dependency bot branch: $branch"
+            exit 0
+          fi
+
+          # Block PRs targeting main from anything other than develop
+          if [[ "$base" == "main" && "$branch" != "develop" ]]; then
+            echo "❌ Only 'develop' can merge into 'main' via PR."
+            echo "   Got: $branch → $base"
+            echo ""
+            echo "   Allowed flow:"
+            echo "     feat/TSC-XXX-*  →  develop  (via PR)"
+            echo "     develop         →  main     (via PR)"
+            exit 1
+          fi
+
+          # Allow long-lived branches
+          if [[ "$branch" == "develop" ]]; then
+            echo "✅ Long-lived branch: $branch"
+            exit 0
+          fi
+
+          re='^(feat|fix|chore|refactor|perf|docs|test|build|ci)/TSC-[0-9]+-[a-z0-9-]+$'
+          if [[ ! "$branch" =~ $re ]]; then
+            echo "❌ Branch name '$branch' must match: <type>/TSC-XXX-<kebab-description>"
+            echo "   type ∈ feat | fix | chore | refactor | perf | docs | test | build | ci"
+            exit 1
+          fi
+          echo "✅ Branch name OK: $branch"

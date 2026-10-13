@@ -1,0 +1,65 @@
+name: Worker Bundle Size
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-size:
+    name: Cloudflare Worker 3MB Limit Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      # One workspace install covers the Next app and admin/ (pnpm-workspace.yaml).
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Cloudflare Worker
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'ci-build-secret-dummy-padding-32-chars-long' }}
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "⚠️  DATABASE_URL secret is not configured in GitHub Secrets. Cannot build Cloudflare bundle without database."
+            exit 1
+          fi
+          pnpm cf:build
+
+      - name: Measure Bundle Size & Warn on Growth
+        run: |
+          HANDLER=".open-next/server-functions/default/handler.mjs"
+          if [ ! -f "$HANDLER" ]; then
+            echo "❌ Worker handler file not found at $HANDLER"
+            exit 1
+          fi
+
+          SIZE_BYTES=$(gzip -c "$HANDLER" | wc -c | tr -d ' ')
+          MAX_BYTES=3145728 # 3 MB Cloudflare Free plan limit
+
+          SIZE_KB=$(awk "BEGIN {printf \"%.2f\", $SIZE_BYTES/1024}")
+          SIZE_MB=$(awk "BEGIN {printf \"%.2f\", $SIZE_BYTES/1048576}")
+
+          echo "📦 Worker Gzipped Size: ${SIZE_MB} MB (${SIZE_KB} KB / ${SIZE_BYTES} bytes)"
+
+          if [ "$SIZE_BYTES" -gt "$MAX_BYTES" ]; then
+            echo "::warning title=Bundle Exceeds 3 MB Free Limit::Worker bundle is ${SIZE_MB} MB. If you are on the Cloudflare Free plan, deploy will fail. Paid plan supports up to 10 MB."
+            echo "⚠️ NOTICE: Worker bundle size is ${SIZE_MB} MB (> 3 MB). Requires Cloudflare Workers Paid plan."
+          else
+            echo "✅ Worker bundle size is ${SIZE_MB} MB (well within 3 MB free tier limits)."
+          fi

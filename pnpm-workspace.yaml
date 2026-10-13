@@ -1,0 +1,6 @@
+# One install, one lockfile for the whole repo.
+#
+# The root package is the Next.js storefront + /api; `admin` is the Vite SPA.
+# When the Hono API lands this becomes `apps/*` + `packages/*` (ARCHITECTURE.md).
+packages:
+  - 'admin'
