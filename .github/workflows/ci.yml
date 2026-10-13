@@ -32,6 +32,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Generates src/generated/admin-shell.ts (gitignored), which the /admin
+      # route imports — so it must exist before the Next typecheck.
+      - name: Build admin SPA
+        run: pnpm admin:build
+
       - name: Typecheck Next.js
         run: pnpm typecheck
 
@@ -42,9 +47,6 @@ jobs:
 
       - name: Run unit & component tests
         run: pnpm test
-
-      - name: Build admin SPA
-        run: pnpm admin:build
 
       - name: Build Next.js
         env:
