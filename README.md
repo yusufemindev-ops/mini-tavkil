@@ -49,7 +49,7 @@ wrangler.jsonc       R2 bindings, Cron Triggers, env
 ```bash
 pnpm install                  # one workspace install: Next app + admin/
 cp .env.example .env          # fill in; [carry] values come from tavkil/.env
-cp .env .dev.vars             # wrangler reads this for local Cloudflare runs
+                              # (Next and wrangler both read .env — no .dev.vars)
 
 pnpm db:migrate               # drizzle-kit, uses DIRECT_URL
 pnpm sync:permissions         # fills the Permission table — no boot hook exists

@@ -110,4 +110,7 @@ export default withNextIntl(nextConfig);
 
 // Gives `next dev` access to the Worker bindings (R2, etc.) declared in
 // wrangler.jsonc, so local dev exercises the same bindings production does.
-void initOpenNextCloudflareForDev();
+if (process.env.NODE_ENV === 'development') {
+  void initOpenNextCloudflareForDev();
+}
+

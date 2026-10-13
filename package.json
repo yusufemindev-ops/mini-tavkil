@@ -19,6 +19,7 @@
     "check:pricing-leak": "bash scripts/check-pricing-leak.sh",
     "typecheck": "next typegen && tsc --noEmit",
     "sync:permissions": "tsx scripts/sync-permissions.ts",
+    "sync:permissions:prod": "DOTENV_CONFIG_PATH=.env.prod tsx scripts/sync-permissions.ts",
     "fx:refresh": "tsx scripts/fx-refresh.ts",
     "test": "vitest run --passWithNoTests --project unit --project component",
     "test:watch": "vitest",
@@ -33,7 +34,10 @@
     "db:pull": "drizzle-kit pull",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:prod": "DOTENV_CONFIG_PATH=.env.prod drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
+    "db:studio:prod": "DOTENV_CONFIG_PATH=.env.prod drizzle-kit studio",
+    "secrets:restore:prod": "node scripts/restore-secrets.mjs",
     "admin:build": "pnpm --filter mini-tavkil-admin build && node scripts/bundle-admin-shell.mjs",
     "admin:typecheck": "pnpm --filter mini-tavkil-admin exec tsc -b --noEmit",
     "admin:lint": "pnpm --filter mini-tavkil-admin lint"

@@ -105,8 +105,9 @@
     "SITE_INDEXABLE": "false",
   },
 
-  // Secrets are NOT listed here. Local: .dev.vars. Production: `wrangler secret put`.
-  // DATABASE_URL, DIRECT_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID,
-  // GOOGLE_CLIENT_SECRET, ADMIN_ALLOWLIST, TURNSTILE_SECRET_KEY,
-  // INDEXNOW_API_KEY
+  // Secrets are NOT listed here. Local: .env (wrangler falls back to it when no
+  // .dev.vars exists). Production: `wrangler secret put`.
+  // DATABASE_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  // ADMIN_ALLOWLIST, INDEXNOW_API_KEY — plus TURNSTILE_SECRET_KEY once configured.
+  // DIRECT_URL is local-only (drizzle-kit over TCP); the Worker never needs it.
 }
