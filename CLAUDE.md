@@ -202,6 +202,7 @@ pnpm check:pricing-leak # Secret price & supplier guard
 - Copy anything from Temsan's schema or admin — architecture patterns only
 - Write essay-length comments, development journals, or historical migration lore in code
 - Write multi-line narrative commit messages or commit lines exceeding 72 characters
+- Run `git commit` or `git push` without asking the user and receiving explicit permission first
 - `--no-verify` (never bypass git hooks)
 
 <!-- BEGIN:nextjs-agent-rules -->
