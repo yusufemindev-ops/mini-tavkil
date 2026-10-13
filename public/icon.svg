@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- The Tavkil seal. A tevkil is a sealed authority to act on someone's
+       behalf, which is the business; the mark is the seal rather than a letter
+       in a box.
+
+       Round because every marketplace ships a rounded square and they are
+       indistinguishable in a row of tabs. The ring sits inside the disc so the
+       silhouette stays a clean circle at 16px, and the T is a path rather than
+       <text>: favicons render with no webfonts loaded, so a text element falls
+       back to whatever the OS resolves and the letter differs per machine. -->
+  <circle cx="32" cy="32" r="32" fill="#f2640c"/>
+  <circle cx="32" cy="32" r="24.5" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.5"/>
+  <path d="M19 23.5h26v9.5h-8v20h-10v-20h-8Z" fill="#ffffff"/>
+</svg>
