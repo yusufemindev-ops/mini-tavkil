@@ -42,18 +42,19 @@
   ],
 
   // ─── R2 ────────────────────────────────────────────────────────────────────
-  // No S3 credentials anywhere: the bucket is a binding.
-  // ONE bucket, no dev/preview variant — local dev writes to the real bucket
-  // (`remote: true`), same as production. Single-environment by decision.
+  // Isolated buckets: production uses tavkil-images / tavkil-cache.
+  // Local dev and preview environments use tavkil-images-dev / tavkil-cache-dev.
   "r2_buckets": [
     {
       "binding": "IMAGES",
       "bucket_name": "tavkil-images",
+      "preview_bucket_name": "tavkil-images-dev",
       "remote": true,
     },
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
       "bucket_name": "tavkil-cache",
+      "preview_bucket_name": "tavkil-cache-dev",
     },
   ],
 
