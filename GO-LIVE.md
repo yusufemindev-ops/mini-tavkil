@@ -154,11 +154,11 @@ Decided by the owner on 2026-08-11, reversed once, and re-affirmed the same day
 after seeing the alternative built. It stays visible here rather than buried as a
 silent exception in a test file.
 
-| surface | fill | label | ratio | AA (4.5:1) |
-| --- | --- | --- | --- | --- |
-| Primary button, light | `#f2640c` | white | 3.18:1 | fails |
-| Primary button, dark | `#ff7a1a` | white | 2.61:1 | fails |
-| WhatsApp button | `#25D366` | white | 1.98:1 | fails |
+| surface               | fill      | label | ratio  | AA (4.5:1) |
+| --------------------- | --------- | ----- | ------ | ---------- |
+| Primary button, light | `#f2640c` | white | 3.18:1 | fails      |
+| Primary button, dark  | `#ff7a1a` | white | 2.61:1 | fails      |
+| WhatsApp button       | `#25D366` | white | 1.98:1 | fails      |
 
 Both were fixed at one point and both fixes were rejected on sight:
 
@@ -171,7 +171,7 @@ The reasoning is the same in both cases and worth stating plainly: **the colour
 is what identifies the control.** A button nobody recognises has an accessibility
 problem of its own.
 
-What is *not* covered: orange used as text goes through `--primary-ink`
+What is _not_ covered: orange used as text goes through `--primary-ink`
 (`#bd4c06`), which clears 4.5:1 on white, on `--primary-soft` and on
 `--background-2`. Large display text passes the 3:1 large-text bar.
 

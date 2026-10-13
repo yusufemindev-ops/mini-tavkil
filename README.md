@@ -47,15 +47,14 @@ wrangler.jsonc       R2 bindings, Cron Triggers, env
 ## Setup
 
 ```bash
-pnpm install
+pnpm install                  # one workspace install: Next app + admin/
 cp .env.example .env          # fill in; [carry] values come from tavkil/.env
 cp .env .dev.vars             # wrangler reads this for local Cloudflare runs
 
 pnpm db:migrate               # drizzle-kit, uses DIRECT_URL
 pnpm sync:permissions         # fills the Permission table — no boot hook exists
-pnpm import:temsan            # the real catalogue; see scripts/temsan/
 
-pnpm dev                      # Next dev server
+pnpm dev                      # Next on :3000 + admin on :5173/admin/, together
 pnpm preview                  # Workers runtime locally, via wrangler
 ```
 
@@ -74,19 +73,20 @@ client; it's the same domain.
 
 ## Commands
 
-| Command                 | Does                                            |
-| ----------------------- | ----------------------------------------------- |
-| `pnpm dev`              | Next dev server                                 |
-| `pnpm preview`          | Run against the real Workers runtime locally    |
-| `pnpm deploy`           | Build + `wrangler deploy`                       |
-| `pnpm test`             | Vitest, once                                    |
-| `pnpm test:watch`       | Vitest, watch                                   |
-| `pnpm e2e`              | Playwright                                      |
-| `pnpm e2e:report`       | Open the last Playwright report                 |
-| `pnpm db:studio`        | Drizzle Studio                                  |
-| `pnpm import:temsan`    | Import the Temsan catalogue from its price list |
-| `pnpm sync:permissions` | Sync `Permission` table from `catalog.ts`       |
-| `pnpm fx:refresh`       | Fetch USD→TRY now (also runs on a Cron Trigger) |
+| Command                 | Does                                                |
+| ----------------------- | --------------------------------------------------- |
+| `pnpm dev`              | Every `dev:*` script in parallel (Ctrl+C stops all) |
+| `pnpm dev:next`         | Storefront + `/api` only, on :3000                  |
+| `pnpm dev:admin`        | Admin SPA only, on :5173/admin/ (hot reload)        |
+| `pnpm preview`          | Run against the real Workers runtime locally        |
+| `pnpm deploy`           | Build + `wrangler deploy`                           |
+| `pnpm test`             | Vitest, once                                        |
+| `pnpm test:watch`       | Vitest, watch                                       |
+| `pnpm e2e`              | Playwright                                          |
+| `pnpm e2e:report`       | Open the last Playwright report                     |
+| `pnpm db:studio`        | Drizzle Studio                                      |
+| `pnpm sync:permissions` | Sync `Permission` table from `catalog.ts`           |
+| `pnpm fx:refresh`       | Fetch USD→TRY now (also runs on a Cron Trigger)     |
 
 ---
 

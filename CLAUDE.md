@@ -19,10 +19,11 @@ Cloudflare.
 ## Reading order
 
 1. This file
-2. `PLAN.md` — decisions + the numbered steps to finish the project
-3. `TESTING.md` — Vitest + Playwright + Chrome DevTools MCP
-4. `README.md` — setup + commands
-5. Tavkil docs at `~/Documents/foundation-pm/Tavkil/` — PRD, architecture, db-schema
+2. `ARCHITECTURE.md` — target system architecture, Cloudflare specs & 128MB RAM constraints
+3. `PLAN.md` — decisions + the numbered steps to finish the project
+4. `TESTING.md` — Vitest + Playwright + Chrome DevTools MCP
+5. `README.md` — setup + commands
+6. Tavkil docs at `~/Documents/foundation-pm/Tavkil/` — PRD, architecture, db-schema
 
 Source repos to port from: `~/Documents/tavkil` (UI + services + schema),
 `~/Documents/temsan` (Cloudflare/Neon patterns only — never its schema or admin).
@@ -33,8 +34,9 @@ Source repos to port from: `~/Documents/tavkil` (UI + services + schema),
 
 ### 1. Public responses contain no price and no supplier
 
-Both are internal admin-only. They never appear in any anonymous response, sitemap,
-`robots.txt`, `llms.txt`, `llms-full.txt`, JSON-LD, or error `details`.
+Both are internal admin-only (`base_price`, `tier_markup_percent`, and supplier identities).
+They never appear in any anonymous response, sitemap, `robots.txt`, `llms.txt`, `llms-full.txt`,
+JSON-LD, or error `details`. Any leak on a public surface is a Critical Severity defect.
 
 **Enforcement is one function.** `lib/queries/public-product.ts` exports the only
 shape public pages may render, and that shape has no `price` and no `supplier` field
@@ -104,24 +106,45 @@ editors. See `PLAN.md` §3 for what this already decided (role editor, settings,
 `products:edit`, `categories:view`, `users:assign_role`. Roles are **fixed in code**
 in `permissions/catalog.ts` — there is no role editor UI.
 
-### 7. Single environment, single branch
+### 7. Branching & Environments
 
-**One git branch: `main`.** No `develop`. (Tavkil's develop-base rule does not apply here.)
-**One Neon database.** No dev/test branch. **One R2 bucket.** No preview bucket.
-
-Local dev talks to the same database and bucket production does. That's deliberate —
-nothing to keep in sync, and what you test is what ships. The cost is that carelessness
-has real consequences:
-
-- Tests create only `e2e-` prefixed rows and delete them in teardown, pass or fail
-- Never `deleteMany({})` or any broad-filter delete
-- `drizzle-kit migrate` is a considered act — there is no staging to catch a mistake
-- Always check what a destructive command targets before running it
+- **Git flow:** `feat/TSC-XXX-*` → `develop` (via PR) → `main` (production release via PR).
+  Direct pushes to `main` and `develop` are blocked by hooks and CI branch-guards.
+- **Commit format:** Conventional commit with ticket: `<type>: [TSC-XXX] <description>` (e.g. `feat: [TSC-70] add CI workflows`). Allowed types: `feat`, `fix`, `chore`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`.
+- **Package manager:** Use `pnpm` exclusively (`pnpm install`, `pnpm add`). Never use `npm` or `yarn`.
+- **Neon database:** `main` (prod) and `dev` (isolated schema/migration testing).
+- **R2 Storage:** Production bucket + `preview_bucket_name` for staging and test uploads.
+- Tests create only `e2e-` prefixed rows and clean them up in teardown.
+- Never `deleteMany({})` or any broad-filter delete.
+- `drizzle-kit migrate` is run deliberately against `dev` first, verified, then `main`.
+- **Security contact:** `yusufemin.dev@gmail.com` (critical leaks or vulnerabilities).
 
 ### 8. Migrations are never automatic
 
 `drizzle-kit migrate` is a deliberate step. Workers have no boot; nothing runs
 migrations for you, and nothing should.
+
+---
+
+## Local Verification Commands
+
+Run before opening a PR or claiming work is complete:
+
+```bash
+# Code Quality & Formatting
+pnpm lint            # Storefront Next.js linting
+pnpm admin:lint      # Admin Vite SPA linting
+pnpm format:check    # Prettier formatting & Tailwind class sorting
+
+# Type Safety
+pnpm typecheck       # Next.js route typegen & tsc
+pnpm admin:typecheck # Admin SPA tsc
+
+# Tests & Security Checks
+pnpm test            # Unit & component test suite (Vitest)
+pnpm check:i18n      # Locale key parity (en / tr / ar)
+pnpm check:pricing-leak # Secret price & supplier guard
+```
 
 ---
 
@@ -153,13 +176,14 @@ migrations for you, and nothing should.
 - [ ] Permission checked in the handler
 - [ ] No new interactive transactions on a request path
 - [ ] Bundle still under the Workers limit
-- [ ] Conventional commit
+- [ ] Conventional commit with ticket: `type: [TSC-XXX] description`
+- [ ] All verification commands passing locally
 
 ---
 
 ## Never do
 
-- Put a price or supplier in anything a logged-out visitor can reach
+- Put a price or supplier in anything a logged-out visitor can reach (`base_price`, `tier_markup_percent`)
 - Migrate back to Prisma — it costs 1.85 MB of a 3 MB budget
 - Use WebSocket/pooled-TCP Neon mode on a request path
 - Use TanStack Query on a public indexable page
@@ -169,7 +193,7 @@ migrations for you, and nothing should.
 - Hand-edit generated files in `drizzle/` — let `drizzle-kit generate` produce them
 - Run migrations or permission-sync on boot
 - Copy anything from Temsan's schema or admin — architecture patterns only
-- `--no-verify`
+- `--no-verify` (never bypass git hooks)
 
 <!-- BEGIN:nextjs-agent-rules -->
 
