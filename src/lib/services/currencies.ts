@@ -4,14 +4,7 @@ import { db } from '@/lib/db';
 import { currencies, fxRateRuns, fxRates } from '@/lib/db/schema';
 import { invalid, notFound } from '@/lib/api/errors';
 
-/**
- * Currencies.
- *
- * USD is the base: every stored price is USD and any quote settles in USD. It can
- * never be toggled off and always converts at 1.0. Everything else is a display
- * convenience — and since no price is public here, currency selection only ever
- * affects what an admin sees.
- */
+/** Admin currencies service. USD is the fixed base currency for all stored prices. */
 export const BASE_CURRENCY = 'USD';
 
 export const toggleCurrencySchema = z.object({ isActive: z.boolean() });
@@ -58,8 +51,7 @@ export async function listCurrencies(): Promise<AdminCurrency[]> {
 export async function setCurrencyActive(code: string, isActive: boolean): Promise<AdminCurrency> {
   const normalized = code.trim().toUpperCase();
 
-  // The base currency is what everything is stored and quoted in. Disabling it
-  // would leave prices denominated in a currency the UI refuses to display.
+  // Base currency cannot be disabled.
   if (normalized === BASE_CURRENCY && !isActive) {
     throw invalid(`${BASE_CURRENCY} is the base currency and can't be disabled.`);
   }
@@ -79,7 +71,7 @@ export async function setCurrencyActive(code: string, isActive: boolean): Promis
   return updated;
 }
 
-/** The FX refresh history, newest first. Step 12 writes these rows. */
+/** Lists FX refresh run history, newest first. */
 export async function listFxRuns(limit = 20) {
   return db.select().from(fxRateRuns).orderBy(desc(fxRateRuns.ranAt)).limit(limit);
 }

@@ -2,34 +2,9 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 /**
- * The Tavkil lockup: a seal and the name beside it.
- *
- * *Tavkil* (تَوْكِيل / tevkil) is delegation — appointing someone to act on your
- * behalf. That is the business: a buyer hands their sourcing to us and we act for
- * them in Türkiye. A tevkil is granted by a sealed document, so the mark is a
- * seal rather than a letter in a box.
- *
- * Round on purpose. Every marketplace ships a rounded square, and in a row of
- * browser tabs or app icons they are indistinguishable; a disc has a silhouette
- * of its own before anyone reads the glyph. The ring sits *inside* the disc so
- * the outline stays a clean circle at 16px, and the T is heavier than a typeface
- * would set it, because a seal is stamped rather than typed.
- *
- * The name is lowercase and tightly tracked — a marketplace, not a manufacturer —
- * with the dot of the "i" replaced by an orange square: a unit, the thing being
- * moved. That substitution only applies to the brand name itself; an
- * admin-supplied `siteName` renders plainly, since the trick is a piece of
- * lettering rather than a rule about text.
- *
- * There is no logo file, so the mark is drawn: no asset to keep in sync, correct
- * at any size, and identical on every machine. An uploaded `logoUrl` still wins.
- *
- * RTL: the wordmark is pinned `dir="ltr"` so a Latin name inside an Arabic page
- * is not reordered by bidi. The lockup as a whole still mirrors — the gap is
- * logical, so the seal leads on the correct side either way.
+ * Brand logo lockup component combining SVG seal and brand wordmark.
+ * Uses dir="ltr" on wordmark to prevent bidi reordering in RTL layouts.
  */
-
-/** The seal. Inline SVG rather than lucide: this is the brand mark, not an icon. */
 function Seal({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden focusable="false">
@@ -79,8 +54,7 @@ export function BrandLogo({
       className={cn('brand-logo group flex items-center gap-2.5', className)}
     >
       {logoUrl ? (
-        // Admin-supplied absolute URL of unknown dimensions; next/image would need
-        // a remotePattern per deployment, and the mark is ~32px anyway.
+        // Admin-supplied logo URL fallback to <img> to support any external host.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logoUrl}
@@ -103,9 +77,7 @@ export function BrandLogo({
         {isBrand ? (
           <>
             tavk
-            {/* The square sits over the printed dot rather than replacing the
-                glyph, so the letter keeps its own spacing and the name stays
-                selectable and readable to a screen reader. */}
+            {/* Overlay dot preserves native glyph spacing and accessibility. */}
             <span className="brand-i">
               i<span aria-hidden className="brand-i-dot" />
             </span>

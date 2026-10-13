@@ -1,21 +1,6 @@
 /**
- * The ONLY product and category shapes public pages may render.
- *
- * There is no `price` field and no `supplier` field — not optional, absent. That
- * is the entire enforcement mechanism: a leak becomes a compile error rather than
- * something a reviewer has to catch.
- *
- * Rules (see CLAUDE.md §1):
- *   - Public pages call the functions in this file. Nothing else.
- *   - Never widen these types "just for one page".
- *   - Never select `basePriceAmount`, `basePriceCurrency`, `supplierId`, or any
- *     `suppliers` column here — not even into a variable that gets discarded.
- *   - Strip at the query, not at the render — a Server Component passing an object
- *     to a Client Component serialises it into the HTML, visible in view-source
- *     even if it is never displayed.
- *
- * Admin queries live in src/lib/queries/admin-*.ts and are called only from
- * /api/admin/*. Those may include price and supplier.
+ * Public product and category queries.
+ * Strict pricing and supplier isolation: price and supplier fields are never selected.
  */
 
 import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
@@ -118,13 +103,7 @@ export type SitemapEntry = {
   updatedAt: Date;
 };
 
-// ─── Shared predicates ───────────────────────────────────────────────────────
-//
-// A row is public only if it is published and not soft-deleted, AND the requested
-// locale has a *complete* translation. There is deliberately no English fallback:
-// a page served in Arabic with English content is a thin/duplicate page, and
-// linking to it from the sitemap costs crawl budget for nothing.
-
+// Rows must be published and not soft-deleted, with a complete translation for the locale.
 const productIsPublic = and(eq(products.status, 'published'), isNull(products.deletedAt));
 const categoryIsPublic = and(eq(categories.status, 'published'), isNull(categories.deletedAt));
 
@@ -136,27 +115,14 @@ function categoryTranslationIsComplete(locale: Locale) {
   return and(eq(categoryTranslations.locale, locale), eq(categoryTranslations.isComplete, true));
 }
 
-// The exact column list every product read uses. Written out rather than
-// `getTableColumns(products)` on purpose: spreading the table would pull in
-// `basePriceAmount`, `basePriceCurrency`, and `supplierId`.
+// Explicit column list prevents accidental selection of sensitive pricing/supplier data.
 const productColumns = {
   id: products.id,
   moq: products.moq,
   unit: products.unit,
   boxQuantity: products.boxQuantity,
   packSize: products.packSize,
-  /**
-   * Carton logistics, published deliberately.
-   *
-   * A wholesale buyer costs a shipment from these three: how many fit a carton,
-   * what it weighs and what volume it occupies. They were imported from the
-   * supplier's price list and then never selected here, so the specification
-   * table showed "Units per box" and nothing else.
-   *
-   * None of them is a price or a supplier, which is the only thing this shape
-   * refuses to carry (CLAUDE.md §1). A barcode is a public product identifier —
-   * it is what a buyer scans — and Google reads it as `gtin13`.
-   */
+  /** Carton logistics specs and barcode. */
   weightKg: products.weightKg,
   cbm: products.cbm,
   gtin13: products.gtin13,
@@ -170,14 +136,7 @@ const productColumns = {
   name: productTranslations.name,
   description: productTranslations.description,
   specsMd: productTranslations.specsMd,
-  /**
-   * The short line written to fit a search snippet.
-   *
-   * `description` is now a 60–75 word paragraph, and Google shows roughly 155
-   * characters — truncating a paragraph mid-clause produces a worse snippet than
-   * a sentence written to length. Both are kept: the paragraph is the page, this
-   * is the meta tag.
-   */
+  /** Search snippet for meta description tag. */
   seoDescription: productTranslations.seoDescription,
   slug: productTranslations.slug,
 } as const;
@@ -305,17 +264,7 @@ export async function publicProduct(slug: string, locale: Locale): Promise<Publi
   });
 }
 
-/**
- * Attributes and options for MANY products in two queries.
- *
- * `llms-full.txt` used to re-read every product with `publicProduct()` to get
- * these — roughly five queries per row. At twelve products that is ~60 outbound
- * fetches from a single Worker invocation, past Cloudflare's subrequest limit,
- * and the route returned a 500 with `fetch failed`. It also broke the build,
- * where the same route is prerendered.
- *
- * Two set-based reads instead, regardless of catalogue size.
- */
+/** Fetches attributes and options for multiple products in batch queries. */
 export async function publicDetailsFor(
   productIds: string[],
   locale: Locale,
@@ -559,16 +508,7 @@ export async function publicProducts(
 
 // ─── Categories ──────────────────────────────────────────────────────────────
 
-/**
- * Category images are stored as bare R2 keys, exactly like product images, and
- * so have to be resolved the same way.
- *
- * Product images went through `resolveImageUrl` from the start; categories did
- * not, and nothing revealed it because no category had ever had an image — every
- * card fell through to the gradient placeholder. The moment the Temsan import
- * gave all sixteen of them a photograph, every card and every rail pill rendered
- * a broken image instead.
- */
+/** Resolves category image URL from stored R2 key. */
 function categoryImage(reference: string | null): string | null {
   return reference ? resolveImageUrl(reference) : null;
 }
@@ -678,13 +618,7 @@ async function localizedCategorySlugs(categoryIds: string[]): Promise<Map<string
 
 // ─── Sitemap ─────────────────────────────────────────────────────────────────
 
-/**
- * Every indexable product and category URL, with the row's own `updatedAt`.
- *
- * `lastModified` must be the real modification time: a sitemap that claims
- * everything changed today teaches Google the signal is worthless and it crawls
- * the site *less*. See PLAN.md §11.
- */
+/** Returns all indexable product and category URLs with row updatedAt timestamps. */
 export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
   const [productRows, categoryRows] = await Promise.all([
     db

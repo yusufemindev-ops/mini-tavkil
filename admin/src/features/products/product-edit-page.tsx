@@ -100,21 +100,7 @@ interface AttributeDraft {
   value: string;
 }
 
-/**
- * Alt text is per-locale, like every other piece of product copy.
- *
- * Tavkil's admin typed this `alt: string` because Tavkil's API returned one
- * string. Here the column is `alt_translations` and the storefront renders it
- * through `altFor(row.altTranslations, locale)` — an Arabic visitor gets Arabic
- * alt text. Keeping the draft a plain string meant the object arrived from the
- * API untouched, so the field rendered the literal text "[object Object]" and
- * `buildImages()` called `.trim()` on an object — which is why "Save changes"
- * on any product that had an image did nothing but say "Could not save the
- * product."
- *
- * The one alt input follows the EN/TR/AR tab, so it edits the locale you are
- * already looking at and leaves the other two alone.
- */
+/** Per-locale image alt text mapping (e.g. { en: '...', tr: '...', ar: '...' }). */
 interface ImageDraft {
   key: string;
   url: string;
@@ -122,12 +108,7 @@ interface ImageDraft {
   isPrimary: boolean;
 }
 
-/**
- * Drop blank locales so an untouched image sends `{}` rather than
- * `{en: '', tr: '', ar: ''}`, and `undefined` rather than an empty object — the
- * backend stores whatever it is given, and empty strings would render as
- * `alt=""` on the storefront for locales nobody ever wrote copy for.
- */
+/** Strips empty locale entries, returning undefined if no alt text is provided. */
 export function cleanAlt(alt: Record<string, string>): Record<string, string> | undefined {
   const out: Record<string, string> = {};
   for (const [code, text] of Object.entries(alt)) {
@@ -212,9 +193,7 @@ export function appendImageRows(existing: ImageDraft[], urls: string[]): ImageDr
   return [...existing, ...rows];
 }
 
-// Inline field errors. `name`/`slug` belong to a specific locale tab
-// (`errors.locale`) so a backend error on the Arabic slug shows on the Arabic tab
-// — not hard-coded to English. The rest are locale-independent single fields.
+// Inline field errors scoped per locale tab or field key.
 interface ProductErrors {
   name?: string;
   slug?: string;
@@ -238,25 +217,18 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
   const [locale, setLocale] = useState<LocaleCode>('en');
   const [status, setStatus] = useState(product?.status ?? 'draft');
   const [translations, setTranslations] = useState(() => toTranslationDrafts(product));
-  // Per-locale "slug manually edited" flags. Existing (non-empty) slugs start
-  // touched so we never auto-rewrite a published product URL.
+  // Per-locale slug touched state to prevent overwriting custom URLs.
   const [slugTouched, setSlugTouched] = useState(() =>
     initialSlugTouched(toTranslationDrafts(product)),
   );
   const [attributes, setAttributes] = useState(() => toAttributeDrafts(product));
   const [images, setImages] = useState(() => toImageDrafts(product));
-  // Selectable options/variants (Color, Thickness, …) — loaded from + saved to
-  // the backend.
   const [options, setOptions] = useState(() => toOptionDrafts(product?.options ?? []));
-  // Priced-variant grid rows (TSC-64) — one per combination of option values.
-  // Seeded from the product's variants, merged onto the full cartesian set so
-  // every current combination has a row (prices preserved by value-key match).
+  // Variant rows seeded from option value permutations with preserved pricing.
   const [variantRows, setVariantRows] = useState(() =>
     syncVariantRows(toOptionDrafts(product?.options ?? []), toVariantRows(product)),
   );
-  // Editing options must not wipe entered variant prices: re-sync the grid on
-  // every options change, matching rows by their value-key set (adds new combos,
-  // drops removed ones, keeps prices).
+  // Sync variant combinations on option changes while preserving entered prices.
   function updateOptions(next: OptionDraft[]) {
     setOptions(next);
     setVariantRows((rows) => syncVariantRows(next, rows));
@@ -272,9 +244,7 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
       .every((r) => r.price.trim().length > 0 && Number(r.price) > 0);
 
   const [categoryId, setCategoryId] = useState(product?.category?.id ?? '');
-  // Siblings for the display-order input: the CURRENTLY-selected sub-category's
-  // published products (re-fetched if the operator changes the sub-category).
-  // Scoped, not the whole catalog.
+  // Sibling published products within the active category used for ordering.
   const { data: allProducts = [] } = useCategoryProducts(categoryId, { status: 'published' });
   const [supplierId, setSupplierId] = useState(product?.supplier?.id ?? '');
   const [sku, setSku] = useState(product?.sku ?? '');
@@ -310,10 +280,7 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
   const published = status === 'published';
   const productId = product?.id ?? '';
 
-  // Display order — a storefront "position" only exists for a published product,
-  // ranked among the published products in its sub-category. Hidden for
-  // drafts/archived/new (they have no position). The input is seeded from the
-  // live position and re-syncs whenever it changes (e.g. after a save reorder).
+  // Display ordering relative to published siblings in the same category.
   const siblings = useMemo(
     () => publishedSiblings(allProducts, categoryId),
     [allProducts, categoryId],
@@ -457,20 +424,12 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
     if (product) void queryClient.invalidateQueries({ queryKey: productsKeys.detail(product.id) });
   };
 
-  // Client-side validation mirroring the backend create schema. Required to
-  // create: SKU, category, supplier, and the English name + slug. Optional
-  // fields only error when non-empty (they're sent as null otherwise).
-  // When true, a new product opens its preview right after the draft is created
-  // (the "Preview" button on a brand-new product: save-then-preview).
+  // Flag indicating whether to launch storefront preview after saving.
   const previewAfterSave = useRef(false);
 
   function onSave(preview = false) {
     previewAfterSave.current = preview;
-    // Draft saves anything EXCEPT a nameless product — a name is the minimum
-    // identity (empty products cause "Untitled" rows + broken previews).
-    // EVERYTHING else — a half-typed GTIN, a bad price, a missing SKU/category —
-    // is allowed in a draft and only enforced at Publish (the publish gate). An
-    // invalid price is dropped to null in the payload so the backend accepts it.
+    // Enforces required English product name for drafts; remaining validation checked at publish.
     const next: ProductErrors = { locale: 'en' };
     if (!translations.en.name.trim()) next.name = 'Product name is required.';
     setErrors(next);
@@ -484,16 +443,13 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
 
   const save = useMutation({
     mutationFn: () => {
-      // A draft may hold an invalid/empty price; only a valid non-negative number
-      // is sent (else null) so the backend never rejects the save. Publish
-      // requires a real price via the gate.
+      // Sanitize price to numeric USD amount or null for draft saves.
       const priceStr = basePriceAmount.trim();
       const priceNum = Number(priceStr);
       const priceAmount =
         priceStr !== '' && !Number.isNaN(priceNum) && priceNum >= 0 ? priceNum : null;
       const base = {
-        // Empty → null so a draft with no category/supplier/SKU passes the
-        // backend (it rejects '' as a non-uuid).
+        // Coerce empty strings to null for foreign keys and optional text fields.
         categoryId: categoryId || null,
         supplierId: supplierId || null,
         sku: sku.trim() || null,
@@ -514,10 +470,7 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
       const attributesPayload = buildAttributes();
       const imagesPayload = buildImages();
       const optionsPayload = optionsToPayload(options);
-      // Variants (TSC-64): a priced product emits one variant per grid row (synced
-      // to the current options so it always matches optionsPayload's value keys);
-      // a simple product emits ONE default variant built from the base-price
-      // fields. Always sent alongside options.
+      // Emit grid variants for configurable products, or default variant for simple products.
       const variantsPayload: ProductVariantPayload[] = hasVariantGrid
         ? variantRowsToPayload(syncVariantRows(options, variantRows))
         : [

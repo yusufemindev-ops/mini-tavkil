@@ -16,15 +16,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode, SVGProps } from 'react';
 
-// Tavkil's custom SVG icons, as the storefront needs them.
-//
-// The admin carries its own copy under admin/src/vendor/icons — a separate Vite
-// app with its own bundle, so the two cannot share a module without a build step
-// neither wants. That copy is the full set; this one holds only what the
-// storefront renders, which is why several of Tavkil's industry icons are gone.
-//
-// Sizing defaults via the `size` prop (→ width/height, default 24), `className`
-// passes through, and everything inherits `currentColor`.
+// Storefront custom SVG and category icon components.
 
 export type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
@@ -169,30 +161,9 @@ export function WhatsAppIcon({ size = 24, ...props }: IconProps) {
 
 /* —— Category icons ——————————————————————————————————————————————————————— */
 
-/**
- * The brand category icon for a database category.
- *
- * Tavkil switched on a fixed six-value `CategoryId` enum (`v1`…`v6`). Categories
- * are rows an admin creates here, so there is no enum to switch on — this matches
- * the slug and name in all three locales instead, and falls back to the package
- * icon rather than guessing. Add a branch when a category needs its own icon.
- *
- * Written as branches returning JSX rather than a name → component lookup on
- * purpose: assigning a component to a local and rendering it trips React's
- * "Cannot create components during render" rule.
- *
- * The six hand-drawn brand icons cover Tavkil's original industry categories.
- * The Temsan catalogue's sixteen are narrower than any of them — a mop and a
- * steel wire rope are both "industrial" — so those come from lucide-react, which
- * is the project's icon set for everything outside the ported brand marks.
- */
+/** Resolves category icon matching English, Turkish, or Arabic category names/slugs. */
 export function CategoryIcon({ hint = '', className }: { hint?: string; className?: string }) {
-  // Most specific first: "Glass Cleaning" and "Floor Cleaning" both contain
-  // "clean", so the bare cleaning branch has to come last of the cleaning group.
-  // Every pattern lists all three locales — matching English only would leave the
-  // Turkish and Arabic rails on the fallback icon, which is precisely the
-  // "every category has the same grey box" look this replaces.
-
+  // Matches multi-lingual keywords with specific terms checked before generic fallbacks.
   // Cleaning
   if (/floor|yer temiz|paspas|الأرضيات/i.test(hint)) return <Footprints className={className} />;
   if (/glass|cam temiz|الزجاج/i.test(hint)) return <PanelsTopLeft className={className} />;
@@ -214,7 +185,7 @@ export function CategoryIcon({ hint = '', className }: { hint?: string; classNam
     return <Cable className={className} />;
   if (/hardware|hırdavat|hirdavat|الأدوات/i.test(hint)) return <Wrench className={className} />;
 
-  // Tavkil's original six, kept for the industry categories they were drawn for.
+  // Industry categories.
   if (/hygien|hijyen|paper|kağıt|kagit|نظاف|ورق/i.test(hint))
     return <TextilesIcon className={className} />;
   if (/packag|ambalaj|تغليف/i.test(hint)) return <PackagingIcon className={className} />;

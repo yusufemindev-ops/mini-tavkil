@@ -29,19 +29,8 @@ import type {
 } from '@/lib/services/catalog-schemas';
 
 /**
- * Product service — the big one.
- *
- * Business logic carried over intact: the publish gate, publish-appends-to-the-end
- * ordering, reorder-is-published-only, and the options/variants rebuild. Every
- * query rewritten from Prisma to Drizzle.
- *
- * Dropped along with their features: audience-shaped public reads (there are no
- * buyers), tier price computation, audit-log writes, and the archive check for
- * live orders (there are no orders).
- *
- * Everything here may read and write price and supplier. That is the whole reason
- * it lives in `lib/services` and is reachable only from `/api/admin/*` — the public
- * shape in `lib/queries/public-product.ts` has no field to put them in.
+ * Admin product service: CRUD, batch hydration, publishing gates, and variants.
+ * Accessible only via internal admin routes.
  */
 
 const PUBLISHED = 'published';
@@ -65,12 +54,7 @@ export interface AdminProduct {
   mpn: string | null;
   weightKg: string | null;
   cbm: string | null;
-  /**
-   * Tavkil's DTO shape, matched deliberately — `admin/src/features/products/
-   * queries.ts` is the consumer and it is Tavkil's file. It reads
-   * `p.basePrice.amount.toFixed(2)` and `p.category?.name`, so returning bare
-   * `basePriceAmount` / `categoryId` rendered "—" in every row.
-   */
+  /** Base price data for admin dashboard view. */
   basePrice: {
     amount: number;
     currency: string | null;
@@ -182,10 +166,7 @@ export async function productStatusCounts(
     .where(and(...adminFilters(query, true)))
     .groupBy(products.status);
 
-  // `all`, not `total`. The products page reads `counts?.all` for its subtitle and
-  // its "All" filter tab (admin/src/features/products/products-page.tsx), so the
-  // header said "0 total" while the table below it listed twelve. `total` is kept
-  // as an alias so nothing that already reads it breaks.
+  // Maintain both `all` and `total` properties for admin filter tabs.
   const counts: Record<string, number> = { draft: 0, published: 0, archived: 0, all: 0 };
   for (const row of rows) {
     counts[row.status] = Number(row.n);
@@ -204,12 +185,7 @@ export async function getProduct(id: string): Promise<AdminProduct> {
 
 // ── Mutations ────────────────────────────────────────────────────────────────
 
-/**
- * See `withRollback` in services/suppliers.ts for why this exists: a create is
- * two writes, Neon over HTTP has no interactive transaction on a request path,
- * and a failing second write used to leave the first committed as a nameless
- * row.
- */
+// Compensating rollback for multi-step product creation over HTTP database connection.
 async function withRollback<T>(remove: () => Promise<unknown>, work: () => Promise<T>) {
   try {
     return await work();
@@ -329,13 +305,7 @@ export async function deleteProduct(id: string): Promise<{ id: string }> {
   return { id };
 }
 
-/**
- * Publish, appending to the end of its category's published list.
- *
- * The append matters: `sort_order` defaults to 0, so a newly published product
- * would otherwise jump to the top of the category and displace whatever the admin
- * had deliberately merchandised there.
- */
+/** Publishes a product, appending to the end of its category's published list. */
 export async function publishProduct(id: string): Promise<AdminProduct> {
   const row = await findActive(id);
   assertProductPublishable(await publishableView(id, row));
@@ -363,8 +333,6 @@ export async function publishProduct(id: string): Promise<AdminProduct> {
   const published = await getProduct(id);
   pingIndexNow({ type: 'product', slugs: slugMap(published.translations) });
   const revalidated = published;
-  // Push it onto the storefront now. Without this the change waits out the
-  // page's revalidate window — up to an hour — before a visitor sees it.
   revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
   return revalidated;
 }
@@ -376,13 +344,9 @@ export async function unpublishProduct(id: string): Promise<AdminProduct> {
     .set({ status: DRAFT, updatedAt: new Date().toISOString() })
     .where(eq(products.id, id));
 
-  // Unpublishing is submitted too: the URL now 404s, and telling the engine
-  // promptly is what removes it from the index rather than leaving a dead result.
   const updated = await getProduct(id);
   pingIndexNow({ type: 'product', slugs: slugMap(updated.translations) });
   const revalidated = updated;
-  // Push it onto the storefront now. Without this the change waits out the
-  // page's revalidate window — up to an hour — before a visitor sees it.
   revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
   return revalidated;
 }
@@ -392,7 +356,7 @@ function slugMap(translations: readonly { locale: string; slug: string }[]) {
   return Object.fromEntries(translations.map((t) => [t.locale, t.slug]));
 }
 
-/** Archive = discontinued for good. Kept for records; off the storefront. */
+/** Archives a product. */
 export async function archiveProduct(id: string): Promise<AdminProduct> {
   await findActive(id);
   await db
@@ -400,13 +364,11 @@ export async function archiveProduct(id: string): Promise<AdminProduct> {
     .set({ status: ARCHIVED, updatedAt: new Date().toISOString() })
     .where(eq(products.id, id));
   const revalidated = await getProduct(id);
-  // Push it onto the storefront now. Without this the change waits out the
-  // page's revalidate window — up to an hour — before a visitor sees it.
   revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
   return revalidated;
 }
 
-/** Restore an archived product to draft — never straight back to published. */
+/** Restores an archived product to draft. */
 export async function restoreProduct(id: string): Promise<AdminProduct> {
   const row = await findActive(id);
   if (row.status !== ARCHIVED) throw invalid('Only an archived product can be restored.');
@@ -415,19 +377,11 @@ export async function restoreProduct(id: string): Promise<AdminProduct> {
     .set({ status: DRAFT, updatedAt: new Date().toISOString() })
     .where(eq(products.id, id));
   const revalidated = await getProduct(id);
-  // Push it onto the storefront now. Without this the change waits out the
-  // page's revalidate window — up to an hour — before a visitor sees it.
   revalidateProduct(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
   return revalidated;
 }
 
-/**
- * Reorder a category's published products.
- *
- * Rejects any id that is not a published product in this category. Order only
- * applies to the storefront-visible set, so a draft taking a position would
- * silently shift every product below it the moment it went live.
- */
+/** Reorders published products within a category. */
 export async function reorderProducts(categoryId: string, ids: string[]): Promise<{ ok: true }> {
   const rows = await db
     .select({ id: products.id })
@@ -548,22 +502,14 @@ async function replaceImages(
   );
 }
 
-/**
- * Rebuild options, their values, and the priced variants that reference them.
- *
- * Variants reference option values by the client-supplied `key`, not by database
- * id, because options are deleted and recreated on every save — their ids change
- * each time. So the order is fixed: recreate options and values first, building a
- * key → new-id map, then create variants and their value links from it.
- */
+/** Rebuilds options, option values, and priced variants using payload keys. */
 async function replaceOptionsAndVariants(
   productId: string,
   options: ProductOptionInput[],
   variants: ProductVariantInput[],
   actorId: string,
 ): Promise<void> {
-  // Variants first: product_variant_option_values cascades from both sides, and
-  // deleting options first would orphan the link rows mid-way.
+  // Cascading deletes on variants and options before recreating.
   await db.delete(productVariants).where(eq(productVariants.productId, productId));
   await db.delete(productOptions).where(eq(productOptions.productId, productId));
 
@@ -704,12 +650,7 @@ function toAdminTranslation(row: typeof productTranslations.$inferSelect): Admin
   };
 }
 
-/**
- * Load full admin products for a set of ids, in the order given.
- *
- * Six queries regardless of how many products — the alternative is a query per
- * product per child table, which at a page of 20 is 120 round trips over HTTP.
- */
+/** Hydrates full admin product details (translations, images, attributes, variants) in batch queries. */
 async function hydrate(ids: string[]): Promise<AdminProduct[]> {
   if (ids.length === 0) return [];
 
@@ -760,10 +701,7 @@ async function hydrate(ids: string[]): Promise<AdminProduct[]> {
         .where(inArray(productVariants.productId, ids)),
     ]);
 
-  // The admin table shows category and supplier by NAME, and Tavkil's DTO carries
-  // them as `{ id, name }` objects rather than bare ids — see
-  // admin/src/features/products/queries.ts. Names come from the English
-  // translation: the dashboard is English-only (there is no locale switcher in it).
+  // Resolves English names for categories and suppliers to match AdminProduct DTO shape.
   const categoryIdList = [...new Set(rows.map((r) => r.categoryId).filter(Boolean))] as string[];
   const supplierIdList = [...new Set(rows.map((r) => r.supplierId).filter(Boolean))] as string[];
   const [categoryNames, supplierNames] = await Promise.all([
@@ -831,9 +769,7 @@ async function hydrate(ids: string[]): Promise<AdminProduct[]> {
       mpn: row.mpn,
       weightKg: row.weightKg,
       cbm: row.cbm,
-      // Tavkil's DTO shape. The admin SPA reads `p.basePrice.amount.toFixed(2)`
-      // and `p.category?.name`; bare `basePriceAmount` / `categoryId` rendered as
-      // "—" in every row of the products table.
+      // Formats basePrice object required by admin products table.
       basePrice:
         row.basePriceAmount == null
           ? null

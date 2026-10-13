@@ -2,29 +2,9 @@ import { revalidatePath } from 'next/cache';
 import { routing } from '@/i18n/routing';
 
 /**
- * Push an admin change onto the storefront immediately.
- *
- * Public pages are `revalidate = 3600`, which is right for a catalogue that
- * changes when someone publishes rather than continuously — but on its own it
- * means an admin waits up to an hour to see their own edit. This is the other
- * half: the background window keeps the cache warm, and these calls invalidate
- * the moment a mutation commits.
- *
- * `revalidatePath` only works because `open-next.config.ts` configures a D1 tag
- * cache. OpenNext defaults `tagCache` to `"dummy"`, under which these calls
- * succeed and do nothing at all — the worst kind of broken, since the code reads
- * as correct.
- *
- * Every path is invalidated in all three locales. Missing one leaves Turkish
- * showing yesterday's catalogue while English is current, which is the sort of
- * bug nobody notices until a customer does.
+ * Invalidation helpers to purge ISR cached storefront pages immediately on admin mutations.
  */
-/**
- * `revalidatePath` throws outside a request context. Services are called from
- * route handlers today, but a future script or cron reusing one must not die on
- * a cache hint — the write is the thing that matters, and the page refreshes on
- * its own within the revalidate window regardless.
- */
+// Safely invoke revalidatePath, ignoring errors outside request context (e.g. scripts).
 function safeRevalidate(path: string, type?: 'page' | 'layout'): void {
   try {
     if (type) revalidatePath(path, type);
@@ -40,23 +20,14 @@ function forEachLocale(path: string): void {
   }
 }
 
-/**
- * A product changed — created, edited, published, unpublished, archived,
- * restored, reordered, or had its images touched.
- *
- * The product page itself is only part of it: the homepage carries featured
- * products and the TV showcase, the catalogue lists categories, and the category
- * page lists this product. `slugs` covers the localized product URLs, which
- * differ per locale.
- */
+/** Revalidates product, category, home, and SEO pages affected by a product mutation. */
 export function revalidateProduct(slugs: Record<string, string> = {}): void {
   forEachLocale('');
   forEachLocale('/catalogue');
   for (const [locale, slug] of Object.entries(slugs)) {
     if (slug) safeRevalidate(`/${locale}/product/${slug}`);
   }
-  // The category listing a product belongs to is a dynamic route; invalidating
-  // the segment covers every category page without needing to know which.
+  // Invalidate dynamic category route segment across all locales.
   safeRevalidate('/[locale]/catalogue/[category]', 'page');
   revalidateSeoSurfaces();
 }
@@ -72,12 +43,7 @@ export function revalidateCategory(slugs: Record<string, string> = {}): void {
   revalidateSeoSurfaces();
 }
 
-/**
- * Settings changed — site name, logo, contact details, social links.
- *
- * These render in the header and footer of every public page, so this is the one
- * case where invalidating the whole storefront is proportionate.
- */
+/** Revalidates all storefront pages when global site settings change. */
 export function revalidateSettings(): void {
   forEachLocale('');
   forEachLocale('/catalogue');
@@ -88,11 +54,7 @@ export function revalidateSettings(): void {
   revalidateSeoSurfaces();
 }
 
-/**
- * The machine-readable surfaces. They are derived from the same rows, so a stale
- * sitemap after a publish is a real SEO cost: `lastModified` would advertise a
- * date Google has already crawled.
- */
+/** Revalidates sitemap and LLM feed surfaces. */
 function revalidateSeoSurfaces(): void {
   safeRevalidate('/sitemap.xml');
   safeRevalidate('/llms.txt');

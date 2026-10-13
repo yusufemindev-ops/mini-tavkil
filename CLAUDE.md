@@ -110,7 +110,7 @@ in `permissions/catalog.ts` — there is no role editor UI.
 
 - **Git flow:** `feat/TSC-XXX-*` → `develop` (via PR) → `main` (production release via PR).
   Direct pushes to `main` and `develop` are blocked by hooks and CI branch-guards.
-- **Commit format:** Conventional commit with ticket: `<type>: [TSC-XXX] <description>` (e.g. `feat: [TSC-70] add CI workflows`). Allowed types: `feat`, `fix`, `chore`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`.
+- **Commit format:** Conventional commit with ticket: `<type>: [TSC-XXX] <description>` (e.g. `feat: [TSC-70] add CI workflows`). Allowed types: `feat`, `fix`, `chore`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`. Max 72 characters. Never write multi-line narratives or paragraphs in commit messages.
 - **Package manager:** Use `pnpm` exclusively (`pnpm install`, `pnpm add`). Never use `npm` or `yarn`.
 - **Neon database:** `main` (prod) and `dev` (isolated schema/migration testing).
 - **R2 Storage:** Production bucket + `preview_bucket_name` for staging and test uploads.
@@ -123,6 +123,13 @@ in `permissions/catalog.ts` — there is no role editor UI.
 
 `drizzle-kit migrate` is a deliberate step. Workers have no boot; nothing runs
 migrations for you, and nothing should.
+
+### 9. Code comments: concise and minimal (no long essays or lore)
+
+- **Max 1–2 concise lines:** Only comment when necessary. Prefer self-documenting code.
+- **No essays, historical lore, or migration stories:** Never write comments detailing past bugs, historical comparisons ("Tavkil used to do X..."), internal discussions, or references to PRD/PLAN steps unless strictly required for a contract.
+- **No obvious comments:** Do not explain what clean code already says (e.g., `// Set name` or `// Render header`).
+- **Explain non-obvious "why" only:** Document subtle security constraints, edge cases, or platform quirks briefly.
 
 ---
 
@@ -176,7 +183,7 @@ pnpm check:pricing-leak # Secret price & supplier guard
 - [ ] Permission checked in the handler
 - [ ] No new interactive transactions on a request path
 - [ ] Bundle still under the Workers limit
-- [ ] Conventional commit with ticket: `type: [TSC-XXX] description`
+- [ ] Conventional commit with ticket: `type: [TSC-XXX] description` (<= 72 chars)
 - [ ] All verification commands passing locally
 
 ---
@@ -193,6 +200,8 @@ pnpm check:pricing-leak # Secret price & supplier guard
 - Hand-edit generated files in `drizzle/` — let `drizzle-kit generate` produce them
 - Run migrations or permission-sync on boot
 - Copy anything from Temsan's schema or admin — architecture patterns only
+- Write essay-length comments, development journals, or historical migration lore in code
+- Write multi-line narrative commit messages or commit lines exceeding 72 characters
 - `--no-verify` (never bypass git hooks)
 
 <!-- BEGIN:nextjs-agent-rules -->

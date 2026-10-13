@@ -6,21 +6,9 @@ import { cn } from '@/lib/utils';
 import type { PublicOption } from '@/lib/queries/public-product';
 import { BidiText } from '@/components/bidi-text';
 
-/**
- * Buyer-facing option picker — Tavkil's, kept as it was.
- *
- * The only thing removed is the cart wiring: Tavkil's version was *controlled*
- * by ProductBuyPanel, which resolved the selection to a priced variant and
- * attached it to an order request. There is no cart and no public price here, so
- * the selection is local state and its job is to answer "what can I ask for" —
- * which is exactly what the buyer needs before using the quote form.
- *
- * Swatches, chips, the selected-label line, the ring on the active swatch and
- * the colour-name fallback are unchanged.
- */
+/** Product option selector for colors, dimensions, and specifications. */
 
-// Common colour-name → hex so swatches show a sensible colour until a real
-// per-value image is uploaded (admin feature). Falls back to a neutral grey.
+// Fallback color mapping for swatch backgrounds.
 const COLOR_MAP: Record<string, string> = {
   red: '#dc2626',
   blue: '#2563eb',
@@ -43,20 +31,7 @@ const COLOR_MAP: Record<string, string> = {
 };
 const colourFor = (label: string) => COLOR_MAP[label.trim().toLowerCase()] ?? '#9ca3af';
 
-/**
- * Option names are one untranslated text column, and options do reach public
- * pages — so an Arabic visitor read "Diameter" in English above a row of Arabic.
- *
- * Translated here rather than in the database. There are three axes in the whole
- * catalogue and they are measurement kinds, not content: giving `product_options`
- * a translations table would mean a migration, an admin editor and three rows per
- * option, to hold words that never vary per product. A name with no mapping falls
- * through unchanged, so an admin inventing a new axis gets their own wording
- * rather than a blank.
- *
- * The values themselves — 2 mm, 40 × 40 cm — are deliberately not translated.
- * They are measurements, and they are already formatted at import.
- */
+/** Maps standard option name keys to localization keys. */
 const OPTION_KEYS: Record<string, string> = {
   size: 'opt_size',
   length: 'opt_length',
@@ -72,8 +47,7 @@ export function ProductOptions({ options }: { options: PublicOption[] }) {
     return key ? t(key) : name;
   };
 
-  // Local, not lifted: nothing downstream consumes the choice. First value of
-  // each axis, so the label line is never empty on first paint.
+  // Default to the first value of each option axis on initial render.
   const [selected, setSelected] = useState<Record<string, string>>(() =>
     Object.fromEntries(visible.map((option) => [option.name, option.values[0]?.label ?? ''])),
   );
@@ -87,13 +61,7 @@ export function ProductOptions({ options }: { options: PublicOption[] }) {
         return (
           <div key={option.name}>
             <div className="text-sm">
-              {/* Option names and values are admin data, not UI copy — a
-                  measurement like "2 mm" reorders to "mm 2" in an RTL page
-                  unless its direction comes from the string itself. */}
-              {/* The colon lives inside the isolate so it stays attached to the
-                  label. Left outside, it is a neutral between two isolates and
-                  resolves against the page, drifting to the far side of the
-                  label in Arabic. */}
+              {/* Colon is kept inside the BidiText isolate to maintain correct placement in RTL. */}
               <BidiText className="text-muted-foreground">{optionName(option.name)}:</BidiText>{' '}
               <BidiText className="text-foreground font-medium">{selectedLabel}</BidiText>
             </div>
@@ -142,9 +110,7 @@ export function ProductOptions({ options }: { options: PublicOption[] }) {
   );
 }
 
-// A single colour swatch. The colour tile is always the base; an optional image
-// overlays it and HIDES on load error, so a missing/404 swatch image gracefully
-// falls back to the colour instead of a broken-image icon.
+// Swatch button displaying color tile with optional image overlay fallback.
 function SwatchButton({
   label,
   imageUrl,

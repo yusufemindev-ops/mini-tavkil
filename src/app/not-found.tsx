@@ -4,21 +4,7 @@ import { useSyncExternalStore } from 'react';
 import './globals.css';
 
 /**
- * The 404 for anything that never matched a route at all.
- *
- * `[locale]/not-found.tsx` only renders when a page calls `notFound()` — a
- * product slug that does not exist, say. A URL that matches no route in the tree
- * (`/en/nope`, `/nope`) falls back to the *root* not-found, and there wasn't one,
- * so Next served its own black "404: This page could not be found." That is the
- * page most people who mistype a URL actually saw.
- *
- * This file renders its own `<html>` because it lives outside `[locale]`, and the
- * root layout deliberately renders nothing — only `[locale]/layout.tsx` knows the
- * locale, and therefore `lang` and `dir`.
- *
- * Which is also why the copy is inlined rather than read through next-intl: there
- * is no locale segment to resolve, so no message provider either. Four strings in
- * three languages is a small price for a page that must never itself fail.
+ * Root 404 handler for routes outside `[locale]`. Renders full HTML shell and inlined copy.
  */
 
 const COPY = {
@@ -44,15 +30,7 @@ const COPY = {
 
 type Locale = keyof typeof COPY;
 
-/**
- * The locale from the URL that missed.
- *
- * Someone who mistypes `/ar/urunler` is an Arabic reader and should be told so in
- * Arabic. Read through `useSyncExternalStore` rather than during render: the
- * prerender has no location, and reading one anyway is the classic hydration
- * mismatch. The server snapshot is the default locale, so the static HTML is
- * English and the browser corrects it immediately if the path says otherwise.
- */
+/** Infers locale from URL path client-side to prevent hydration mismatch. */
 const subscribe = () => () => {};
 const readLocale = (): Locale => {
   const first = window.location.pathname.split('/')[1];
@@ -72,8 +50,6 @@ export default function NotFound() {
           id="main"
           className="mx-auto flex min-h-screen w-full max-w-[var(--width-container)] flex-col items-center justify-center px-5 py-20 text-center sm:px-6"
         >
-          {/* The seal, so the page is recognisably ours even without the header —
-              the site chrome lives under [locale] and cannot be reached here. */}
           <svg viewBox="0 0 64 64" aria-hidden className="mb-8 size-12">
             <circle cx="32" cy="32" r="32" fill="var(--primary)" />
             <circle
@@ -95,8 +71,6 @@ export default function NotFound() {
           <p className="text-muted-foreground mt-3 max-w-md">{t.body}</p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            {/* Plain anchors, not next-intl's <Link>: that needs the routing
-                context this page is outside of. */}
             <a
               href={`/${locale}`}
               className="bg-primary-button text-primary-button-foreground hover:bg-primary-hover inline-flex h-11 items-center rounded-md px-6 text-sm font-medium transition-colors"

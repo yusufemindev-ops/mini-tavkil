@@ -11,14 +11,7 @@ export interface CategoryRailItem {
   active?: boolean;
 }
 
-// Prototype `.dir-rail` — a carded, sticky category navigation rail with icon
-// pills. Items can point to in-page anchors (#cat-<id>) or to routes.
-//
-// The pill and the icons inside it are Tavkil's — `components/icons.tsx` is that
-// package ported verbatim. Only the *lookup* differs: Tavkil switched on a fixed
-// six-value CategoryId enum, and categories are database rows here, so
-// `categoryIconFor()` matches on the slug and name instead. An uploaded category
-// image still wins over the icon.
+/** Sticky category navigation rail with icon pills linking to anchor IDs or routes. */
 export function CategoryRail({
   title,
   items,
@@ -42,8 +35,6 @@ export function CategoryRail({
             <a
               href={item.href}
               className={cn(
-                // leading-snug tightens the wrap when a longer category name
-                // spills onto a second line.
                 'group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[0.92rem] leading-snug font-medium transition-colors',
                 item.active
                   ? 'bg-background-2 text-foreground'
@@ -60,15 +51,7 @@ export function CategoryRail({
   );
 }
 
-/**
- * Shared with the mobile dropdown so both navigations look the same.
- *
- * Always the brand icon, never the category photograph. The pill is 30px, and a
- * product shot scaled into it is an unreadable smudge that changes colour from
- * row to row — the rail stops reading as navigation. Tavkil drew an icon here
- * for the same reason. The photograph still carries the category on its card,
- * where it has the space to mean something.
- */
+/** Category icon pill indicator shared between desktop rail and mobile navigation. */
 export function CategoryPill({ hint, active }: { hint?: string; active?: boolean }) {
   return (
     <span

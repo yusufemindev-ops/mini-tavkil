@@ -16,24 +16,10 @@ import {
 } from '@/lib/permissions/catalog';
 
 /**
- * Admin users and roles.
- *
- * This is where PLAN.md §3's "simplify machinery, never capability" bites hardest.
- * Tavkil had 1078 lines of UI over a role editor with a permission checkbox grid
- * and custom roles. That editor is gone: there are three roles, fixed in code, and
- * this module only assigns them.
- *
- * The model underneath is unchanged — `roles`, `permissions`, `role_permissions`
- * and `auth_user_roles` all still exist and are all still enforced. What was
- * deleted is the ability to *edit* them at runtime, which for a three-person team
- * was a large surface guarding a decision nobody makes twice.
+ * Admin users and RBAC role assignments. Roles are fixed in code.
  */
 
-/**
- * The SPA sends `{ roleId }` — the role's database id — while a human calling the
- * API by hand naturally sends `{ role: 'catalog_manager' }`. Accept both and
- * resolve to a code, rather than making the dashboard wrong or the API awkward.
- */
+/** Accepts either role code or database roleId to resolve target role. */
 export const assignRoleSchema = z
   .object({
     role: z.enum(ASSIGNABLE_ROLES as [RoleCode, ...RoleCode[]]).optional(),
@@ -42,13 +28,7 @@ export const assignRoleSchema = z
   .refine((value) => value.role || value.roleId, { message: 'Pick a role.' });
 export type AssignRoleInput = z.infer<typeof assignRoleSchema>;
 
-/**
- * Tavkil's `AdminTeamMember`, matched field for field — see
- * `admin/src/features/users/queries.ts`. The users page is Tavkil's and indexes
- * `STATUS_BADGE[member.status]`, so a row without `status` produced
- * `undefined.variant` and the whole page rendered blank with an uncaught
- * TypeError. `role.name` is read directly too; we were sending `role.label`.
- */
+/** Shape matching admin dashboard team member row requirements. */
 export interface AdminUserRow {
   id: string;
   email: string;
@@ -57,43 +37,16 @@ export interface AdminUserRow {
   lastName: string | null;
   image: string | null;
   banned: boolean;
-  /** Null when allowlisted but never assigned a role — they can do nothing. */
   role: { id: string; code: string; name: string } | null;
-  /**
-   * `suspended` when banned, `invited` when allowlisted but never signed in, else
-   * `active`. There is no invitation flow here (access is the allowlist), so
-   * `invited` means "cleared to sign in but has not yet".
-   */
   status: 'active' | 'invited' | 'suspended';
   googleConnected: boolean;
-  /** False when the row exists but the address is no longer on the allowlist. */
   allowlisted: boolean;
   isYou: boolean;
   lastSeenAt: string | null;
   createdAt: string;
 }
 
-/**
- * Every admin account.
- *
- * Includes users whose address has since been removed from `ADMIN_ALLOWLIST`,
- * flagged rather than hidden: they still have a row and a role, and knowing the
- * allowlist is what is actually blocking them beats wondering where they went.
- */
-/**
- * Stamp a naive timestamp as UTC.
- *
- * `lastSeenAt` is a Postgres `timestamp` (no time zone) read in `mode: 'string'`,
- * so it arrives as `2026-08-12 11:08:50.341` — no `Z`, no offset. `new Date()` in
- * the browser reads that as *local* time, so in UTC+3 the dashboard reported an
- * admin's last activity three hours earlier than it happened: someone signed in,
- * refreshed, and was told they had last been seen three hours ago.
- *
- * The stored value is UTC (it is written from `toISOString()`), so the only thing
- * missing was saying so. Done at the boundary rather than by migrating the column,
- * because a migration here is a deliberate act with no staging behind it
- * (CLAUDE.md §8) and this fixes the whole class of it for every consumer.
- */
+/** Normalizes timestamp strings without timezone offsets to UTC ISO. */
 function asUtcIso(value: string | null): string | null {
   if (!value) return null;
   const hasZone = /[Zz]$|[+-]\d{2}:?\d{2}$/.test(value);
@@ -102,9 +55,7 @@ function asUtcIso(value: string | null): string | null {
 
 export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]> {
   const invites = await listInvites();
-  // Both sources of access: the env allowlist that bootstraps owners, and people
-  // invited from this very page. Listing only the former meant a colleague you
-  // had just added did not appear at all.
+  // Include both env allowlist and dashboard invitees.
   const allowed = new Set([...adminAllowlist(), ...invites.map((i) => i.email.toLowerCase())]);
 
   const rows = await db
@@ -163,14 +114,12 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
         ).map((row) => row.userId),
   );
 
-  // Invited but not yet signed in — no authUser row exists, so synthesise one.
-  // Otherwise "Add member" appeared to do nothing until they logged in.
+  // Synthesize pending rows for invited members who have not yet signed in.
   const signedInEmails = new Set(staff.map((row) => row.email.toLowerCase()));
   const pending: AdminUserRow[] = invites
     .filter((invite) => !signedInEmails.has(invite.email.toLowerCase()))
     .map((invite) => ({
       id: `invite:${invite.email}`,
-      // The address as it was typed; `invite.email` is the lowercased match key.
       email: invite.displayEmail ?? invite.email,
       name: `${invite.firstName} ${invite.lastName}`.trim() || invite.email,
       firstName: invite.firstName || null,
@@ -219,13 +168,7 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
   return [...existing, ...pending];
 }
 
-/**
- * Assign a role, replacing whatever the user held.
- *
- * One role per user, deliberately. Tavkil allowed several and then had to union
- * their grants; with three fixed roles that only creates the question "what does
- * Owner + Viewer mean?", which has no useful answer.
- */
+/** Assigns a single fixed role to a user. */
 export async function assignRole(userId: string, role: RoleCode): Promise<AdminUserRow> {
   const [user] = await db
     .select({ id: authUser.id, email: authUser.email })
@@ -300,18 +243,7 @@ export async function removeRole(userId: string): Promise<AdminUserRow> {
   return updated;
 }
 
-/** The three fixed roles and what each holds. Read-only — there is no editor. */
-/**
- * Tavkil's `AdminRole` shape — see `admin/src/features/users/queries.ts`.
- *
- * The users page renders each option as `role.name` keyed on `role.id`. We were
- * returning `{ code, label, isOwner }`, so every entry in the "Add member" Role
- * dropdown rendered blank: the list was the right length and completely unusable.
- *
- * `id` is the database row id where one exists, because assigning a role writes
- * `auth_user_roles.role_id`. `type` is always 'system': roles are fixed in code
- * here and there is no role editor (CLAUDE.md §6), so none of them are custom.
- */
+/** Returns all system roles with member counts and granted permissions. */
 export async function listRoles(): Promise<AdminRole[]> {
   const [rows, counts] = await Promise.all([
     db.select({ id: roles.id, code: roles.code }).from(roles),
@@ -356,16 +288,7 @@ export function permissionCatalog() {
   return [...byDomain.entries()].map(([domain, permissions]) => ({ domain, permissions }));
 }
 
-/**
- * Resolve a role's database id OR its code to a code.
- *
- * Reads the table rather than a module-level cache. A cache warmed by
- * `listRoles()` looked fine locally and failed in production: Workers do not
- * share module state between invocations, so the request that POSTed a new
- * member ran in a cold isolate, the map was empty, and every add was rejected
- * with "That role does not exist." Three rows, one indexed lookup — the cache
- * was never worth it.
- */
+/** Resolves role id or code string to a validated RoleCode enum value. */
 export async function roleCodeFromIdOrCode(value: string): Promise<RoleCode | null> {
   if ((ASSIGNABLE_ROLES as string[]).includes(value)) return value as RoleCode;
   const [row] = await db

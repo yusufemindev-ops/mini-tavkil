@@ -16,3 +16,9 @@ if ! [[ "$msg" =~ $re ]]; then
   echo "  Got: $msg"
   exit 1
 fi
+
+if [ ${#msg} -gt 72 ]; then
+  echo "❌ Commit message is too long (${#msg} chars). Keep under 72 characters."
+  echo "  Got: $msg"
+  exit 1
+fi
