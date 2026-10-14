@@ -44,7 +44,7 @@
 
      The cost is legibility, and it is real: #f2640c on white is 3.18:1 against
      the 4.5 AA wants for normal text, where #bd4c06 was 5.00. Same decision as
-     the buttons and recorded in the same place — see GO-LIVE.md. */
+     the buttons and recorded in ARCHITECTURE.md. */
   --primary-ink: var(--primary);
   --primary-hover: #ff7a1a;
   --secondary: #f5f6f8;
@@ -106,7 +106,7 @@
   --primary: #ff7a1a;
   --primary-foreground: #ffffff;
   /* Same decision in dark mode: Tavkil's orange, white label. 2.61:1, accepted
-     on the owner's call — see GO-LIVE.md. */
+     on the owner's call — see ARCHITECTURE.md. */
   --primary-button: var(--primary);
   --primary-button-foreground: var(--primary-foreground);
   --primary-soft: #2a1c12;

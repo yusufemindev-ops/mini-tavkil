@@ -10,7 +10,7 @@ pre-commit:
 
     - name: no-secrets
       run: |
-        if git diff --cached --name-only | grep -qE '^(\.env|\.dev\.vars)$'; then
+        if git diff --cached --name-only | grep -E '^(\.env|\.dev\.vars)' | grep -vq '^\.env\.example$'; then
           echo "Refusing to commit .env / .dev.vars"; exit 1
         fi
 

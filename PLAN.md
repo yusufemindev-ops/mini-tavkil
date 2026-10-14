@@ -3,11 +3,7 @@
 Everything needed to finish this project. Decisions first, then numbered steps.
 Work top to bottom. Commit and push to `main` after every step.
 
-**Status:** steps 1–14 done and deployed. **Step 15 is in `GO-LIVE.md`** — every
-remaining item needs a credential or a browser session only you have.
-
-**Needs you before launch:** Turnstile keys, the Cloudflare Email Service binding,
-all of which need the domain and your credentials. See step 15.
+**Status:** steps 1–14 done and deployed.
 
 **Needs you:** only step 15 now — attaching `tavkil.com`, flipping
 `SITE_INDEXABLE`, swapping the R2 domain and submitting the sitemaps. Everything
@@ -996,7 +992,7 @@ project. 14a's leak suite and 14c's view-source pass are the real security tests
 - [x] All 82 products carry long-form copy in EN, TR and AR — 215 / 206 / 205
       rendered words on the same product
 - [x] Security headers present; SVG upload rejected (byte-sniffed).
-      Secrets: none reach the browser; build-artifact hygiene noted in GO-LIVE.md
+      Secrets: none reach the browser; build-artifact hygiene handled via strip-build-secrets.mjs
 - [x] Playwright green against the deployed URL — 53 public specs (a11y,
       responsive, visual, console, leak, category sort) and 29 admin specs
       (API contract, CRUD walkthrough, media upload), leaving no `e2e-` rows

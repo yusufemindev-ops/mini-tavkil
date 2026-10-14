@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
  * the same one made for the brand orange — the colour is what identifies the
  * button, so the colour stays.
  *
- * Recorded rather than hidden: GO-LIVE.md carries it, and a11y.spec.ts allows
+ * Recorded rather than hidden: ARCHITECTURE.md carries it, and a11y.spec.ts allows
  * this exact pairing and no other.
  *
  * The link target comes from the caller via `waUrl(settings.whatsappNumber)`, so

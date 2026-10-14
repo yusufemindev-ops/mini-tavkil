@@ -99,3 +99,14 @@ A Worker instance terminates with an unrecoverable **Out-Of-Memory (OOM)** error
   - `dev` branch: Cloned instantly in Neon dashboard for zero-risk schema migration testing.
 - **R2 Storage**:
   - Uses `preview_bucket_name` in `wrangler.jsonc` to isolate dev uploads from production assets.
+- **Production Secrets Lifecycle**:
+  - `.env.prod` is a temporary local bridge for manual CLI deployments (`pnpm deploy`). Once GitHub Actions auto-deploy on merge to `main` is configured with repository secrets, `.env.prod` will be completely removed from local machines.
+
+---
+
+## 6. Accepted Design & Accessibility Decisions
+
+- **Brand Orange & WhatsApp Green on Buttons**:
+  - Brand orange with white text (`#f2640c` on white ≈ 3.18:1) and WhatsApp green with white text (`#25D366` on white ≈ 1.98:1) deliberately fail WCAG AA 4.5:1 text contrast on buttons to preserve brand identity.
+  - Alternatives (dark text or muted greens) were evaluated and rejected for diluting recognition.
+  - Accepted decision: `e2e/public/a11y.spec.ts` explicitly permits these pairings while enforcing strict WCAG AA contrast across all other UI elements.

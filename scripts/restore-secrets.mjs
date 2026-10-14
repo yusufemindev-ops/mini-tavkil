@@ -1,21 +1,10 @@
 /**
- * Re-upload the production secrets to the Worker from the local `.env.prod`.
+ * Re-upload the production secrets to the Worker from the local `.env.production`.
  *
- * The Worker's secrets went empty once — `wrangler secret list` returned `[]`
- * and every request to `/api/auth/*` answered 500 with "You are using the
- * default secret", which reads like a Better Auth misconfiguration and is
- * actually a missing binding. Restoring them by hand is seven `wrangler secret
- * put` prompts and a chance to paste one into the wrong terminal, so it lives
- * here instead.
- *
- * The values are read from `.env.prod` and piped straight into `wrangler secret
- * bulk`; nothing is printed, and the temporary JSON is deleted whether the
- * upload succeeds or fails.
+ * The values are read from `.env.production` and piped straight into `wrangler secret
+ * bulk`; nothing is printed, and the temporary JSON is deleted.
  *
  *   pnpm secrets:restore:prod
- *
- * `.env.prod`, never `.env`: `.env` points at the develop database and bucket,
- * so uploading it would silently repoint production at develop data.
  */
 
 import { execFileSync } from 'node:child_process';
