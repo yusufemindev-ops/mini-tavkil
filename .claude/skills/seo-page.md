@@ -1,22 +1,16 @@
 # Skill: seo-page
 
-SEO is the one area where mini-tavkil is _more_ thorough than Tavkil, not less. The
-backend's job is to be a fast structured Knowledge Engine — data in the HTML, for
-crawlers and for AI answer engines.
+The backend's job for SEO/GEO/AEO is to be a **fast structured Knowledge Engine** — delivering complete data directly in the server-rendered HTML for search crawlers and AI answer engines.
 
-Apply this whenever adding or changing a public page.
+Apply this whenever adding or modifying a public storefront page.
 
 ## Non-negotiables
 
-1. **Server Components + native `fetch`/direct query.** Never TanStack Query, never
-   `useEffect` fetching, on an indexable page. Client-fetched data is invisible to
-   crawlers.
-2. **Full metadata** via `generateMetadata`: title, description, canonical, `hreflang`
-   for all three locales, OG + Twitter tags.
+1. **Server Components + direct query / native `fetch`.** Never use TanStack Query or `useEffect` data fetching on a public, indexable page. Client-fetched data is invisible to crawlers. (TanStack Query is only used on authenticated `noindex` buyer pages and the Admin SPA.)
+2. **Full metadata** via `generateMetadata`: localized title, description, self-referencing canonical, `hreflang` for all locales with complete content (`en`, `tr`, `ar`) + `x-default`, Open Graph, and Twitter tags.
 3. **JSON-LD** appropriate to the page type — see below.
-4. **Sitemap entry** with a real `lastModified`.
-5. **No price, no supplier** — see `public-data-guard`. A `Product` block with `offers`
-   is a rule violation, not an oversight.
+4. **Sitemap entry** (`src/app/sitemap.ts`) with the database row's real `updated_at` as `lastModified`.
+5. **No price, no supplier** on anonymous pages — see `public-data-guard`. A `Product` JSON-LD block with `offers` is a rule violation.
 
 ## JSON-LD per page type
 
@@ -27,60 +21,43 @@ Apply this whenever adding or changing a public page.
 | Product         | `Product` (**no `offers`**) + `BreadcrumbList`                  |
 | About / Contact | `Organization`, `ContactPoint` on contact                       |
 
-`Product` fields to include: `name`, `description`, `image` (all of them), `sku`,
-`brand`, `category`, `material`/`color` via `additionalProperty` where you have them.
+`Product` fields to include: `name`, `description`, `image` (all gallery URLs), `sku`, `brand`, `category`, and `additionalProperty` for attributes.
 
-**Why no `offers`:** Google's price and availability rich results require
-`offers.price`. We have no public price. Emitting `"price": "0"` or a fake range is
-spam and risks a manual action. We forgo the price snippet and win on completeness,
-breadcrumbs, and AI answer engines instead.
+**Why no `offers`:** Google's price and availability rich results require `offers.price`. Anonymous pages have no public price. Emitting `"price": "0"` or a fake range is spam and risks a manual action. We compete on structured attribute completeness, breadcrumbs, and AI answer engine citations instead.
 
 ## hreflang
 
-- One `<link rel="alternate" hreflang>` per locale **that actually has content**
-- Never emit an hreflang pointing at an English-fallback URL — those are `noindex`
-- Include `x-default`
-- Canonical always points at the current locale's own URL, never cross-locale
+- Emit one `<link rel="alternate" hreflang>` per locale **that actually has complete content** (`isComplete = true`).
+- Never emit an `hreflang` pointing at an incomplete or fallback URL.
+- Include `x-default`.
+- Canonical always points at the current locale's own URL, never cross-locale.
 
 ## Sitemap
 
-`app/sitemap.ts` is generated from the database, not a static list.
+`src/app/sitemap.ts` is generated dynamically from the database:
 
-- Products + categories × locales, plus the static routes
-- **`lastModified` is the row's `updated_at`.** Never `new Date()` — that tells Google
-  everything changed on every crawl, and it responds by crawling _less_.
-- Emit a locale's URL only when that locale has real content
-- `alternates.languages` per entry
-- Cached via `revalidate` — one query per revalidation, not per crawl
+- Published products + categories × completed locales, plus static routes.
+- **`lastModified` comes from the row's `updated_at`.** Never `new Date()`.
+- `alternates.languages` per entry.
 
 ## IndexNow
 
-Ping on publish/unpublish of any product or category. One POST with
-`INDEXNOW_API_KEY`. Covers Bing, Yandex, Naver, Seznam — minutes, not days.
-
-Google does not use IndexNow, and its sitemap ping endpoint was retired in 2023. For
-Google the levers are accurate `lastModified`, the sitemap registered once in Search
-Console, and internal linking.
+Ping on publish/unpublish of any product or category (`src/lib/seo/indexnow.ts` / `ping.ts`) using `INDEXNOW_API_KEY`. Covers Bing, Yandex, IndexNow-participating engines, and Copilot citations.
 
 ## Internal linking
 
-Worth more than any markup. Every product must be reachable in ~3 clicks from the home
-page. Category pages should link to their products and to sibling categories. Orphan
-products don't get crawled, sitemap or not.
+Every published product must be reachable within ~3 clicks of the homepage. Category pages link to their products and sibling categories so crawlers never hit orphan pages.
 
-## llms.txt / llms-full.txt
+## llms.txt & llms-full.txt
 
-The AEO/GEO play, and the one place a no-price catalog isn't at a disadvantage —
-answer engines want structured facts, not offers. Keep `llms-full.txt` covering the
-whole catalog: product names, categories, attributes, descriptions. No prices, no
-suppliers.
+Served by `src/app/llms.txt/route.ts` and `src/app/llms-full.txt/route.ts` for GEO/AEO answer engines: structured catalog facts (product names, categories, attributes, MOQs, descriptions) with zero prices and zero supplier identities.
 
 ## Checklist
 
-- [ ] Server Component, no client-side data fetching
-- [ ] `generateMetadata` with canonical + hreflang (all locales with content) + OG
+- [ ] Server Component, no client-side data fetching on indexable pages
+- [ ] `generateMetadata` with canonical + `hreflang` (completed locales) + OG
 - [ ] Correct JSON-LD for the page type; `Product` has no `offers`
-- [ ] Added to the sitemap with `updated_at` as `lastModified`
-- [ ] IndexNow fires if this page's entity can be published
+- [ ] Included in `src/app/sitemap.ts` with `updated_at` as `lastModified`
+- [ ] IndexNow fires when the entity is published
 - [ ] Reachable within ~3 clicks of the homepage
-- [ ] Verified in rendered HTML — view source, not devtools DOM
+- [ ] Verified in rendered HTML source

@@ -1,45 +1,48 @@
-| `.env.example` | 14 env keys, with `[carry]` markers for values reusable from Tavkil || `pnpm db:studio` | Drizzle Studio |
-| `pnpm db:pull` | Re-introspect Neon into src/lib/db/schema.ts |
-| `pnpm db:generate` | Generate a migration from schema changes |# mini-tavkil
+# Tavkil (`mini-tavkil`)
 
-Successor to [Tavkil](https://tavkil.com) — a public product showcase with a small
-admin dashboard. One Next.js app on Neon + Cloudflare.
+B2B cross-border wholesale platform ([tavkil.com](https://tavkil.com)) connecting international buyers with verified Turkish manufacturers. Built with two separate frontends — a **Next.js 16 App Router Storefront** and a standalone **React 19 + Vite Admin SPA** — backed by **Cloudflare Workers (Hono Backend API) + Cloudflare Hyperdrive + Neon Serverless Postgres + Cloudflare R2**.
 
-Buyers never sign in. Prices are never public. Orders start with a contact form.
+- **B2B Customer Storefront (Next.js 16):** Multilingual public catalog (`en`, `tr`, `ar` RTL) optimized for SEO/GEO/AEO (zero public prices/suppliers), plus authenticated buyer portal for personalized tier pricing and RFQ / order requests.
+- **Vendor / Admin Panel (React 19 + Vite SPA):** Separate operator dashboard (`admin/`) for managing catalog, suppliers, buyers, order requests, RBAC roles, audit logs, and settings.
+- **Backend API (Hono on Cloudflare Workers):** Dedicated Edge API orchestrator replacing transitional Next.js route handlers, connected via Cloudflare Hyperdrive to Neon Serverless Postgres.
 
 ---
 
 ## Docs
 
-| File             | What's in it                                                        |
-| ---------------- | ------------------------------------------------------------------- |
-| **`CLAUDE.md`**  | Hard rules, stack, definition of done. Read first.                  |
-| **`PLAN.md`**    | Every decision, plus the 15 numbered steps to finish the project    |
-| **`TESTING.md`** | Vitest + Playwright + Chrome DevTools MCP                           |
-| `.env.example`   | 16 env keys, with `[carry]` markers for values reusable from Tavkil |
+| File                  | What's in it                                                                   |
+| --------------------- | ------------------------------------------------------------------------------ |
+| **`CLAUDE.md`**       | Hard rules, 3-audience pricing guard, stack, definition of done. Read first.   |
+| **`AGENTS.md`**       | Tool-agnostic mirror of `CLAUDE.md` + AI assistant rules.                      |
+| **`ARCHITECTURE.md`** | System architecture, Cloudflare Workers limits (128 MB RAM), branching & envs. |
+| **`TESTING.md`**      | Vitest + Playwright + Chrome DevTools MCP testing strategy and gates.          |
+| `.env.example`        | Required environment variables for local `dev` and production deployments.     |
 
-Design docs live at `~/Documents/foundation-pm/Tavkil/`.
+Product & design specifications live at `~/Documents/foundation-pm/Tavkil/`. Legacy Nest.js/Prisma modules being ported live at `~/Documents/tavkil`.
 
 ---
 
 ## Layout
 
-```
-app/
-  [locale]/          public storefront — Server Components, no client data fetching
-  admin/             Vite SPA build output, served as static assets
-  api/               route handlers (replaces the Nest.js backend)
-lib/
-  db/                generated Drizzle schema + relations + citext type
-  queries/           Drizzle access. public-product.ts is the leak-proof shape.
-  services/          ported Nest services, minus the decorators
-  image-resize.ts    browser-side canvas → WebP (Sharp can't run on Workers)
-  seo/               metadata, JSON-LD, sitemap helpers
-drizzle/             generated SQL baseline + drizzle-kit metadata
-messages/            en.json · tr.json · ar.json
-e2e/                 Playwright
-scripts/             sync-permissions, seed, fx-refresh
-wrangler.jsonc       R2 bindings, Cron Triggers, env
+```text
+src/
+  app/
+    [locale]/          Storefront (Server Components for public SEO pages; client query on buyer pages)
+    api/               API Route Handlers (public, buyer, and permission-gated admin endpoints)
+  components/          Shared UI primitives (shadcn/ui + Base UI) and catalog components
+  lib/
+    db/                Drizzle schema, relations, and citext custom type
+    queries/           Drizzle data access (`public-product.ts` enforces the anonymous leak-proof shape)
+    services/          Domain business logic and publish-gate validations
+    media/             Magic-byte upload sniffing (`sniff.ts`) and R2 image URL helpers
+    permissions/       Permission catalog (`catalog.ts`) and allowlist helpers
+    seo/               Metadata, hreflang, Schema.org JSON-LD, sitemap, and IndexNow helpers
+admin/                 Standalone React 19 + Vite Admin SPA (`admin/src/lib/image-resize.ts` handles Canvas → WebP)
+drizzle/               SQL migrations + Drizzle Kit metadata
+messages/              Locale dictionaries (`en.json`, `tr.json`, `ar.json`)
+e2e/                   Playwright end-to-end test suites (public & admin)
+scripts/               Permission sync, FX rate refresh, locale parity, pricing leak & build scripts
+wrangler.jsonc         Cloudflare Worker bindings (R2 buckets, Cron Triggers, runtime config)
 ```
 
 ---
@@ -47,57 +50,52 @@ wrangler.jsonc       R2 bindings, Cron Triggers, env
 ## Setup
 
 ```bash
-pnpm install                  # one workspace install: Next app + admin/
-cp .env.example .env          # fill in; [carry] values come from tavkil/.env
-                              # (Next and wrangler both read .env — no .dev.vars)
+pnpm install                  # Installs root Next.js storefront + admin/ SPA workspace
+cp .env.example .env          # Configure local dev environment (uses Neon `dev` branch)
 
-pnpm db:migrate               # drizzle-kit, uses DIRECT_URL
-pnpm sync:permissions         # fills the Permission table — no boot hook exists
+pnpm db:migrate               # Apply Drizzle migrations via DIRECT_URL
+pnpm sync:permissions         # Sync Permission table from src/lib/permissions/catalog.ts
 
-pnpm dev                      # Next on :3000 + admin on :5173/admin/, together
-pnpm preview                  # Workers runtime locally, via wrangler
+pnpm dev                      # Starts Storefront (:3000) + Admin Vite SPA (:5173) in parallel
+pnpm preview                  # Build and run locally on the Cloudflare Workers runtime
 ```
 
-**Neon:** create the project, then take two connection strings — the **pooled** one
-(`-pooler` in the host) for `DATABASE_URL`, and the direct one for `DIRECT_URL`.
-Pooled HTTP is what lets compute autosuspend and keeps the free tier free.
-
-**Cloudflare:** create the R2 bucket, bind it in `wrangler.jsonc`. There are no S3
-credentials — the binding replaces them.
-
-**Google OAuth:** add `https://tavkil.com/api/auth/callback/google` and
-`http://localhost:3000/api/auth/callback/google` as redirect URIs. Reuse Tavkil's
-client; it's the same domain.
+- **Neon Postgres:** Use the **pooled** connection string (`-pooler` host) for `DATABASE_URL` (HTTP mode, allows compute autosuspend) and the direct connection string for `DIRECT_URL` (used by `drizzle-kit` and CLI scripts).
+- **Cloudflare R2:** Bound directly via `wrangler.jsonc` (`IMAGES_BUCKET` and `NEXT_INC_CACHE_R2_BUCKET`) with `preview_bucket_name` isolation for local development.
+- **Google OAuth:** Ensure `http://localhost:3000/api/auth/callback/google` and `https://tavkil.com/api/auth/callback/google` are registered in Google Cloud Console.
 
 ---
 
 ## Commands
 
-| Command                 | Does                                                |
-| ----------------------- | --------------------------------------------------- |
-| `pnpm dev`              | Every `dev:*` script in parallel (Ctrl+C stops all) |
-| `pnpm dev:next`         | Storefront + `/api` only, on :3000                  |
-| `pnpm dev:admin`        | Admin SPA only, on :5173/admin/ (hot reload)        |
-| `pnpm preview`          | Run against the real Workers runtime locally        |
-| `pnpm deploy`           | Build + `wrangler deploy`                           |
-| `pnpm test`             | Vitest, once                                        |
-| `pnpm test:watch`       | Vitest, watch                                       |
-| `pnpm e2e`              | Playwright                                          |
-| `pnpm e2e:report`       | Open the last Playwright report                     |
-| `pnpm db:studio`        | Drizzle Studio                                      |
-| `pnpm sync:permissions` | Sync `Permission` table from `catalog.ts`           |
-| `pnpm fx:refresh`       | Fetch USD→TRY now (also runs on a Cron Trigger)     |
+| Command                   | Description                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| `pnpm dev`                | Start Storefront (`:3000`) and Admin SPA (`:5173`) in parallel     |
+| `pnpm dev:next`           | Storefront + `/api` only on `:3000`                                |
+| `pnpm dev:admin`          | Admin Vite SPA only on `:5173` (with HMR)                          |
+| `pnpm preview`            | Build & run against the local Cloudflare Workers runtime           |
+| `pnpm deploy`             | Build production bundle (`cf:build:prod`) + deploy to Workers      |
+| `pnpm lint`               | ESLint check for Next.js storefront & API                          |
+| `pnpm admin:lint`         | ESLint check for Admin SPA                                         |
+| `pnpm typecheck`          | Next.js route typegen + TypeScript check                           |
+| `pnpm admin:typecheck`    | TypeScript check for Admin SPA                                     |
+| `pnpm format:check`       | Prettier formatting check                                          |
+| `pnpm check:i18n`         | Verify translation key parity across `en`, `tr`, and `ar`          |
+| `pnpm check:pricing-leak` | Guard against price or supplier leaks on public surfaces           |
+| `pnpm test`               | Run Vitest unit & component tests                                  |
+| `pnpm test:integration`   | Run Vitest database integration tests                              |
+| `pnpm e2e`                | Run Playwright E2E test suite                                      |
+| `pnpm db:generate`        | Generate Drizzle SQL migration from schema changes                 |
+| `pnpm db:migrate`         | Apply pending migrations to the configured database                |
+| `pnpm db:studio`          | Open Drizzle Studio                                                |
+| `pnpm sync:permissions`   | Sync `permissions` and `role_permissions` tables from `catalog.ts` |
+| `pnpm fx:refresh`         | Refresh FX exchange rates (also runs via Cloudflare Cron Trigger)  |
 
 ---
 
-## Things that will surprise you
+## Key Platform Constraints
 
-- **Sharp is not available.** Images are resized in the browser before upload.
-- **Nothing runs on boot.** Workers start per request. Permission sync and FX are a
-  script and a Cron Trigger.
-- **No interactive transactions** on request paths — Neon HTTP mode does not support
-  them. `db.batch([q1, q2])` is fine.
-- **Bundle size is a hard gate.** Cloudflare free plan caps at 3 MB gzipped. The
-  scaffold measures 1.02 MB. Prisma was rejected because its client alone cost 1.85 MB.
-- **The admin is still a Vite SPA.** It's built and served as static assets under
-  `/admin`; it was never ported to Next.js routes, and probably shouldn't be.
+- **No Sharp on Workers:** Images are downscaled and converted to WebP in the admin browser via Canvas (`admin/src/lib/image-resize.ts`) before uploading to R2, and byte-sniffed on the server (`src/lib/media/sniff.ts`).
+- **Nothing runs on boot:** Workers wake per request. Migrations and permission syncing run via explicit CLI/CI scripts, and periodic jobs run via Cloudflare Cron Triggers.
+- **No interactive transactions on request paths:** Neon HTTP mode supports `db.batch([q1, q2])`, not interactive `db.transaction(async (tx) => ...)` callbacks.
+- **128 MB Worker RAM limit:** Always paginate queries (`LIMIT`) and select lean projections.

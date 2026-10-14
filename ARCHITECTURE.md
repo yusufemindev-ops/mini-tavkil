@@ -6,7 +6,7 @@ This document captures the locked architecture, infrastructure specifications, a
 
 ## 1. System Overview
 
-```
+```text
        [ CLIENT / FRONTEND LAYER ]
 ┌─────────────────────────┐     ┌─────────────────────────┐
 │  B2B Customer Storefront│     │   Vendor/Admin Panel    │
@@ -64,7 +64,7 @@ This document captures the locked architecture, infrastructure specifications, a
 
 A Worker instance terminates with an unrecoverable **Out-Of-Memory (OOM)** error if RAM consumption exceeds 128 MB.
 
-### Critical Rules for Data Access:
+### Critical Rules for Data Access
 
 1. **Strict Pagination Everywhere**:
    - **NEVER** run unbounded queries like `SELECT * FROM products`.

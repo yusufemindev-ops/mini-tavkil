@@ -32,6 +32,7 @@ What should have happened instead.
 - **Locale:** [e.g. EN, TR, AR]
 - **Browser / Device:** [e.g. Chrome 130 on macOS, Safari on iOS]
 - **Console Errors / Stack Trace:**
+
   ```text
   [Paste any error messages or network responses here]
   ```
