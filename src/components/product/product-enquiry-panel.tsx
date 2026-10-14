@@ -7,16 +7,7 @@ import { Link } from '@/i18n/navigation';
 import { getSiteSettings, waUrl } from '@/lib/settings';
 
 /**
- * What replaces Tavkil's buy panel.
- *
- * Tavkil's showed a tier price (or a sign-in lock), the supplier, and an
- * add-to-request button. None of those exist here — no public price, no supplier
- * on any public surface, no cart. The single conversion path is the contact form,
- * so this panel states the order terms a buyer needs, then routes them there with
- * the product already identified.
- *
- * A Server Component: nothing here is interactive, and the CTA carries the product
- * in the URL rather than in client state.
+ * Product order-terms summary (MOQ, pack size, unit) and quote-request CTA panel.
  */
 export async function ProductEnquiryPanel({
   slug,

@@ -5,9 +5,6 @@ import { Link } from '@/i18n/navigation';
 import { getSiteSettings, waUrl } from '@/lib/settings';
 import { BrandLogo } from '@/components/brand-logo';
 
-// Tavkil's footer had a fourth "Account" column (sign in / my orders). Buyers
-// never sign in here, so the grid drops to three columns and the catalogue takes
-// its place — internal linking is what actually moves SEO (PLAN.md §11).
 const COMPANY_LINKS = [
   { href: '/about', key: 'nav_about' },
   { href: '/catalogue', key: 'nav_catalog' },

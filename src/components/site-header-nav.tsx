@@ -18,13 +18,7 @@ const NAV_LINKS = [
   { href: '/contact', key: 'nav_contact' },
 ] as const;
 
-// Interactive nav bar (client). Brand comes from admin-managed settings,
-// resolved server-side by the `SiteHeader` wrapper and passed in as props.
-// `logoUrl` unset → the CSS lockup in `BrandLogo`.
-//
-// Tavkil's version also carried a session chip, notification bell, cart, and
-// currency switcher. Buyers never sign in here and prices are never public, so
-// the only action left is "contact us" — which is also the only conversion path.
+// Interactive storefront navigation bar receiving server-resolved brand settings.
 export function SiteHeaderNav({
   siteName = 'Tavkil',
   logoUrl = '',

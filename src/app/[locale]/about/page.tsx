@@ -141,15 +141,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const { locale } = await params;
   setRequestLocale(locale);
 
-  /*
-   * Tavkil's about page hard-coded six stat cards: 340+ suppliers, 38 countries,
-   * 48h onboarding, 0% markup. Every one of those was invented, and two of them
-   * (supplier count, markup) are claims this project has no way to stand behind —
-   * a supplier count is admin-only data and there is no public price to mark up.
-   *
-   * These three are counted from the database, so the page can't drift from the
-   * catalogue and can't overstate it.
-   */
+  // Live catalog counts derived directly from the database.
   const [categories, productCount] = await Promise.all([
     publicCategories(locale as Locale),
     publicProductCount({}, locale as Locale),

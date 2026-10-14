@@ -23,11 +23,7 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-// Grouped sidebar nav, mirroring prototype/adminv2.html.
-//
-// The Buyers and Operations groups are gone with their features (PLAN.md §9):
-// there are no buyer accounts, no account requests and no orders here. Audit log
-// went the same way. What remains is Catalog + Admin settings.
+// Grouped sidebar navigation items gated by RBAC permission.
 export const NAV_GROUPS: NavGroup[] = [
   { items: [{ label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard }] },
   {

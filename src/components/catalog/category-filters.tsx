@@ -3,12 +3,7 @@ import { cn } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 import type { PublicCategory } from '@/lib/queries/public-product';
 
-// Prototype `.filters` — a carded, single-select list of sibling subcategories.
-// Each row is a clean-path LINK to that category's own page, so every listing has
-// one canonical, crawlable URL rather than a `?subcategory=` variant of the parent.
-//
-// Tavkil's version also carried a verified-buyers-only toggle. There are no buyer
-// accounts here, so the list is all that remains.
+// Carded, single-select list of sibling subcategories linking to canonical category URLs.
 export async function CategoryFilters({
   siblings,
   parentSlug,

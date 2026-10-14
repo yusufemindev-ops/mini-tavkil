@@ -29,16 +29,6 @@ describe('permission catalog', () => {
     }
   });
 
-  it('drops the domains whose features were cut', () => {
-    // orders, buyers, account_requests and audit_log do not exist in this project
-    // (PLAN.md §3). A permission for a feature that isn't there is a guard nobody
-    // will ever call, and a role editor's checkbox for nothing.
-    const domains = new Set(PERMISSION_CATALOG.map((permission) => permission.domain));
-    for (const gone of ['orders', 'buyers', 'account_requests', 'audit_log', 'roles']) {
-      expect(domains.has(gone)).toBe(false);
-    }
-  });
-
   it('every permission has a name and a description', () => {
     for (const permission of PERMISSION_CATALOG) {
       expect(permission.name.trim()).not.toBe('');

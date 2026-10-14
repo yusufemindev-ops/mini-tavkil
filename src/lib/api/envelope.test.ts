@@ -1,20 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 /**
- * The admin API speaks Tavkil's envelope: `{ data: … }` on success,
- * `{ error: { code, message, details? } }` on failure.
- *
- * This is not a style preference — it is a contract with code we do not own.
- * `admin/src/lib/api/client.ts` is Tavkil's, and it ends with
- *
- *     return (payload as SuccessEnvelope<T>).data;
- *
- * so a handler that returns the bare value resolves to `undefined` in the SPA.
- * When that happened, every admin screen broke at once and none of them errored:
- * the dashboard showed "No catalog metrics yet" against a 200 carrying real
- * numbers, and `/admin/me` yielded no permissions, so `RequirePermission` hid
- * Products, Categories, Suppliers, Users and Settings. A silent `undefined` is
- * the worst possible failure mode, which is why it is pinned here.
+ * Verifies the `{ data }` success and `{ error: { code, message, details? } }` failure envelope expected by `admin/src/lib/api/client.ts`.
  */
 vi.mock('@/lib/auth-guard', () => ({
   requirePermission: vi.fn(async () => ({

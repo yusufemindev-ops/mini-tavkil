@@ -78,9 +78,7 @@ describe('category schemas', () => {
   });
 
   it('offers no price sort strategy', () => {
-    // Tavkil had price_asc / price_desc. There is no public price here, so a
-    // storefront honouring them would order by a number it must never reveal —
-    // and the ordering itself would leak the ranking.
+    // Public category sorting must never expose price-based ranking.
     expect(SORT_STRATEGIES).not.toContain('price_asc');
     expect(SORT_STRATEGIES).not.toContain('price_desc');
     expect(updateCategorySchema.safeParse({ sortStrategy: 'price_asc' }).success).toBe(false);

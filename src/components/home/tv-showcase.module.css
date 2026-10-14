@@ -1,10 +1,4 @@
-/* Faithful port of the prototype hero showcase: two "TV sets" with a CRT switch
-   animation and an ambient glow. Prototype CSS variables are remapped to the
-   storefront tokens.
-
-   Tavkil's second set was a premium-supplier channel. Suppliers never appear on a
-   public surface here (CLAUDE.md §1), so it shows a featured product instead —
-   the composition, sizing and z-order are unchanged, only the content differs. */
+/* Hero showcase with dual "TV sets", CRT channel-switch animation, and ambient glow. */
 
 .showcase {
   position: relative;
@@ -388,25 +382,7 @@
   display: flex;
   gap: 8px;
 }
-/*
- * Tavkil's dots exactly: a 9px circle, 8px apart, stretching to a 26px pill when
- * active.
- *
- * An earlier attempt padded each button out to a 24×24 hit area for WCAG 2.5.8
- * and set `background-clip: content-box` so only the 9px centre painted. The
- * `background` shorthand one line below it silently reset that clip back to
- * `border-box`, so the padding painted too — the dots rendered as 24px blobs and
- * the active one as a 41px slab. A shorthand after its own longhand is a quiet
- * way to undo it.
- *
- * The hit area is enlarged by a pseudo-element instead, which grows the target
- * without painting anything or touching layout. It stops short of 24px wide on
- * purpose: at 8px spacing a full 24px target would overlap its neighbour's, and
- * a dot that triggers the one next to it is worse than a small dot. Height gets
- * the full 24px, where there is nothing to collide with. The prev/next arrows
- * sit beside these at full size and do the same job, which is the equivalent
- * control 2.5.8 accepts.
- */
+/* 9px dot indicators with a pseudo-element hit target for touch accessibility. */
 .scDots button {
   position: relative;
   inline-size: 9px;

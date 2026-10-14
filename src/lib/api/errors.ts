@@ -1,13 +1,7 @@
 import { ZodError } from 'zod';
 
 /**
- * The error type every service throws, carrying the same codes Tavkil used so the
- * admin SPA's error handling keeps working unchanged.
- *
- * `details` is deliberately narrow. It carries field-level validation messages and
- * nothing else — never a database error string, never a row. A leaked price or
- * supplier name in an error body counts as a leak exactly like one in a page
- * (CLAUDE.md §1).
+ * Service error codes; `details` exposes only field-level validation messages, never raw DB errors or row data (CLAUDE.md §1).
  */
 export type AppErrorCode =
   | 'resource.not_found'

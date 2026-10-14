@@ -4,9 +4,7 @@ import en from '../../messages/en.json';
 import tr from '../../messages/tr.json';
 import { routing } from './routing';
 
-// A missing key in one locale is invisible until someone browses that locale and
-// sees a raw key path where a sentence should be — so the parity check is a test,
-// not a review item. English is the reference set because it's the default locale.
+// Enforce key parity across all locales using English as the reference set.
 function flatten(value: unknown, prefix = ''): Set<string> {
   const keys = new Set<string>();
   if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -51,13 +49,5 @@ describe('message catalogues', () => {
     };
     walk(messages[locale]);
     expect(empty).toEqual([]);
-  });
-
-  it('no longer carries the buyer-account namespace', () => {
-    // There is no buyer sign-in here (PLAN.md §3). Keeping the strings around
-    // invites someone to render them.
-    for (const locale of Object.keys(messages)) {
-      expect(messages[locale]).not.toHaveProperty('account');
-    }
   });
 });

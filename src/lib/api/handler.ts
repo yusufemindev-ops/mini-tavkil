@@ -3,17 +3,7 @@ import { requirePermission, type AdminUser } from '@/lib/auth-guard';
 import { invalid, toErrorResponse } from '@/lib/api/errors';
 
 /**
- * The wrapper every `/api/admin/*` handler goes through.
- *
- * It exists so the permission check cannot be forgotten. Tavkil enforced this with
- * a `@RequirePermission` decorator that the framework applied; a Next route handler
- * is just an exported function, so nothing stops someone writing one without a
- * guard. Making the permission a required argument of the only helper used to build
- * these handlers puts it back in the type system.
- *
- * The order is deliberate and matches PLAN.md §14h: authenticate and authorise
- * *first*, before reading the body or touching the database. A handler that parses
- * a 10 MB body and then returns 401 has already done the attacker's work for them.
+ * Wrapper for `/api/admin/*` routes that enforces authentication and RBAC authorization before parsing the request body.
  */
 
 type Ctx<P> = { params: Promise<P> };
@@ -56,8 +46,7 @@ export function adminRoute<P, B>(
         } catch {
           throw invalid('Request body must be valid JSON.');
         }
-        // `parse` throws ZodError, which toErrorResponse turns into a 422 with
-        // per-field messages.
+        // `parse` throws ZodError, which toErrorResponse turns into a 422 with per-field messages.
         body = schema.parse(raw);
       }
 
@@ -65,14 +54,7 @@ export function adminRoute<P, B>(
       const result = await handler({ request, params, body, admin });
 
       if (result instanceof Response) return result;
-      // `{ data: … }`, not the bare value. The admin SPA is Tavkil's, and its
-      // `lib/api/client.ts` ends with `return (payload as SuccessEnvelope<T>).data`
-      // — Tavkil's Nest backend wrapped every success in that envelope. Returning
-      // the bare object made EVERY admin call resolve to `undefined`: the
-      // dashboard rendered its empty state, `/admin/me` yielded no permissions so
-      // the sidebar hid every entry, and products, categories, suppliers, users
-      // and settings would all have come back blank. The whole dashboard was
-      // non-functional for this one line.
+      // Wrap response in `{ data }` to match `admin/src/lib/api/client.ts`.
       return Response.json(
         { data: result },
         {

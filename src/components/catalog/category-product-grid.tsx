@@ -7,20 +7,7 @@ import { Link } from '@/i18n/navigation';
 import type { PublicProduct } from '@/lib/queries/public-product';
 
 /**
- * The category product grid.
- *
- * Tavkil showed an "prices are hidden on public listings" notice above the grid
- * for anonymous visitors. Every visitor is anonymous here and no listing has ever
- * shown a price, so the notice would be noise — the buy panel on the product page
- * carries the "request a quote" call instead.
- *
- * An empty grid is a state, not a blank area: a category with nothing published
- * yet gets a real explanation and a route onward.
- *
- * The cards are rendered here, on the server, and handed to `CategoryListing`
- * already built. That component reorders them when the visitor sorts; it never
- * renders a card itself, so nothing about product markup crosses into the client
- * bundle just to make a `<select>` work.
+ * Server-rendered category product grid passed as pre-built cards to `CategoryListing` for client-side sorting.
  */
 export async function CategoryProductGrid({
   products,

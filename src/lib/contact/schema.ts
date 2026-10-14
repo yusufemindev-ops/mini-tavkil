@@ -2,13 +2,7 @@ import { z } from 'zod';
 import { LOCALES } from '@/lib/services/catalog-schemas';
 
 /**
- * The contact form's shape.
- *
- * The only public write on the site, so this is the only place an anonymous
- * visitor's input reaches the server at all. Everything is bounded: an unbounded
- * message field is a free way to make us relay megabytes into an inbox.
- *
- * Client-side validation is UX; this is the check that counts (PLAN.md §14h).
+ * Server-side validation schema for public contact/quote form submissions.
  */
 export const contactSchema = z.object({
   name: z.string().trim().min(2, 'Please enter your name.').max(120),

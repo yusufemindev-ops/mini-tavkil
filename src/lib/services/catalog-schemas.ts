@@ -81,7 +81,7 @@ export const productAttributeSchema = z.object({
 
 export const productImageSchema = z.object({
   url: z.string().trim().min(1),
-  // Per-locale alt text. Step 14e requires real alt text, not filenames.
+  // Per-locale descriptive alt text.
   alt: z.partialRecord(z.enum(LOCALES), z.string().trim()).optional(),
   isPrimary: z.boolean().optional(),
   sortOrder: z.number().int().min(0).optional(),

@@ -28,9 +28,7 @@ describe('sniffImageFormat', () => {
 
   describe('rejects', () => {
     it('an SVG, even though it is an image format', () => {
-      // The reason SVG is refused: it is XML, it can carry <script>, and it would
-      // be served from the images host we treat as trusted — stored XSS, not an
-      // image (PLAN.md §14h).
+      // SVG is XML and can carry <script> payloads (stored XSS).
       expect(sniffImageFormat(ascii('<svg xmlns="http://www.w3.org/2000/svg">'))).toBeNull();
       expect(sniffImageFormat(ascii('<?xml version="1.0"?><svg>'))).toBeNull();
     });

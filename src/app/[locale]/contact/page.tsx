@@ -116,14 +116,7 @@ function ContactNote({
   );
 }
 
-/**
- * `showAddress` covers the case where there is an address but no map.
- *
- * Tavkil only ever printed the address inside the map panel, and that panel
- * hides itself when no embed URL is set — so a configured address was simply
- * invisible. Showing it here when the map is absent keeps Tavkil's layout
- * wherever the map exists and stops the address disappearing where it does not.
- */
+/** Renders contact email and address when the map panel is absent. */
 function ContactInfo({ email, address }: { email: string; address?: string }) {
   const t = useTranslations('store');
   return (

@@ -15,15 +15,7 @@ export function JsonLd({ schema }: { schema: Schema | Schema[] }) {
   );
 }
 
-/**
- * The entity behind the site.
- *
- * `name` and `url` alone give an answer engine nothing to say about us beyond the
- * domain. `description` and `areaServed` are what a "what is Tavkil / who supplies
- * X from Türkiye" answer can actually be built from. `sameAs` is deliberately
- * absent until the profiles exist — pointing it at pages that do not resolve is
- * worse than omitting it.
- */
+/** Organization JSON-LD schema for search and answer engines. */
 export function organizationSchema(): Schema {
   return {
     '@context': 'https://schema.org',
@@ -37,9 +29,7 @@ export function organizationSchema(): Schema {
   };
 }
 
-// WebSite so search engines and answer engines understand the site identity.
-// Tavkil also emitted a SearchAction pointing at /search — there is no search
-// route here, and advertising an entry point that 404s is worse than omitting it.
+/** WebSite JSON-LD schema for localized site identity. */
 export function websiteSchema(locale: string): Schema {
   return {
     '@context': 'https://schema.org',
