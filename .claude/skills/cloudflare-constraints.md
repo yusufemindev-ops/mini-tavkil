@@ -1,3 +1,8 @@
+---
+name: cloudflare-constraints
+description: Enforces Cloudflare Workers runtime constraints (128 MB isolate RAM limit, Neon HTTP pooled connections, db.batch instead of interactive transactions, browser-side WebP resizing, R2 bindings, and Cron Triggers). Use when adding dependencies, writing database queries, handling file uploads, or scheduling background tasks.
+---
+
 # Skill: cloudflare-constraints
 
 What does not work on Cloudflare Workers, and what to do instead. Check this before adding any dependency, query, or background behaviour.

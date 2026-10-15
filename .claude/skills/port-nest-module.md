@@ -1,3 +1,8 @@
+---
+name: port-nest-module
+description: Guides porting backend modules from the legacy Nest.js + Prisma repository (~/Documents/tavkil/backend/src/modules/) to Hono / Next.js Route Handlers + Drizzle ORM on Cloudflare Workers. Use when porting or expanding backend services, schemas, or route handlers.
+---
+
 # Skill: port-nest-module
 
 How to port backend modules from the legacy Nest.js + Prisma repository (`~/Documents/tavkil/backend/src/modules/<name>/`) into this codebase's Hono API on Cloudflare Workers (and transitional Next.js Route Handlers) + Drizzle ORM.

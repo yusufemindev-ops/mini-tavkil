@@ -1,3 +1,8 @@
+---
+name: public-data-guard
+description: Enforces the 3-audience pricing and supplier confidentiality rules across Public (zero prices/suppliers), Buyer (computed unitPrice only, never base_price or tier_markup_percent), and Admin surfaces. Use whenever touching queries, API routes, storefront components, SEO metadata, or sitemaps.
+---
+
 # Skill: public-data-guard
 
 The most important security and commercial rule in this repo: **Pricing and supplier visibility across our 3 audiences.**

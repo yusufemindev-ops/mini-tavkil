@@ -1,4 +1,9 @@
-# Skill: seo-page
+---
+name: tavkil-seo-page
+description: Enforces Tavkil's SEO/GEO/AEO Knowledge Engine rules on public storefront pages (Next.js Server Components, generateMetadata with canonical and completed-locale hreflang, JSON-LD Product without offers, real updated_at in sitemap.ts, IndexNow pings, and llms.txt). Use whenever adding or modifying a public storefront page.
+---
+
+# Skill: tavkil-seo-page
 
 The backend's job for SEO/GEO/AEO is to be a **fast structured Knowledge Engine** — delivering complete data directly in the server-rendered HTML for search crawlers and AI answer engines.
 
@@ -11,6 +16,7 @@ Apply this whenever adding or modifying a public storefront page.
 3. **JSON-LD** appropriate to the page type — see below.
 4. **Sitemap entry** (`src/app/sitemap.ts`) with the database row's real `updated_at` as `lastModified`.
 5. **No price, no supplier** on anonymous pages — see `public-data-guard`. A `Product` JSON-LD block with `offers` is a rule violation.
+6. **Incomplete or machine-translated rows get `noindex`:** Pages where `is_complete = false` or `is_machine_translated = true` must emit `robots: { index: false }` until reviewed by a human.
 
 ## JSON-LD per page type
 
