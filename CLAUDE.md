@@ -117,6 +117,10 @@ pnpm admin:typecheck    # Admin SPA tsc
 pnpm test               # Unit & component test suite (Vitest)
 pnpm check:i18n         # Locale key parity (en / tr / ar)
 pnpm check:pricing-leak # Secret price & supplier guard
+
+# Hono API Inspection & Request Testing (no server required)
+pnpm api:routes                                       # List all Hono API routes
+pnpm exec hono request /api/health src/server/app.ts  # Execute an in-process request
 ```
 
 ---

@@ -1,14 +1,23 @@
-import { revalidatePath } from 'next/cache';
 import { routing } from '@/i18n/routing';
 
 /**
  * Invalidation helpers to purge ISR cached storefront pages immediately on admin mutations.
+ * Decoupled from `next/cache` so the Hono API server bundles cleanly without pulling in Next.js internals.
  */
-// Safely invoke revalidatePath, ignoring errors outside request context (e.g. scripts).
+type RevalidateFn = (path: string, type?: 'page' | 'layout') => void;
+
+let revalidateImpl: RevalidateFn | null = null;
+
+/** Registers the framework ISR revalidator (e.g. `revalidatePath` from `next/cache`). */
+export function registerRevalidator(fn: RevalidateFn): void {
+  revalidateImpl = fn;
+}
+
 function safeRevalidate(path: string, type?: 'page' | 'layout'): void {
+  if (!revalidateImpl) return;
   try {
-    if (type) revalidatePath(path, type);
-    else revalidatePath(path);
+    if (type) revalidateImpl(path, type);
+    else revalidateImpl(path);
   } catch {
     // Not in a request context; the background window still covers it.
   }
@@ -27,7 +36,6 @@ export function revalidateProduct(slugs: Record<string, string> = {}): void {
   for (const [locale, slug] of Object.entries(slugs)) {
     if (slug) safeRevalidate(`/${locale}/product/${slug}`);
   }
-  // Invalidate dynamic category route segment across all locales.
   safeRevalidate('/[locale]/catalogue/[category]', 'page');
   revalidateSeoSurfaces();
 }

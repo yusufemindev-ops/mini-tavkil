@@ -10,19 +10,16 @@ const green = (text) => `\x1b[32m${text}\x1b[0m`;
 const bold = (text) => `\x1b[1m${text}\x1b[0m`;
 const dim = (text) => `\x1b[2m${text}\x1b[0m`;
 
-const services = [
-  {
-    name: 'Storefront (Next.js)',
-    url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  },
-  { name: 'Admin Dashboard (Vite)', url: 'http://localhost:5173/admin' },
-];
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const backendUrl =
+  process.env.BACKEND_API_URL || process.env.BACKEND_URL || process.env.API_URL || `${siteUrl}/api`;
 
-// Automatically include backend API server if configured in .env or environment
-const backendUrl = process.env.BACKEND_API_URL || process.env.BACKEND_URL || process.env.API_URL;
-if (backendUrl) {
-  services.push({ name: 'Backend API Server', url: backendUrl });
-}
+const services = [
+  { name: 'Storefront (Next.js)', url: siteUrl },
+  { name: 'Admin Dashboard (Vite)', url: 'http://localhost:5173/admin' },
+  { name: 'Backend API (Hono)', url: backendUrl },
+  { name: 'API Docs (Hono UI)', url: `${backendUrl}/docs` },
+];
 
 const headerText = '  🚀 mini-tavkil local development environments';
 const footerText = '  • DB: Neon (branch: develop)   • Storage: tavkil-images-dev';
