@@ -62,27 +62,30 @@ Keep the **business logic** (validation rules, publish gates, status transitions
   - Express multi-statement writes as `await db.batch([q1, q2, ...])` (which executes atomically in a single HTTP round-trip) or single CTE SQL statements.
   - Reserve interactive TCP transactions for CLI scripts using `DIRECT_URL`.
 
-### 3. Controller → Hono Route / Next.js Route Handler (`adminRoute`)
+### 3. Controller → Hono Router (`src/server/routes/`)
 
-Target: Dedicated **Hono** API router on Cloudflare Workers. Transitional: Next.js Route Handler (`src/app/api/...`).
+`<name>.controller.ts` → `src/server/routes/<name>.ts` (public/buyer) or `src/server/routes/admin/<name>.ts` (admin), mounted in `src/server/app.ts`:
 
-`<name>.controller.ts` → `src/app/api/<path>/route.ts` (public/buyer) or `src/app/api/admin/<path>/route.ts` (admin)
-
-- Export `GET` / `POST` / `PATCH` / `DELETE` handlers.
-- **For `/api/admin/*` routes, always use `adminRoute()` from `@/lib/api/handler`:**
+- Chain `.get()` / `.post()` / `.patch()` / `.delete()` handlers on `new Hono<AppEnv>()` so RPC types (`AppType`) stay inferred.
+- **For `/api/admin/*` routes, always use `requireAdminPerm()`, `parseJson()`, and `adminJson()` from `@/server/factory`:**
 
   ```ts
-  import { adminRoute } from '@/lib/api/handler';
-  export const PATCH = adminRoute(
-    'products:edit',
-    updateProductSchema,
-    async ({ params, body, admin }) => {
-      return updateProduct(params.id, body, admin);
+  import { Hono } from 'hono';
+  import { adminJson, parseJson, requireAdminPerm, type AppEnv } from '@/server/factory';
+  import { updateProductSchema } from '@/lib/services/catalog-schemas';
+  import { updateProduct } from '@/lib/services/products';
+
+  export const adminProductsRoutes = new Hono<AppEnv>().patch(
+    '/:id',
+    requireAdminPerm('products:edit'),
+    async (c) => {
+      const body = await parseJson(c, updateProductSchema);
+      return adminJson(c, await updateProduct(c.req.param('id'), body, c.var.admin.id));
     },
   );
   ```
 
-  `adminRoute` authenticates and checks the colon permission _before_ reading the request body, validates `body` with Zod (`422` on failure), wraps the return value in `{ data: result }` (which the Admin SPA's API client expects), and sets `Cache-Control: private, no-store`.
+  `requireAdminPerm` authenticates and checks the colon permission _before_ reading the request body, `parseJson` validates the body with Zod (`422` on failure), and `adminJson` wraps the return value in `{ data: result }` with `Cache-Control: private, no-store`.
 
 - Keep URL paths and response shapes identical to what the Admin Vite SPA (`admin/`) and Storefront expect.
 

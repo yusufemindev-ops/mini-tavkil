@@ -50,6 +50,7 @@ const eslintConfig = defineConfig([
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
       'src/app/api/admin/**',
+      'src/server/routes/admin/**',
       'src/lib/services/**',
       'src/lib/db/**',
       'src/lib/auth.ts',
