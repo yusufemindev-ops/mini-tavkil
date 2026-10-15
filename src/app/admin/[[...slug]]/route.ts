@@ -15,7 +15,9 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
 
   if (process.env.NODE_ENV === 'development') {
-    return Response.redirect(new URL(`${url.pathname}${url.search}`, 'http://localhost:5173'), 307);
+    const devPath =
+      url.pathname === '/admin' || url.pathname === '/admin/' ? '/admin/dashboard' : url.pathname;
+    return Response.redirect(new URL(`${devPath}${url.search}`, 'http://localhost:5173'), 307);
   }
 
   if (LOOKS_LIKE_A_FILE.test(url.pathname)) {

@@ -270,6 +270,121 @@ const ROUTE_META: Record<string, RouteMeta> = {
     summary: 'Upload an image file (multipart/form-data) to Cloudflare R2',
     permission: 'media:upload',
   },
+  'GET /api/admin/buyers': {
+    summary: 'List all buyer accounts with tier markup, verification, and order counts',
+    permission: 'buyers:view',
+  },
+  'POST /api/admin/buyers': {
+    summary: 'Provision a new buyer account (Google sign-in allowlist)',
+    permission: 'buyers:create',
+    sampleBody: {
+      email: 'buyer@company.com',
+      firstName: 'Ahmet',
+      lastName: 'Yilmaz',
+      phone: '+90 532 000 0000',
+      country: 'TR',
+      companyName: 'Anatolia Industrial Ltd.',
+      tierMarkup: 15,
+    },
+  },
+  'GET /api/admin/buyers/:id': {
+    summary: 'Get a single buyer account by ID',
+    permission: 'buyers:view',
+  },
+  'PATCH /api/admin/buyers/:id': {
+    summary: 'Update buyer profile fields, tier markup, or internal notes',
+    permission: 'buyers:edit',
+    sampleBody: {
+      tierMarkup: 12,
+    },
+  },
+  'POST /api/admin/buyers/:id/verify': {
+    summary: 'Mark buyer account as verified',
+    permission: 'buyers:edit',
+  },
+  'POST /api/admin/buyers/:id/unverify': {
+    summary: 'Mark buyer account as unverified',
+    permission: 'buyers:edit',
+  },
+  'POST /api/admin/buyers/:id/suspend': {
+    summary: 'Suspend buyer account and revoke active sessions',
+    permission: 'buyers:disable',
+  },
+  'POST /api/admin/buyers/:id/reactivate': {
+    summary: 'Reactivate a suspended buyer account',
+    permission: 'buyers:disable',
+  },
+  'DELETE /api/admin/buyers/:id': {
+    summary: 'Permanently delete a buyer account and associated orders',
+    permission: 'buyers:disable',
+  },
+  'GET /api/admin/account-requests': {
+    summary: 'List pending and rejected buyer account requests',
+    permission: 'account_requests:view',
+  },
+  'POST /api/admin/account-requests/:id/approve': {
+    summary: 'Approve an account request and provision the buyer with initial tier markup',
+    permission: 'account_requests:review',
+    sampleBody: {
+      tierMarkup: 15,
+    },
+  },
+  'POST /api/admin/account-requests/:id/reject': {
+    summary: 'Reject a pending account request',
+    permission: 'account_requests:review',
+    sampleBody: {
+      reason: 'Incomplete company details',
+    },
+  },
+  'POST /api/admin/account-requests/:id/reopen': {
+    summary: 'Move a rejected account request back to pending review',
+    permission: 'account_requests:review',
+  },
+  'DELETE /api/admin/account-requests/:id': {
+    summary: 'Permanently delete an account request',
+    permission: 'account_requests:review',
+  },
+  'GET /api/admin/orders': {
+    summary: 'Paginated admin order request inbox with status, buyer, and search filters',
+    permission: 'orders:view',
+    queryParams: [
+      { name: 'page', example: '1', description: 'Page number (1-indexed)' },
+      { name: 'pageSize', example: '25', description: 'Items per page (max 100)' },
+      {
+        name: 'status',
+        example: '',
+        description: 'submitted | confirmed | accepted | rejected | expired',
+      },
+      { name: 'buyerId', example: '', description: 'Filter by buyer user ID' },
+      { name: 'search', example: '', description: 'Search order number or buyer name/company' },
+    ],
+  },
+  'GET /api/admin/orders/:id': {
+    summary: 'Get full admin order details with line items and pricing snapshots',
+    permission: 'orders:view',
+  },
+  'POST /api/admin/orders/:id/confirm': {
+    summary: 'Confirm or update an order quote with per-line buyer unit prices',
+    permission: 'orders:confirm',
+    sampleBody: {
+      markupPercent: 15,
+      itemOverrides: [{ itemId: '00000000-0000-0000-0000-000000000000', unitPriceFinal: 115 }],
+    },
+  },
+  'POST /api/admin/orders/:id/reject': {
+    summary: 'Reject a submitted or confirmed order request',
+    permission: 'orders:reject',
+    sampleBody: {
+      reason: 'Requested lead time unavailable',
+    },
+  },
+  'PATCH /api/admin/orders/:id/assign': {
+    summary: 'Assign or unassign an order request to an admin user',
+    permission: 'orders:assign',
+    sampleBody: {
+      assignedUserId: null,
+    },
+  },
   'GET /api/admin/audit-logs': {
     summary: 'Paginated admin activity log with resource type and search filters',
     permission: 'audit_log:view',
@@ -279,7 +394,8 @@ const ROUTE_META: Record<string, RouteMeta> = {
       {
         name: 'resourceType',
         example: '',
-        description: 'product | category | supplier | settings | currency | user | media',
+        description:
+          'product | category | supplier | buyer | account_request | order | settings | currency | user | media',
       },
       { name: 'search', example: '', description: 'Filter by actor, action, target, or summary' },
     ],
@@ -296,6 +412,10 @@ function tagForPath(path: string): string {
   if (path.startsWith('/api/admin/categories')) return 'Admin · Categories';
   if (path.startsWith('/api/admin/products')) return 'Admin · Products';
   if (path.startsWith('/api/admin/suppliers')) return 'Admin · Suppliers';
+  if (path.startsWith('/api/admin/buyers') || path.startsWith('/api/admin/account-requests')) {
+    return 'Admin · Buyers & Account Requests';
+  }
+  if (path.startsWith('/api/admin/orders')) return 'Admin · Orders (RFQ Inbox)';
   if (path.startsWith('/api/admin/currencies') || path.startsWith('/api/admin/fx')) {
     return 'Admin · Currencies & FX';
   }

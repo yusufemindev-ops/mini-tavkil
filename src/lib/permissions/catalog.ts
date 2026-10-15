@@ -170,6 +170,70 @@ export const PERMISSION_CATALOG: readonly PermissionDef[] = [
     description: 'Trigger an on-demand FX rate refresh',
   },
 
+  // ── Buyers & Account Requests ───────────────────────────────────────────────
+  {
+    code: 'buyers:view',
+    domain: 'buyers',
+    name: 'View buyers',
+    description: 'View buyer accounts and order history',
+  },
+  {
+    code: 'buyers:create',
+    domain: 'buyers',
+    name: 'Create buyers',
+    description: 'Provision new buyer accounts',
+  },
+  {
+    code: 'buyers:edit',
+    domain: 'buyers',
+    name: 'Edit buyers',
+    description: 'Update buyer profiles, verification and tier markup',
+  },
+  {
+    code: 'buyers:disable',
+    domain: 'buyers',
+    name: 'Suspend or delete buyers',
+    description: 'Suspend, reactivate or delete buyer accounts',
+  },
+  {
+    code: 'account_requests:view',
+    domain: 'account_requests',
+    name: 'View account requests',
+    description: 'View incoming buyer account requests',
+  },
+  {
+    code: 'account_requests:review',
+    domain: 'account_requests',
+    name: 'Review account requests',
+    description: 'Approve, reject, reopen or delete account requests',
+  },
+
+  // ── Orders (RFQ Inbox) ──────────────────────────────────────────────────────
+  {
+    code: 'orders:view',
+    domain: 'orders',
+    name: 'View orders',
+    description: 'View buyer order requests and quotes',
+  },
+  {
+    code: 'orders:confirm',
+    domain: 'orders',
+    name: 'Confirm orders',
+    description: 'Confirm order quotes and set per-line buyer prices',
+  },
+  {
+    code: 'orders:reject',
+    domain: 'orders',
+    name: 'Reject orders',
+    description: 'Reject submitted or confirmed order requests',
+  },
+  {
+    code: 'orders:assign',
+    domain: 'orders',
+    name: 'Assign orders',
+    description: 'Assign an order request to an admin operator',
+  },
+
   // ── Audit log ───────────────────────────────────────────────────────────────
   {
     code: 'audit_log:view',
@@ -246,13 +310,16 @@ export const ROLE_GRANTS: Readonly<Record<string, readonly string[]>> = {
     'settings:view',
     'currencies:view',
   ],
-  // Viewer: read-only across the catalogue. Deliberately no settings:edit, no
-  // users:*, and no media:upload.
+  // Viewer: read-only across the catalogue and operations. Deliberately no settings:edit,
+  // no users:*, and no media:upload.
   member: [
     'products:view',
     'categories:view',
     'suppliers:view',
     'media:view',
+    'buyers:view',
+    'account_requests:view',
+    'orders:view',
     'settings:view',
     'currencies:view',
   ],

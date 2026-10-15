@@ -1,12 +1,15 @@
 import { Hono } from 'hono';
 import { toErrorResponse } from '@/lib/api/errors';
 import type { AppEnv } from '@/server/factory';
+import { adminAccountRequestsRoutes } from '@/server/routes/admin/account-requests';
 import { adminAuditLogsRoutes } from '@/server/routes/admin/audit-logs';
+import { adminBuyersRoutes } from '@/server/routes/admin/buyers';
 import { adminCategoriesRoutes } from '@/server/routes/admin/categories';
 import { adminCurrenciesRoutes, adminFxRoutes } from '@/server/routes/admin/currencies';
 import { adminDashboardRoutes } from '@/server/routes/admin/dashboard';
 import { adminMeRoutes } from '@/server/routes/admin/me';
 import { adminMediaRoutes } from '@/server/routes/admin/media';
+import { adminOrdersRoutes } from '@/server/routes/admin/orders';
 import { adminProductsRoutes } from '@/server/routes/admin/products';
 import { adminSettingsRoutes } from '@/server/routes/admin/settings';
 import { adminSuppliersRoutes } from '@/server/routes/admin/suppliers';
@@ -50,6 +53,9 @@ const _routes = app
   .route('/admin/categories', adminCategoriesRoutes)
   .route('/admin/products', adminProductsRoutes)
   .route('/admin/suppliers', adminSuppliersRoutes)
+  .route('/admin/buyers', adminBuyersRoutes)
+  .route('/admin/account-requests', adminAccountRequestsRoutes)
+  .route('/admin/orders', adminOrdersRoutes)
   .route('/admin/currencies', adminCurrenciesRoutes)
   .route('/admin/fx', adminFxRoutes)
   .route('/admin/settings', adminSettingsRoutes)

@@ -1,10 +1,13 @@
 import {
+  Building2,
   FolderTree,
+  Inbox,
   LayoutDashboard,
   Package,
   ScrollText,
   Settings,
   Truck,
+  UserPlus,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -34,6 +37,27 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Categories', to: '/categories', icon: FolderTree, permission: 'categories:view' },
       { label: 'Suppliers', to: '/suppliers', icon: Truck, permission: 'suppliers:view' },
     ],
+  },
+  {
+    label: 'Buyers',
+    items: [
+      {
+        label: 'Buyer accounts',
+        to: '/buyer-accounts',
+        icon: Building2,
+        permission: 'buyers:view',
+      },
+      {
+        label: 'Account requests',
+        to: '/account-requests',
+        icon: UserPlus,
+        permission: 'account_requests:view',
+      },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [{ label: 'Orders inbox', to: '/orders', icon: Inbox, permission: 'orders:view' }],
   },
   {
     label: 'Admin settings',

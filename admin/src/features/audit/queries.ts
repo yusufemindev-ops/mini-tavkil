@@ -2,7 +2,16 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 
 export type AuditResourceType =
-  'product' | 'category' | 'supplier' | 'settings' | 'currency' | 'user' | 'media';
+  | 'product'
+  | 'category'
+  | 'supplier'
+  | 'buyer'
+  | 'account_request'
+  | 'order'
+  | 'settings'
+  | 'currency'
+  | 'user'
+  | 'media';
 
 export interface AdminAuditLogRow {
   id: string;
@@ -74,7 +83,11 @@ export function actionBadgeVariant(
     action.endsWith('.published') ||
     action.endsWith('.invited') ||
     action.endsWith('.reactivated') ||
-    action.endsWith('.restored')
+    action.endsWith('.restored') ||
+    action.endsWith('.approved') ||
+    action.endsWith('.confirmed') ||
+    action.endsWith('.verified') ||
+    action.endsWith('.reopened')
   ) {
     return 'success';
   }
@@ -82,18 +95,20 @@ export function actionBadgeVariant(
     action.endsWith('.deleted') ||
     action.endsWith('.suspended') ||
     action.endsWith('.archived') ||
-    action.endsWith('.role_revoked')
+    action.endsWith('.role_revoked') ||
+    action.endsWith('.rejected')
   ) {
     return 'destructive';
   }
-  if (action.endsWith('.unpublished')) {
+  if (action.endsWith('.unpublished') || action.endsWith('.unverified')) {
     return 'warning';
   }
   if (
     action.endsWith('.updated') ||
     action.endsWith('.reordered') ||
     action.endsWith('.role_assigned') ||
-    action.endsWith('.fx_refreshed')
+    action.endsWith('.fx_refreshed') ||
+    action.endsWith('.assigned')
   ) {
     return 'primary';
   }
