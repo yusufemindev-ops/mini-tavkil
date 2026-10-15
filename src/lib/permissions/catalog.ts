@@ -170,6 +170,14 @@ export const PERMISSION_CATALOG: readonly PermissionDef[] = [
     description: 'Trigger an on-demand FX rate refresh',
   },
 
+  // ── Audit log ───────────────────────────────────────────────────────────────
+  {
+    code: 'audit_log:view',
+    domain: 'audit_log',
+    name: 'View audit log',
+    description: 'View the admin activity log',
+  },
+
   // ── Self (implicit for every signed-in admin; never granted via a role) ──────
   {
     code: 'self_profile:view',

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { toErrorResponse } from '@/lib/api/errors';
 import type { AppEnv } from '@/server/factory';
+import { adminAuditLogsRoutes } from '@/server/routes/admin/audit-logs';
 import { adminCategoriesRoutes } from '@/server/routes/admin/categories';
 import { adminCurrenciesRoutes, adminFxRoutes } from '@/server/routes/admin/currencies';
 import { adminDashboardRoutes } from '@/server/routes/admin/dashboard';
@@ -56,6 +57,7 @@ const _routes = app
   .route('/admin/roles', adminRolesRoutes)
   .route('/admin/permissions', adminPermissionsRoutes)
   .route('/admin/media', adminMediaRoutes)
+  .route('/admin/audit-logs', adminAuditLogsRoutes)
   .route('/', createDocsRoutes(app));
 
 export type AppType = typeof _routes;

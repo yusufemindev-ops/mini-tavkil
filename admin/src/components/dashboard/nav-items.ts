@@ -2,6 +2,7 @@ import {
   FolderTree,
   LayoutDashboard,
   Package,
+  ScrollText,
   Settings,
   Truck,
   Users,
@@ -38,6 +39,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Admin settings',
     items: [
       { label: 'User management', to: '/users', icon: Users, permission: 'users:view' },
+      { label: 'Audit log', to: '/audit-log', icon: ScrollText, permission: 'audit_log:view' },
       { label: 'Settings', to: '/settings', icon: Settings, permission: 'settings:view' },
     ],
   },

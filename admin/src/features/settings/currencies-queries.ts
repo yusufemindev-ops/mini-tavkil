@@ -67,3 +67,21 @@ export function useFxRuns() {
 export function refreshFx(): Promise<FxRun> {
   return api.post<FxRun>('/admin/fx/refresh');
 }
+
+/** Deduplicates consecutive cron runs recorded in the same minute with identical rate output. */
+export function deduplicateFxRuns(runs: FxRun[]): FxRun[] {
+  const out: FxRun[] = [];
+  for (const run of runs) {
+    const prev = out[out.length - 1];
+    if (prev) {
+      const sameMinute =
+        Math.abs(new Date(prev.ranAt).getTime() - new Date(run.ranAt).getTime()) < 60_000;
+      const sameRates = JSON.stringify(prev.rates) === JSON.stringify(run.rates);
+      if (prev.status === run.status && prev.source === run.source && sameMinute && sameRates) {
+        continue;
+      }
+    }
+    out.push(run);
+  }
+  return out;
+}

@@ -15,6 +15,7 @@ import { CategoryEditPage } from '@/features/categories/category-edit-page';
 import { SuppliersPage } from '@/features/suppliers/suppliers-page';
 import { SupplierEditPage } from '@/features/suppliers/supplier-edit-page';
 import { UsersPage } from '@/features/users/users-page';
+import { AuditLogPage } from '@/features/audit/audit-log-page';
 import { SettingsPage } from '@/features/settings/settings-page';
 import { ProfilePage } from '@/features/profile/profile-page';
 import { useAuthBridge } from '@/features/auth/use-auth-bridge';
@@ -53,6 +54,9 @@ export default function App() {
             <Route element={<RequirePermission permission="users:assign_role" />}>
               <Route path="/users" element={<UsersPage />} />
               <Route path="/users/:tab" element={<UsersPage />} />
+            </Route>
+            <Route element={<RequirePermission permission="audit_log:view" />}>
+              <Route path="/audit-log" element={<AuditLogPage />} />
             </Route>
             <Route element={<RequirePermission permission="settings:view" />}>
               <Route path="/settings" element={<SettingsPage />} />

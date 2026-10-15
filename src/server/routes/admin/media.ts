@@ -3,7 +3,13 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { AppError, invalid } from '@/lib/api/errors';
 import { resolveImageUrl } from '@/lib/media/image-url';
 import { contentTypeFor, extensionFor, sniffImageFormat } from '@/lib/media/sniff';
-import { adminJson, requireAdminPerm, type AppEnv, type R2BucketLike } from '@/server/factory';
+import {
+  adminJson,
+  auditAdmin,
+  requireAdminPerm,
+  type AppEnv,
+  type R2BucketLike,
+} from '@/server/factory';
 
 function maxBytes(): number {
   const configured = Number(process.env.MAX_UPLOAD_MB);
@@ -50,11 +56,20 @@ export const adminMediaRoutes = new Hono<AppEnv>().post(
 
     const key = `products/${crypto.randomUUID()}.${extensionFor(format)}`;
     await bucket.put(key, bytes, { httpMetadata: { contentType: contentTypeFor(format) } });
+    const filename = key.split('/').pop() ?? key;
+
+    await auditAdmin(c, {
+      action: 'media.uploaded',
+      resourceType: 'media',
+      resourceId: key,
+      target: filename,
+      summary: `Uploaded image ${filename}`,
+    });
 
     return adminJson(c, {
       key,
       url: resolveImageUrl(key),
-      filename: key.split('/').pop(),
+      filename,
     });
   },
 );
