@@ -239,7 +239,7 @@ async function upsertTranslations(
           description: translation.description ?? null,
           seoTitle: translation.seoTitle ?? null,
           seoDescription: translation.seoDescription ?? null,
-          isComplete: translation.isComplete ?? false,
+          isComplete: translation.isComplete ?? true,
           isMachineTranslated: translation.isMachineTranslated ?? false,
         })
         .onConflictDoUpdate({
@@ -250,7 +250,7 @@ async function upsertTranslations(
             description: translation.description ?? null,
             seoTitle: translation.seoTitle ?? null,
             seoDescription: translation.seoDescription ?? null,
-            isComplete: translation.isComplete ?? false,
+            isComplete: translation.isComplete ?? true,
             isMachineTranslated: translation.isMachineTranslated ?? false,
           },
         });

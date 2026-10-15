@@ -105,18 +105,17 @@ export interface AdminProduct {
   images: AdminProductImage[];
 }
 
-// Payload shapes — mirror the backend zod schemas (snake_case translation
-// fields, camelCase product fields).
+// Payload shapes — mirror the backend zod schemas.
 export interface ProductTranslationPayload {
   locale: string;
   name: string;
   slug: string;
   description?: string | null;
-  specs_md?: string | null;
-  seo_title?: string | null;
-  seo_description?: string | null;
-  is_complete?: boolean;
-  is_machine_translated?: boolean;
+  specsMd?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  isComplete?: boolean;
+  isMachineTranslated?: boolean;
 }
 
 export interface ProductAttributePayload {

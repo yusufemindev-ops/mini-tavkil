@@ -216,7 +216,7 @@ async function upsertTranslations(
         name: translation.name,
         slug: translation.slug,
         description: translation.description ?? null,
-        isComplete: translation.isComplete ?? false,
+        isComplete: translation.isComplete ?? true,
         isMachineTranslated: translation.isMachineTranslated ?? false,
       };
       await db

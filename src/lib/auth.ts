@@ -30,6 +30,7 @@ export const auth = betterAuth({
   }),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  trustedOrigins: process.env.NODE_ENV === 'development' ? ['http://localhost:5173'] : undefined,
   emailAndPassword: { enabled: false },
   // Expose userType in session payload; server-owned to prevent client tampering.
   user: {

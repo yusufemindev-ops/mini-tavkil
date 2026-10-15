@@ -389,9 +389,9 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
         // produces a valid (regex-passing) slug for the backend.
         slug: d.slug.trim() || toSlug(d.name),
         description: d.description.trim() || null,
-        seo_title: d.seoTitle.trim() || null,
-        seo_description: d.seoDescription.trim() || null,
-        is_complete: isTranslationComplete(d),
+        seoTitle: d.seoTitle.trim() || null,
+        seoDescription: d.seoDescription.trim() || null,
+        isComplete: isTranslationComplete(d),
       };
     });
   }
