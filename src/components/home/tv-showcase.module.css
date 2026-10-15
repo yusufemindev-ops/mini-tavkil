@@ -380,29 +380,35 @@
 }
 .scDots {
   display: flex;
-  gap: 8px;
+  gap: 2px;
 }
-/* 9px dot indicators with a pseudo-element hit target for touch accessibility. */
+/* 24px button box satisfies WCAG 2.5.8 touch target; visual 9px dot lives on ::before. */
 .scDots button {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 24px;
+  block-size: 24px;
+  background: transparent;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+.scDots button::before {
+  content: '';
   inline-size: 9px;
   block-size: 9px;
   border-radius: 50%;
   background: var(--border);
-  padding: 0;
-  border: 0;
-  cursor: pointer;
   transition:
-    width 0.25s var(--ease),
+    inline-size 0.25s var(--ease),
     background 0.2s;
 }
-.scDots button::after {
-  content: '';
-  position: absolute;
-  /* 23px tall, 17px wide — centres are 17px apart, so targets never overlap. */
-  inset: -7px -4px;
-}
 .scDots button.on {
+  inline-size: 32px;
+}
+.scDots button.on::before {
   background: var(--primary);
   inline-size: 26px;
   border-radius: 100px;
