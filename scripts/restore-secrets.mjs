@@ -1,26 +1,14 @@
 /**
- * Re-upload the production secrets to the Worker from the local `.env`.
+ * Re-upload the production secrets to the Worker from the local `.env.production`.
  *
- * The Worker's secrets went empty once — `wrangler secret list` returned `[]`
- * and every request to `/api/auth/*` answered 500 with "You are using the
- * default secret", which reads like a Better Auth misconfiguration and is
- * actually a missing binding. Restoring them by hand is seven `wrangler secret
- * put` prompts and a chance to paste one into the wrong terminal, so it lives
- * here instead.
+ * The values are read from `.env.production` and piped straight into `wrangler secret
+ * bulk`; nothing is printed, and the temporary JSON is deleted.
  *
- * The values are read from `.env` and piped straight into `wrangler secret
- * bulk`; nothing is printed, and the temporary JSON is deleted whether the
- * upload succeeds or fails.
- *
- *   pnpm exec node scripts/restore-secrets.mjs
- *
- * `.env` is the source of truth because it is the file that already holds these
- * values for local dev, and local dev talks to the same database and bucket
- * production does (CLAUDE.md §7).
+ *   pnpm secrets:restore:prod
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -61,7 +49,12 @@ function parseEnv(text) {
   return out;
 }
 
-const env = parseEnv(readFileSync('.env', 'utf8'));
+const ENV_FILE = '.env.prod';
+if (!existsSync(ENV_FILE)) {
+  console.error(`${ENV_FILE} not found — it holds the production values this uploads.`);
+  process.exit(1);
+}
+const env = parseEnv(readFileSync(ENV_FILE, 'utf8'));
 
 const payload = {};
 const missing = [];
@@ -71,7 +64,7 @@ for (const key of SECRETS) {
 }
 
 if (missing.length > 0) {
-  console.error(`Missing from .env: ${missing.join(', ')}`);
+  console.error(`Missing from ${ENV_FILE}: ${missing.join(', ')}`);
   process.exit(1);
 }
 

@@ -107,7 +107,7 @@ export function SelectMenu({
         id={id ?? fieldId}
         aria-label={ariaLabel}
         className={cn(
-          'border-input bg-background text-foreground flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-base sm:text-sm outline-none',
+          'border-input bg-background text-foreground flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-base outline-none sm:text-sm',
           'focus-visible:ring-ring focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50',
           'data-[popup-open]:border-primary',
           className,
@@ -189,7 +189,7 @@ export function SelectMenu({
                   key={o.value}
                   value={o.value}
                   className={cn(
-                    'flex cursor-default select-none items-center justify-between gap-2 rounded-md py-1.5 pe-2 ps-2.5 text-sm outline-none',
+                    'flex cursor-default items-center justify-between gap-2 rounded-md py-1.5 ps-2.5 pe-2 text-sm outline-none select-none',
                     'data-[highlighted]:bg-muted data-[highlighted]:text-foreground',
                   )}
                 >

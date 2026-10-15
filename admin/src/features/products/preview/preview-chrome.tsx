@@ -34,7 +34,7 @@ function PreviewBar({
       <div className="mx-auto flex h-14 max-w-[var(--width-container,1200px)] items-center justify-between gap-4 px-5">
         <div className="flex items-center gap-2.5">
           <span className="text-foreground text-lg font-bold tracking-tight">Tavkil</span>
-          <span className="bg-primary-soft text-primary rounded px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide">
+          <span className="bg-primary-soft text-primary rounded px-2 py-0.5 text-[0.68rem] font-semibold tracking-wide uppercase">
             Preview
           </span>
           {status && <CatalogStatusBadge status={status} />}

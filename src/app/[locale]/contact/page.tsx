@@ -32,7 +32,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         {icon}
       </span>
       <div>
-        <div className="text-muted-foreground text-[0.72rem] font-bold uppercase tracking-wide">
+        <div className="text-muted-foreground text-[0.72rem] font-bold tracking-wide uppercase">
           {label}
         </div>
         <div className="text-foreground mt-0.5 text-[0.95rem] font-medium">{value}</div>
@@ -116,14 +116,7 @@ function ContactNote({
   );
 }
 
-/**
- * `showAddress` covers the case where there is an address but no map.
- *
- * Tavkil only ever printed the address inside the map panel, and that panel
- * hides itself when no embed URL is set — so a configured address was simply
- * invisible. Showing it here when the map is absent keeps Tavkil's layout
- * wherever the map exists and stops the address disappearing where it does not.
- */
+/** Renders contact email and address when the map panel is absent. */
 function ContactInfo({ email, address }: { email: string; address?: string }) {
   const t = useTranslations('store');
   return (

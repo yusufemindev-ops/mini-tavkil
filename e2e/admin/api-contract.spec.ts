@@ -1,47 +1,12 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
 /**
- * Every admin endpoint, exercised.
- *
- * Written after a run of bugs that all shared one shape: an endpoint returned
- * 200 with a body the SPA could not read, and nothing anywhere failed. The
- * dashboard rendered its empty state against real numbers; the sidebar hid every
- * link; the products table showed "—" in three columns; the users page crashed to
- * a white screen. A 200 is not a passing test — the *shape* is the contract.
- *
- * So each endpoint is checked for four things:
- *   1. it refuses an unauthenticated caller
- *   2. it answers 200 wrapped in `{ data }` — the SPA does `payload.data`
- *   3. the payload has the fields the admin actually reads
- *   4. bad input is a 4xx with a usable message, not a 500
- *
- * Every row created here is prefixed `e2e-` and deleted in teardown whether the
- * test passed or failed. There is one database and no staging (CLAUDE.md §7).
- */
-/**
- * Unique per run.
- *
- * A fixed prefix collided with the previous run's rows: delete is a SOFT delete,
- * so the slug stayed taken and the next create failed. That surfaced a real bug
- * — a duplicate slug returned 500 instead of a conflict — but as a test it was
- * simply not repeatable.
+ * Admin API contract and envelope compliance tests.
+ * Validates authentication guards, 200 { data } envelopes, field presence, and 4xx error formats.
  */
 const E2E = `e2e-contract-${Date.now().toString(36)}`;
 
-/**
- * Every id this run creates, so teardown can delete by id rather than by name.
- *
- * Name-based cleanup only finds rows the test MEANT to create. The rows that
- * actually leaked were the ones it did not: an earlier revision of the bad-input
- * test posted `{}`, and because create is draft-first, the server correctly
- * answered 200 and made a row with no name at all — invisible to an `e2e-`
- * filter. Twelve nameless suppliers and two nameless categories accumulated in
- * the production database before anyone noticed them in the admin's supplier
- * list.
- *
- * So: anything that comes back with an id gets recorded, whatever the test
- * expected to happen, and the sweep at the end removes it.
- */
+/** Tracks created resource IDs for reverse-order teardown cleanup. */
 const createdRows: { resource: string; id: string }[] = [];
 
 /** Record a row for teardown if the response produced one. */
@@ -79,10 +44,7 @@ async function get<T = unknown>(request: APIRequestContext, path: string): Promi
 
 test.describe('admin API contract', () => {
   test('every admin endpoint refuses an unauthenticated caller', async ({ playwright }) => {
-    // Explicitly EMPTY storage state. Omitting the option is not enough — the
-    // project's `use.storageState` is inherited, so the "anonymous" context
-    // arrived holding the admin cookie and every endpoint answered 200. The test
-    // was wrong, not the server; curl with no cookie returns 401 throughout.
+    // Use empty storage state to test unauthenticated access.
     const anon = await playwright.request.newContext({
       baseURL: test.info().project.use.baseURL,
       storageState: { cookies: [], origins: [] },
@@ -229,11 +191,7 @@ test.describe('admin API contract', () => {
   });
 
   test('invalid bodies are rejected with a usable message', async ({ request }) => {
-    // NOT an empty body: create is deliberately draft-first (see
-    // services/catalog-schemas.ts) — a blank row is savable and the publish gate
-    // is what demands an English name and slug. Asserting 4xx on `{}` was my
-    // misreading, and it left two nameless products in the table before I
-    // noticed. These are genuinely malformed instead.
+    // Verify malformed request bodies fail validation with 4xx responses.
     const cases: { path: string; body: unknown }[] = [
       { path: '/api/admin/products', body: { moq: 'not-a-number' } },
       { path: '/api/admin/products', body: { translations: [{ locale: 'xx', name: '' }] } },
@@ -308,9 +266,7 @@ test.describe('admin API contract', () => {
   });
 
   test('a duplicate slug is a conflict, not a 500', async ({ request }) => {
-    // The most ordinary mistake an admin makes. It used to answer 500
-    // "Something went wrong." because Drizzle wraps the driver error and the
-    // SQLSTATE sits on `cause`, which the check did not look at.
+    // Verifies duplicate slug results in conflict response rather than 500 error.
     const slug = `${E2E}-dup`;
     const body = {
       countryCode: 'TR',
@@ -430,18 +386,7 @@ test.describe('admin API contract', () => {
   });
 });
 
-/**
- * A failed create must leave nothing behind.
- *
- * A create is two writes — the row, then its translations — and Neon over HTTP
- * has no interactive transaction on a request path. When the second failed, the
- * first stayed committed: the API correctly answered 409 for a duplicate slug and
- * silently kept a nameless draft. Ten of them accumulated in production before
- * the owner saw the supplier list and asked what they were.
- *
- * This counts rows either side of a deliberate conflict, so a regression shows up
- * as an increase rather than as junk somebody notices weeks later.
- */
+/** Verifies failed create operations leave no orphan records in database. */
 test.describe('a rejected create leaves no orphan row', () => {
   test('a duplicate supplier slug does not add a nameless supplier', async ({ request }) => {
     const count = async () =>

@@ -74,7 +74,7 @@ function ContactCell({
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-muted-foreground text-[10.5px] font-semibold uppercase tracking-wide">
+        <div className="text-muted-foreground text-[10.5px] font-semibold tracking-wide uppercase">
           {label}
         </div>
         {value ? (

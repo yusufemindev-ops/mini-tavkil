@@ -17,18 +17,7 @@ import type {
 import { revalidateCategory } from '@/lib/cache';
 
 /**
- * Category service, ported from Tavkil's Nest service.
- *
- * What carried over unchanged is the business logic: the publish gate, the
- * reorder-is-atomic rule, the draft-first stance. What was rewritten is every
- * query — Prisma to Drizzle.
- *
- * What was dropped:
- *   - audit-log writes (the feature is cut, PLAN.md §3)
- *   - the public read methods. Tavkil's storefront fetched categories over HTTP;
- *     ours is Server Components reading the database directly through
- *     lib/queries/public-product.ts. A public JSON endpoint here would be an
- *     un-consumed surface, and one more place a price or supplier could leak.
+ * Admin category service: CRUD, atomic reordering, publishing, and cache invalidation.
  */
 
 export type { AdminCategory, AdminTranslation };
@@ -59,12 +48,7 @@ export async function getCategory(id: string): Promise<AdminCategory> {
 
 // ── Mutations ────────────────────────────────────────────────────────────────
 
-/**
- * See `withRollback` in services/suppliers.ts for why this exists: a create is
- * two writes, Neon over HTTP has no interactive transaction on a request path,
- * and a failing second write used to leave the first committed as a nameless
- * row.
- */
+// Compensating rollback for multi-step category creation over HTTP database connection.
 async function withRollback<T>(remove: () => Promise<unknown>, work: () => Promise<T>) {
   try {
     return await work();
@@ -142,14 +126,7 @@ export async function deleteCategory(id: string): Promise<{ id: string }> {
   return { id };
 }
 
-/**
- * Bulk reorder a sibling group: each id's display_order becomes its position.
- *
- * All-or-nothing on purpose. Tavkil used an interactive transaction; Neon HTTP has
- * none on a request path (CLAUDE.md §3), so this is `db.batch`, which is still one
- * round trip and still atomic. A half-applied reorder would leave the catalogue in
- * an order nobody chose.
- */
+/** Atomically reorders sibling categories via a batched query. */
 export async function reorderCategories(ids: string[]): Promise<{ ok: true }> {
   const rows = await db
     .select({ id: categories.id })
@@ -183,8 +160,6 @@ export async function publishCategory(id: string): Promise<AdminCategory> {
   const published = await getCategory(id);
   pingIndexNow({ type: 'category', slugs: slugMap(published.translations) });
   const revalidated = published;
-  // Straight onto the storefront; otherwise the catalogue shows the old tree
-  // until the revalidate window expires.
   revalidateCategory(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
   return revalidated;
 }
@@ -196,13 +171,9 @@ export async function unpublishCategory(id: string): Promise<AdminCategory> {
     .set({ status: DRAFT, updatedAt: new Date().toISOString() })
     .where(eq(categories.id, id));
 
-  // Submitted on unpublish as well — the URL now 404s, and saying so promptly is
-  // what clears it from the index rather than leaving a dead result.
   const updated = await getCategory(id);
   pingIndexNow({ type: 'category', slugs: slugMap(updated.translations) });
   const revalidated = updated;
-  // Straight onto the storefront; otherwise the catalogue shows the old tree
-  // until the revalidate window expires.
   revalidateCategory(Object.fromEntries(revalidated.translations.map((t) => [t.locale, t.slug])));
   return revalidated;
 }
@@ -251,13 +222,7 @@ async function translationsFor(ids: string[]): Promise<Map<string, AdminTranslat
   return out;
 }
 
-/**
- * Upsert one translation per (category, locale).
- *
- * The (locale, slug) unique index is what stops two categories claiming the same
- * URL. Translating that violation into a 409 with a readable message is the
- * difference between an admin fixing their slug and filing a bug.
- */
+/** Upserts translations for a category, handling localized slug conflicts. */
 async function upsertTranslations(
   categoryId: string,
   translations: TranslationInput[],

@@ -36,7 +36,7 @@ function ProductCard({ product, name, to }: { product: AdminProduct; name: strin
       )}
       <div className="flex flex-1 flex-col p-[15px]">
         <span className="text-muted-foreground font-mono text-[0.68rem]">{product.sku ?? '—'}</span>
-        <h4 className="text-foreground my-1 text-base font-bold leading-tight tracking-tight">
+        <h4 className="text-foreground my-1 text-base leading-tight font-bold tracking-tight">
           {name}
         </h4>
         <div className="border-border mt-auto flex items-center justify-between border-t pt-3">
@@ -94,7 +94,7 @@ export function PreviewGrid({
       <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
         {/* Type sidebar — sibling categories as links, current highlighted. */}
         <aside className="border-border bg-card h-fit rounded-lg border p-3.5">
-          <h2 className="text-muted-foreground mb-2 px-[11px] text-[0.72rem] font-bold uppercase tracking-wide">
+          <h2 className="text-muted-foreground mb-2 px-[11px] text-[0.72rem] font-bold tracking-wide uppercase">
             Type
           </h2>
           <div className="flex flex-col gap-0.5">

@@ -7,15 +7,7 @@ import { DEFAULT_LOCALE, type AdminTranslation } from '@/lib/services/publish-ga
 import { translationSchema, type TranslationInput } from '@/lib/services/catalog-schemas';
 
 /**
- * Suppliers — internal records with no public surface at all.
- *
- * There is no public read here and there never will be: a supplier name on an
- * anonymous response is the leak this project is built to prevent (CLAUDE.md §1).
- * `contactEmailInternal`, `contactPhoneInternal` and `internalNotes` make that
- * obvious in the column names, but the whole table is admin-only, not just those.
- *
- * Suppliers still matter to the storefront indirectly: a product cannot be
- * published unless its supplier is (see publish-gates).
+ * Supplier service. Suppliers are internal admin-only records and never exposed publicly.
  */
 
 export const createSupplierSchema = z.object({
@@ -28,13 +20,11 @@ export const createSupplierSchema = z.object({
   internalNotes: z.string().trim().min(1).nullable().optional(),
   address: z.string().trim().min(1).max(300).nullable().optional(),
   mapUrl: z.string().trim().url().nullable().optional(),
-  // Draft-first, like categories: the publish gate enforces the English name.
   translations: z.array(translationSchema).optional(),
 });
 export type CreateSupplierInput = z.infer<typeof createSupplierSchema>;
 
 export const updateSupplierSchema = createSupplierSchema.partial().extend({
-  // Draft or published only — archive belongs to products.
   status: z.enum(['draft', 'published']).optional(),
 });
 export type UpdateSupplierInput = z.infer<typeof updateSupplierSchema>;
@@ -56,13 +46,7 @@ export interface AdminSupplier {
   translations: AdminTranslation[];
 }
 
-/**
- * A supplier needs an English name to publish — nothing else.
- *
- * Lighter than the product gate on purpose: a supplier is never rendered on its
- * own page, so the only thing that must exist is something to call it in the
- * admin and in the product publish check.
- */
+/** Requires a valid English name before publishing a supplier. */
 export function assertSupplierPublishable(supplier: AdminSupplier): void {
   const english = supplier.translations.find((t) => t.locale === DEFAULT_LOCALE);
   if (!english || !english.name.trim()) {
@@ -87,20 +71,7 @@ export async function getSupplier(id: string): Promise<AdminSupplier> {
   return toAdminSupplier(row, translations.get(id) ?? []);
 }
 
-/**
- * A create is two writes — the row, then its translations — and Neon over HTTP
- * has no interactive transactions on a request path (CLAUDE.md §3). So when the
- * second write fails, the first is already committed.
- *
- * That is not theoretical. A duplicate slug is the most ordinary mistake an
- * admin makes: the API correctly answered 409, and left a nameless draft row
- * behind every single time. Ten of them accumulated in production before anyone
- * looked at the suppliers list and asked what they were.
- *
- * Without a transaction the fix is a compensating delete: undo the row, then let
- * the original error surface unchanged, so the caller still sees the 409 that
- * actually describes what went wrong.
- */
+/** Compensating rollback wrapper for multi-step creates on HTTP database connection. */
 async function withRollback<T>(id: string, remove: () => Promise<unknown>, work: () => Promise<T>) {
   try {
     return await work();

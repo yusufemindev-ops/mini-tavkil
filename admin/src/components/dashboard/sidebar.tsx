@@ -30,7 +30,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         {groups.map((group, gi) => (
           <div key={group.label ?? gi} className="mb-4">
             {group.label && (
-              <div className="text-muted-foreground px-2.5 py-2 text-[0.66rem] font-semibold uppercase tracking-wider">
+              <div className="text-muted-foreground px-2.5 py-2 text-[0.66rem] font-semibold tracking-wider uppercase">
                 {group.label}
               </div>
             )}

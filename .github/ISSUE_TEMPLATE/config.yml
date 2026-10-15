@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Architectural Discussions
+    url: https://github.com/yusufemindev-ops/mini-tavkil/discussions
+    about: Ask questions, explore architecture decisions, or discuss ideas before proposing.

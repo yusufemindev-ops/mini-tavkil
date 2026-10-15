@@ -10,7 +10,7 @@ export function Table({ className, ...props }: ComponentProps<'table'>) {
       <table
         className={cn(
           'w-full border-collapse text-[13px]',
-          '[&_th]:border-border [&_th]:bg-muted/40 [&_th]:text-muted-foreground [&_th]:border-b [&_th]:px-3.5 [&_th]:py-2.5 [&_th]:text-start [&_th]:text-[11px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide',
+          '[&_th]:border-border [&_th]:bg-muted/40 [&_th]:text-muted-foreground [&_th]:border-b [&_th]:px-3.5 [&_th]:py-2.5 [&_th]:text-start [&_th]:text-[11px] [&_th]:font-semibold [&_th]:tracking-wide [&_th]:uppercase',
           '[&_td]:border-border [&_td]:border-b [&_td]:px-3.5 [&_td]:py-3 [&_td]:align-middle',
           '[&_tbody_tr:hover]:bg-muted/30 [&_tbody_tr:last-child_td]:border-b-0',
           className,

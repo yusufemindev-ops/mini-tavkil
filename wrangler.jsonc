@@ -42,18 +42,19 @@
   ],
 
   // ─── R2 ────────────────────────────────────────────────────────────────────
-  // No S3 credentials anywhere: the bucket is a binding.
-  // ONE bucket, no dev/preview variant — local dev writes to the real bucket
-  // (`remote: true`), same as production. Single-environment by decision.
+  // Isolated buckets: production uses tavkil-images / tavkil-cache.
+  // Local dev and preview environments use tavkil-images-dev / tavkil-cache-dev.
   "r2_buckets": [
     {
       "binding": "IMAGES",
       "bucket_name": "tavkil-images",
+      "preview_bucket_name": "tavkil-images-dev",
       "remote": true,
     },
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
       "bucket_name": "tavkil-cache",
+      "preview_bucket_name": "tavkil-cache-dev",
     },
   ],
 
@@ -105,8 +106,9 @@
     "SITE_INDEXABLE": "false",
   },
 
-  // Secrets are NOT listed here. Local: .dev.vars. Production: `wrangler secret put`.
-  // DATABASE_URL, DIRECT_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID,
-  // GOOGLE_CLIENT_SECRET, ADMIN_ALLOWLIST, TURNSTILE_SECRET_KEY,
-  // INDEXNOW_API_KEY
+  // Secrets are NOT listed here. Local: .env (wrangler falls back to it when no
+  // .dev.vars exists). Production: `wrangler secret put`.
+  // DATABASE_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  // ADMIN_ALLOWLIST, INDEXNOW_API_KEY — plus TURNSTILE_SECRET_KEY once configured.
+  // DIRECT_URL is local-only (drizzle-kit over TCP); the Worker never needs it.
 }

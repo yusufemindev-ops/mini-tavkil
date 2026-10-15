@@ -3,29 +3,9 @@ import pg from 'pg';
 import { PERMISSION_CATALOG, ROLE_GRANTS, ROLE_LABELS } from '../src/lib/permissions/catalog';
 
 /**
- * Syncs the code permission catalog into the database.
- *
- * Tavkil ran this from `onApplicationBootstrap`. Workers have no boot, and
- * CLAUDE.md §8 says nothing runs on boot anyway — so this is a deliberate command:
- *
- *   pnpm sync:permissions
- *
- * It runs over DIRECT_URL with the `pg` TCP driver, not the Neon HTTP driver,
- * precisely because it needs a real interactive transaction: the advisory lock has
- * to be held across every statement. HTTP batching cannot do that (CLAUDE.md §3).
- *
- * This is idempotent reference-data sync, not a schema migration.
- *
- * What it does, in one transaction:
- *   1. upsert every catalog permission, un-deprecating any that reappeared
- *   2. mark database permissions no longer in the catalog as deprecated — kept,
- *      not deleted, because a grant row may still reference them
- *   3. drop role grants pointing at deprecated permissions, so a role's effective
- *      permission set stays accurate
- *   4. re-label the three fixed roles and apply the seed grants, additively
+ * Idempotently syncs `PERMISSION_CATALOG`, `ROLE_LABELS`, and `ROLE_GRANTS` into the database over `DIRECT_URL` (`pg` TCP transaction with advisory lock).
  */
 
-// Arbitrary app-wide constant. Any concurrent run takes the same lock and waits.
 const SYNC_LOCK_KEY = 472947;
 
 async function main() {
@@ -66,8 +46,7 @@ async function main() {
         WHERE rp.permission_id = p.id AND p.deprecated = true`,
     );
 
-    // Keep the three fixed roles' labels in step with the code. The rows already
-    // exist from the Tavkil migration; this only renames them.
+    // Sync system role display labels with code definitions.
     for (const [code, label] of Object.entries(ROLE_LABELS)) {
       await client.query(`UPDATE roles SET name = $2, updated_at = now() WHERE code = $1`, [
         code,

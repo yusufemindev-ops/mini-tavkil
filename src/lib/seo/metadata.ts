@@ -7,11 +7,7 @@ import { env } from '@/lib/env';
 export const SITE_NAME = 'Tavkil';
 export const BASE_URL = env.baseUrl;
 
-/**
- * Whether this deployment may be indexed at all. Stays false until the custom
- * domain is attached and the SEO work is done (PLAN.md §15) — otherwise the
- * workers.dev URL gets indexed and then competes with the real domain.
- */
+/** Controls whether search engines may index this deployment (`SITE_INDEXABLE=true` in production). */
 export const SITE_INDEXABLE = process.env.SITE_INDEXABLE === 'true';
 
 function localizedUrl(locale: string, path: string): string {

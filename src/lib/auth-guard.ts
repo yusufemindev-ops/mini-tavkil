@@ -8,15 +8,8 @@ import { allowedEmails } from '@/lib/services/team';
 import { OWNER_ROLE, roleGrants } from '@/lib/permissions/catalog';
 
 /**
- * The two checks every admin surface runs, in this order:
- *
- *   1. `requireAdmin`      — is there a live session, and is that email allowlisted?
- *   2. `requirePermission` — does that user's role grant this specific action?
- *
- * Both are first-line calls in a handler, before reading the body or touching the
- * database (PLAN.md §14h). The allowlist is checked on every request, not just at
- * sign-in, so removing an address from ADMIN_ALLOWLIST locks that person out on
- * their very next request rather than whenever their session happens to expire.
+ * Admin authentication and RBAC permission guards.
+ * Enforces live session allowlist and permission requirements on protected routes.
  */
 
 export type AdminUser = {
@@ -27,12 +20,7 @@ export type AdminUser = {
   banned: boolean;
 };
 
-// Defined in lib/api/errors so that module can stay dependency-free; re-exported
-// here because this is where callers expect it.
 export { AuthError };
-
-// Re-exported so callers have one import for "the admin guard", while the policy
-// itself stays in a module that touches nothing.
 export { adminAllowlist, isAllowlisted };
 
 /** The signed-in admin, or null. Never throws — for pages that render either way. */
@@ -40,16 +28,11 @@ export async function getAdmin(request: Request): Promise<AdminUser | null> {
   const session = await auth.api.getSession({ headers: request.headers });
   const user = session?.user;
   if (!user?.email) return null;
-  // The env allowlist bootstraps the first owner; everyone after that is invited
-  // from the dashboard by an admin holding `users:assign_role`. Re-read on every
-  // request, so revoking access takes effect immediately rather than whenever
-  // their session happens to expire.
+  // Verify email is present in allowlist or active team invites.
   const allowed = await allowedEmails();
   if (!allowed.has(user.email.trim().toLowerCase())) return null;
 
-  // A banned user keeps a valid cookie until it expires; check the row.
-  // `lastSeenAt` rides along on the same read — it is needed a line below and a
-  // second query for it would double the cost of every admin request.
+  // Check banned status and retrieve lastSeenAt in single query.
   const [row] = await db
     .select({ banned: authUser.banned, lastSeenAt: authUser.lastSeenAt })
     .from(authUser)
@@ -68,31 +51,12 @@ export async function getAdmin(request: Request): Promise<AdminUser | null> {
   };
 }
 
-/**
- * How recently `lastSeenAt` must have been written before it is written again.
- *
- * Presence needs to be roughly live, and a write on every request would put a
- * round trip on the hot path to record something that changed by a second. A
- * minute is fine either way: the dashboard calls anything inside five minutes
- * "online", so the reading is never more than a minute stale.
- */
+/** Throttle lastSeenAt writes to at most once per minute. */
 const SEEN_WRITE_INTERVAL_MS = 60_000;
 
-/**
- * Record that this admin is active, at most once a minute.
- *
- * Previously the column was stamped only in Better Auth's session-create hook,
- * which is *sign-in*, not activity: someone signed in at nine and worked all day
- * still read "last seen 09:00". The hook stays — it covers the first request of
- * a session — and this keeps the value honest for the rest of it.
- *
- * Awaited rather than left dangling. A Worker may be torn down as soon as the
- * response is sent, so a floating promise here would land or not depending on
- * timing, which is worse than a predictable few milliseconds.
- */
+/** Updates admin's lastSeenAt timestamp if throttled interval has elapsed. */
 async function touchLastSeen(userId: string, current: string | null): Promise<void> {
   if (current) {
-    // The column is a naive UTC timestamp; parse it as such, not as local time.
     const seen = Date.parse(`${current.replace(' ', 'T')}Z`);
     if (Number.isFinite(seen) && Date.now() - seen < SEEN_WRITE_INTERVAL_MS) return;
   }
@@ -109,14 +73,7 @@ export async function requireAdmin(request: Request): Promise<AdminUser> {
   return admin;
 }
 
-/**
- * Every permission code the user holds, resolved through
- * `auth_user_roles → role_permissions → permissions`.
- *
- * The Owner role short-circuits to the whole catalog rather than reading grant
- * rows, so a permission added to the catalog is owned immediately and Owner can
- * never be locked out of a new feature by a forgotten sync.
- */
+/** Resolves all permission codes for a user. Owner role inherits all permissions. */
 export async function permissionsFor(userId: string): Promise<Set<string>> {
   const assigned = await db
     .select({ code: roles.code })
@@ -151,14 +108,7 @@ export async function rolesFor(userId: string): Promise<string[]> {
   return assigned.map((row) => row.code);
 }
 
-/**
- * Guard for an admin route handler. Returns the user so the handler can use it.
- *
- * Throws 401 when signed out or not allowlisted, 403 when signed in without the
- * permission — the distinction matters, because 403 tells an attacker the endpoint
- * exists while 401 does not, and only the former is a legitimate signal to send to
- * someone who has already proven who they are.
- */
+/** Enforces admin authentication and specific RBAC permission code. */
 export async function requirePermission(request: Request, code: string): Promise<AdminUser> {
   const admin = await requireAdmin(request);
   const held = await permissionsFor(admin.id);

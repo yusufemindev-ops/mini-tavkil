@@ -8,25 +8,14 @@ import { Thumb } from '@/components/catalog/thumb';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 import styles from './tv-showcase.module.css';
 
-/**
- * Hero showcase: a "TV set" that channel-hops through the catalogue's categories,
- * with a CRT switch animation and an ambient glow.
- *
- * Tavkil's version had a second set showing a rotating *premium supplier*.
- * Suppliers never appear on a public surface here (CLAUDE.md §1), so that channel
- * is gone — which is also why the remaining set now fills the stage instead of
- * being one of two overlapping cards.
- *
- * Each channel shows a real image from the category (its own, or its first
- * product's). No picsum: the brand gradient is the fallback.
- */
+/** Hero showcase cycling category highlights with CRT channel-switch animation. */
 export type ShowcaseChannel = {
   slug: string;
   name: string;
   imageUrl: string | null;
 };
 
-/** The second set's content: a featured product, where Tavkil showed a supplier. */
+/** Secondary showcase frame featuring highlighted public products. */
 export type ShowcaseFeature = {
   slug: string;
   name: string;
@@ -99,8 +88,7 @@ export function TvShowcase({
       aria-label={t('sc_category')}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      // Keyboard users get the same courtesy as mouse users: rotation stops
-      // while focus is inside, so the link under the cursor can't change.
+      // Pause auto-rotation when focus is within.
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
@@ -139,9 +127,7 @@ export function TvShowcase({
           </div>
         </article>
 
-        {/* Second set. Tavkil's showed a premium supplier — name, city, country —
-            which is admin-only here (CLAUDE.md §1). A featured product carries no
-            price and no supplier, so it fills the same frame safely. */}
+        {/* Secondary set displaying featured product without price or supplier details. */}
         {feature && (
           <article className={`${styles.tv} ${styles.scSup}`}>
             <div className={styles.tvScreen}>

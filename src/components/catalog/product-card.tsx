@@ -3,14 +3,7 @@ import { Thumb } from '@/components/catalog/thumb';
 import { Link } from '@/i18n/navigation';
 import type { PublicProduct } from '@/lib/queries/public-product';
 
-/**
- * Prototype `.card` — product tile.
- *
- * Tavkil's version had a price slot that showed either the buyer's tier price or a
- * "sign in to see price" lock. Neither exists here: `PublicProduct` has no price
- * field at all, so the footer carries the MOQ and the unit — the two facts a buyer
- * actually needs before enquiring.
- */
+/** Public catalog product card displaying thumbnail, category, name, MOQ, and unit. */
 export function ProductCard({
   product,
   priority = false,
@@ -42,7 +35,7 @@ export function ProductCard({
         )}
         <h3
           dir="auto"
-          className="text-foreground my-1 text-base font-bold leading-tight tracking-tight"
+          className="text-foreground my-1 text-base leading-tight font-bold tracking-tight"
         >
           {product.name}
         </h3>

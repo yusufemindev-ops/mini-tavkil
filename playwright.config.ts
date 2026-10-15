@@ -51,7 +51,10 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: 'pnpm dev',
+        // CI builds first and serves the production output — prerendered pages
+        // answer instantly. `next dev` compiles each route on first hit, which
+        // is what timed the suite out. Locally, dev keeps the edit-reload loop.
+        command: process.env.CI ? 'pnpm start' : 'pnpm dev',
         url: BASE_URL,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

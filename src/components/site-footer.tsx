@@ -5,9 +5,6 @@ import { Link } from '@/i18n/navigation';
 import { getSiteSettings, waUrl } from '@/lib/settings';
 import { BrandLogo } from '@/components/brand-logo';
 
-// Tavkil's footer had a fourth "Account" column (sign in / my orders). Buyers
-// never sign in here, so the grid drops to three columns and the catalogue takes
-// its place — internal linking is what actually moves SEO (PLAN.md §11).
 const COMPANY_LINKS = [
   { href: '/about', key: 'nav_about' },
   { href: '/catalogue', key: 'nav_catalog' },
@@ -30,7 +27,7 @@ export async function SiteFooter() {
 
   return (
     <footer className="border-footer-border bg-footer text-footer-foreground mt-auto border-t">
-      <div className="mx-auto max-w-[var(--width-container)] px-5 pb-7 pt-[50px] sm:px-6">
+      <div className="mx-auto max-w-[var(--width-container)] px-5 pt-[50px] pb-7 sm:px-6">
         <div className="grid gap-9 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
           {/* Brand */}
           <div>
@@ -84,7 +81,7 @@ export async function SiteFooter() {
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="mb-3 text-[0.76rem] font-bold uppercase tracking-wider text-white">{title}</h2>
+      <h2 className="mb-3 text-[0.76rem] font-bold tracking-wider text-white uppercase">{title}</h2>
       {children}
     </div>
   );

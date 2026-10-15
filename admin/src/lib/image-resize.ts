@@ -1,15 +1,5 @@
 /**
- * Browser-side image optimisation, ported from Temsan.
- *
- * This exists because Sharp cannot run on Cloudflare Workers and a WASM encoder
- * would not fit inside the 3 MB bundle. So the admin does the work the server
- * normally would: decode with `createImageBitmap`, draw to a canvas at the target
- * size, and re-encode as WebP. The Worker then only ever checks and stores bytes —
- * it never decodes an image.
- *
- * The trade-off is one size per image rather than Tavkil's four variants. For a
- * showcase that is fine; if responsive sizes matter later they belong at delivery
- * (Cloudflare Image Resizing), not here.
+ * Browser-side Canvas → WebP image resize (Workers cannot run native `sharp`).
  */
 export interface ResizeOptions {
   /** Longest side, in pixels. */

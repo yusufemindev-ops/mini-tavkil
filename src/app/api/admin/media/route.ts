@@ -6,18 +6,7 @@ import { resolveImageUrl } from '@/lib/media/image-url';
 
 /**
  * Admin image upload → Cloudflare R2.
- *
- * Path kept as `/api/admin/media` so the admin SPA's existing upload call works
- * unchanged (PLAN.md §8).
- *
- * Sharp cannot run on Workers and a WASM encoder would not fit in the bundle, so
- * the resizing happens in the browser before this is called
- * (`admin/src/lib/image-resize.ts`): the Worker never decodes image bytes, it only
- * checks and stores them. That is also why the size cap here is generous — it is a
- * backstop against a hand-rolled request, not the actual compression step.
- *
- * What is stored is a **bare key**, not a URL. Step 15 swaps the images host, and
- * absolute URLs in the database would turn that into a migration over every row.
+ * Images are resized in the browser beforehand; the DB stores bare R2 keys, not full URLs.
  */
 export const dynamic = 'force-dynamic';
 

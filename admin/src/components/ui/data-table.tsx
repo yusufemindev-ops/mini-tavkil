@@ -82,7 +82,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <th
                       key={header.id}
-                      className="bg-muted/40 text-muted-foreground px-3.5 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wide"
+                      className="bg-muted/40 text-muted-foreground px-3.5 py-2.5 text-start text-[11px] font-semibold tracking-wide uppercase"
                     >
                       {header.isPlaceholder ? null : (
                         <div className="flex items-center gap-1">
@@ -198,7 +198,7 @@ function ColumnFilter<TData>({ column }: { column: Column<TData> }) {
           placeholder={variant === 'date' ? undefined : 'Search…'}
           value={value}
           onChange={(e) => column.setFilterValue(e.target.value)}
-          className="border-input bg-background focus-visible:ring-ring h-8 w-full rounded-md border px-2.5 text-sm normal-case focus-visible:outline-none focus-visible:ring-2"
+          className="border-input bg-background focus-visible:ring-ring h-8 w-full rounded-md border px-2.5 text-sm normal-case focus-visible:ring-2 focus-visible:outline-none"
         />
         <div className="mt-2 flex justify-end">
           <button

@@ -52,8 +52,8 @@ export function ConfirmDialog({
         />
         <AlertDialog.Popup
           className={cn(
-            'border-border bg-card text-foreground fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border p-5 shadow-lg outline-none',
-            'transition-[transform,opacity] data-[starting-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0',
+            'border-border bg-card text-foreground fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border p-5 shadow-lg outline-none',
+            'transition-[transform,opacity] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',
           )}
         >
           <AlertDialog.Title className="text-foreground text-base font-semibold">

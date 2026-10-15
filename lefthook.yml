@@ -1,9 +1,23 @@
-# Local gates. Mirror of CI — see TESTING.md §4.
+# Local gates. Mirror of CI.
 # Install: pnpm exec lefthook install
 
 pre-commit:
   parallel: true
   jobs:
+    - name: trim-whitespace
+      glob: '**/*.{ts,tsx,js,jsx,md,json,yml,yaml,sh,sql,css,html}'
+      run: bash scripts/trim-whitespace.sh {staged_files}
+
+    - name: no-secrets
+      run: |
+        if git diff --cached --name-only | grep -E '^(\.env|\.dev\.vars)' | grep -vq '^\.env\.example$'; then
+          echo "Refusing to commit .env / .dev.vars"; exit 1
+        fi
+
+    - name: locale-parity
+      glob: 'messages/*.json'
+      run: bash scripts/check-locale-parity.sh
+
     - name: prettier
       glob: '**/*.{ts,tsx,js,mjs,json,md,css,yml,yaml}'
       run: pnpm exec prettier --check {staged_files}
@@ -12,17 +26,25 @@ pre-commit:
       glob: '**/*.{ts,tsx}'
       run: pnpm exec eslint {staged_files}
 
-    - name: no-secrets
-      run: |
-        if git diff --cached --name-only | grep -qE '^(\.env|\.dev\.vars)$'; then
-          echo "Refusing to commit .env / .dev.vars"; exit 1
-        fi
+commit-msg:
+  jobs:
+    - name: commit-format
+      run: bash scripts/check-commit-format.sh {1}
 
 pre-push:
-  parallel: false
+  parallel: true
   jobs:
+    - name: branch-protection
+      run: bash scripts/pre-push-protection.sh
+
+    - name: branch-guard
+      run: bash scripts/check-branch-name.sh
+
     - name: typecheck
       run: pnpm typecheck
+
+    - name: admin-typecheck
+      run: pnpm admin:typecheck
 
     - name: unit-tests
       run: pnpm test

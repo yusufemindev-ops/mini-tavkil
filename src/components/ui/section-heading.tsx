@@ -16,11 +16,7 @@ export function Kicker({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-2 text-[0.78rem] font-bold uppercase tracking-wider',
-        // 0.78rem is normal-size text, so it needs 4.5:1. The brand orange is a
-        // fill colour — it measures 3.18:1 on white and 2.94:1 on the tinted
-        // section background. --primary-ink is the text-safe shade of the same
-        // orange (4.79:1 / 4.43:1) and is what Tavkil defines the token for.
+        'inline-flex items-center gap-2 text-[0.78rem] font-bold tracking-wider uppercase',
         tone === 'onDark' ? 'text-white' : 'text-primary-ink',
         'before:h-0.5 before:w-[18px] before:rounded-full before:content-[""]',
         tone === 'onDark' ? 'before:bg-white' : 'before:bg-primary',

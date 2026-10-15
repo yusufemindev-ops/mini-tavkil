@@ -1,75 +1,54 @@
+---
+name: public-data-guard
+description: Enforces the 3-audience pricing and supplier confidentiality rules across Public (zero prices/suppliers), Buyer (computed unitPrice only, never base_price or tier_markup_percent), and Admin surfaces. Use whenever touching queries, API routes, storefront components, SEO metadata, or sitemaps.
+---
+
 # Skill: public-data-guard
 
-The most important rule in this repo. Prices and suppliers never reach the public.
+The most important security and commercial rule in this repo: **Pricing and supplier visibility across our 3 audiences.**
 
-## The rule
+## The 3-Audience Rule
 
-`price` (any form: base, unit, cost) and `supplier` are **admin-only**. They never appear in:
+### 1. Public (Anonymous Storefront)
 
-- Any page, component, or route handler reachable without an admin session
+`price` (any form: `base_price`, `tier_markup_percent`, `unit_price`, cost) and `supplier` identities never appear in:
+
+- Any page, component, or route handler reachable without an authenticated session
 - `sitemap.xml`, `robots.txt`, `llms.txt`, `llms-full.txt`
 - JSON-LD — `Product` is rendered **without `offers`**
 - Error responses, including `details` and stack traces
 - HTML comments, `data-*` attributes, or serialized RSC payloads
 
-Note the last one. A field can leak without being _displayed_ — if a Server Component
-receives an object containing `price` and passes it to a Client Component, that value is
-serialized into the HTML payload and is trivially readable. **Strip at the query, not at
-the render.**
+> **Note on RSC serialization:** A field can leak without being displayed. If a Server Component receives an object containing `basePriceAmount` and passes it to a Client Component, that value is serialized into the HTML payload. **Strip at the query boundary, never at the render layer.**
 
-## How it's enforced
+### 2. Buyer (Authenticated Storefront)
 
-One file: `lib/queries/public-product.ts`.
+- Logged-in, active buyers see **only** the server-computed personalized `unitPrice` (`base_price × (1 + buyer.tier_markup_percent / 100)`).
+- Raw `base_price` (`basePriceAmount`, `basePriceCurrency`) and `tier_markup_percent` (`tierMarkupPercent`) are **strictly admin-only** and must never appear in any buyer API response or buyer SSR/RSC payload.
 
-```ts
-// The only product shape public pages may render.
-// No price field. No supplier field. Not optional — absent.
-export type PublicProduct = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  images: PublicImage[];
-  category: { slug: string; name: string };
-  attributes: { label: string; value: string }[];
-};
+### 3. Admin (`/api/admin/*`)
 
-export async function publicProduct(slug: string, locale: Locale): Promise<PublicProduct | null>;
-export async function publicProducts(filter: PublicFilter): Promise<PublicProduct[]>;
-```
+- Full visibility (`basePriceAmount`, `basePriceCurrency`, `tierMarkupPercent`, supplier details, internal notes).
+- Strictly gated behind admin authentication + `requirePermission(req, 'domain:action')`.
 
-Because the type has no such keys, a leak is a **compile error**.
+## How It Is Enforced
 
-## When writing code
+1. **Anonymous Query Boundary (`src/lib/queries/public-product.ts`):**
+   Exports `PublicProduct`, `publicProduct()`, and `publicProducts()`. The `PublicProduct` type has **no price fields and no supplier fields at all** (absent, not optional), making an anonymous leak a compile-time error.
+2. **Buyer Query / Service Boundary:**
+   Buyer-facing queries and services compute `{ unitPrice, currency }` server-side and strip `basePriceAmount` and `tierMarkupPercent` before returning.
+3. **Admin Service & Route Boundary (`src/lib/services/*.ts` & `src/lib/api/handler.ts`):**
+   Admin services that access prices or suppliers are only called from `/api/admin/*` route handlers wrapped in `adminRoute(permission, ...)` (`src/lib/api/handler.ts`), which enforces admin authentication, permission checks, and `Cache-Control: private, no-store`. `src/lib/queries/import-boundary.test.ts` verifies that nothing under `src/app/[locale]` or `src/components/` imports an admin service or references a `suppliers` table.
+
+## When Writing Code
 
 - Public page needs product data → call `publicProduct` / `publicProducts`. Nothing else.
-- Need a new field publicly → add it to `PublicProduct` deliberately, in that file, and
-  ask whether it's genuinely public.
-- Never `select` price or supplier in a query reachable from a public path
-- Never widen the return type "temporarily"
-- Never `as any` or spread a raw Drizzle row into a public response
-- Admin queries live in `lib/queries/admin-*.ts` and are only called from
-  `/api/admin/*` handlers behind the session guard
+- Need a new field publicly → add it to `PublicProduct` deliberately in `src/lib/queries/public-product.ts` after verifying it is safe for anonymous crawlers and visitors.
+- Buyer page/endpoint needs pricing → return only the computed `unitPrice` and `currency`, never the underlying base price or markup percentage.
+- Never use `as any` or spread a raw Drizzle product/buyer row into a public or buyer response.
 
-## When reviewing
+## Verification & Tests
 
-Grep the diff for `price`, `base_price`, `unit`, `supplier`, `cost`. For each hit ask:
-_can a logged-out visitor reach this code path?_ If yes or unsure, it's a finding.
-
-Check RSC boundaries specifically: a Client Component prop is public data even if it's
-never rendered.
-
-## Tests
-
-`TESTING.md` §1 defines the public-leak suite. Every public route handler and page data
-function asserts no `price` / `supplier` key exists anywhere in the returned object,
-including nested. Playwright flow 2 asserts the same against rendered HTML.
-
-Types catch it at build. Vitest catches a widened type. Playwright catches a render-side
-mistake. Keep all three.
-
-## What this replaces
-
-Tavkil's three-DTO discipline (`PublicProductDto` / `BuyerProductDto` /
-`AdminProductDto`) existed because logged-in buyers saw tier-derived prices. **There are
-no buyers here.** Two audiences: anonymous and admin. Do not reintroduce the DTO split.
+- `pnpm check:pricing-leak` — Static guard scanning public routes and components.
+- `public-product.test.ts` & `public-product.integration.test.ts` — Deep-walks returned objects in all 3 locales to assert no price or supplier keys exist.
+- Playwright E2E leak specs — Asserts against rendered HTML and network payloads.

@@ -24,10 +24,10 @@ export function KpiCard({
 }) {
   return (
     <div className="border-border bg-card rounded-lg border p-4">
-      <div className="text-muted-foreground text-[0.7rem] font-semibold uppercase tracking-wide">
+      <div className="text-muted-foreground text-[0.7rem] font-semibold tracking-wide uppercase">
         {label}
       </div>
-      <div className="text-foreground mt-1.5 text-[1.6rem] font-bold leading-none">{value}</div>
+      <div className="text-foreground mt-1.5 text-[1.6rem] leading-none font-bold">{value}</div>
       {delta && <div className={cn('mt-1.5 text-[0.72rem]', toneClass[tone])}>{delta}</div>}
     </div>
   );

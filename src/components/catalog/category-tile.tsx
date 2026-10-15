@@ -5,15 +5,7 @@ import { Thumb } from '@/components/catalog/thumb';
 import { Link } from '@/i18n/navigation';
 import type { PublicCategory } from '@/lib/queries/public-product';
 
-/**
- * Prototype `.cat` — category directory tile.
- *
- * Tavkil looked its label and icon up from a fixed six-category enum
- * (`t('${category.id}_t')`, `CATEGORY_ICONS[id]`). Categories here are database
- * rows an admin creates, so the name and description come from the row's
- * translation and the visual comes from the row's own `imageUrl`, falling back to
- * the brand-gradient tile. No enum to keep in sync.
- */
+/** Category directory tile with image thumbnail or brand-gradient icon fallback. */
 export function CategoryTile({
   category,
   productCount,

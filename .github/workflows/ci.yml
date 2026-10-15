@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      # One workspace install covers the Next app and admin/ (pnpm-workspace.yaml).
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      # Generates src/generated/admin-shell.ts (gitignored), which the /admin
+      # route imports — so it must exist before the Next typecheck.
+      - name: Build admin SPA
+        run: pnpm admin:build
+
+      - name: Typecheck Next.js
+        run: pnpm typecheck
+
+      - name: Verify admin (typecheck + lint)
+        run: |
+          pnpm admin:typecheck
+          pnpm admin:lint
+
+      - name: Run unit & component tests
+        run: pnpm test
+
+      - name: Build Next.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'ci-build-secret-dummy-padding-32-chars-long' }}
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "⚠️  DATABASE_URL secret is not set in GitHub Secrets."
+            echo "   Please add DATABASE_URL in GitHub Repo Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          pnpm build

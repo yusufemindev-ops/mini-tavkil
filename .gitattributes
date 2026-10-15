@@ -1,0 +1,39 @@
+# Auto-detect text files and normalize line endings to LF (cross-platform safety)
+* text=auto eol=lf
+
+# Force LF for source and configuration files
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.sql text eol=lf
+*.sh text eol=lf
+
+# Binary media formats
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+
+# GitHub Linguist — collapse lockfiles, generated builds, and schema artifacts in PRs
+pnpm-lock.yaml linguist-generated=true -diff
+drizzle/** linguist-generated=true -diff
+public/admin/** linguist-generated=true -diff
+.open-next/** linguist-generated=true -diff
+cloudflare-env.d.ts linguist-generated=true -diff
+next-env.d.ts linguist-generated=true -diff
+*.tsbuildinfo linguist-generated=true -diff

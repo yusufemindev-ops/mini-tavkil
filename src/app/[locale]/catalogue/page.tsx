@@ -46,16 +46,8 @@ export default async function CataloguePage({ params }: { params: Promise<{ loca
   const roots = all.filter((category) => category.parent === null);
   const childrenOf = (slug: string) => all.filter((c) => c.parent?.slug === slug);
 
-  // A category with no children has nothing to tile, so preview its products
-  // instead. That also shortens crawl depth: every previewed product is two
-  // clicks from the homepage rather than three (PLAN.md §11 — internal linking
-  // matters more than the markup).
-  //
-  // One read for all of them, grouped in memory, rather than a `publicProducts()`
-  // call per childless category. The identical pattern on the homepage exhausted
-  // the outbound connection budget during a build and killed prerendering with
-  // `NeonDbError: fetch failed`. It is inert here today because every root has
-  // children — which is exactly why it would come back unnoticed.
+  // Preview products directly for root categories that have no child categories,
+  // using a single batch query to avoid N+1 database calls during prerendering.
   const leaves = roots.filter((category) => childrenOf(category.slug).length === 0);
   const previews = new Map<string, PublicProduct[]>();
   if (leaves.length > 0) {

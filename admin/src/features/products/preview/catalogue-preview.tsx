@@ -40,8 +40,8 @@ function SubcategoryTile({ tile }: { tile: CatalogueTile }) {
     >
       <CategoryThumb src={tile.imageUrl} className="aspect-[16/10]" />
       {tile.isDraft && <DraftBadge className="absolute start-2 top-2" />}
-      <div className="border-border border-t px-3 pb-3 pt-2.5">
-        <div className="text-foreground text-[0.9rem] font-semibold leading-tight">{tile.name}</div>
+      <div className="border-border border-t px-3 pt-2.5 pb-3">
+        <div className="text-foreground text-[0.9rem] leading-tight font-semibold">{tile.name}</div>
       </div>
     </Link>
   );
@@ -77,7 +77,7 @@ export function CataloguePreview({
         <div className="grid gap-8 lg:grid-cols-[300px_1fr] lg:items-start">
           {/* CATEGORIES rail — anchor links to each section. */}
           <aside className="border-border bg-card h-fit rounded-lg border p-3.5 lg:sticky lg:top-4">
-            <h2 className="text-muted-foreground mb-2 px-[11px] text-[0.72rem] font-bold uppercase tracking-wide">
+            <h2 className="text-muted-foreground mb-2 px-[11px] text-[0.72rem] font-bold tracking-wide uppercase">
               Categories
             </h2>
             <div className="flex flex-col gap-0.5">
@@ -85,7 +85,7 @@ export function CataloguePreview({
                 <a
                   key={s.id}
                   href={`#cat-${s.id}`}
-                  className="text-foreground-soft hover:bg-muted/60 hover:text-foreground flex items-center justify-between gap-2 rounded-md px-[11px] py-[9px] text-[0.9rem] font-medium leading-snug transition-colors"
+                  className="text-foreground-soft hover:bg-muted/60 hover:text-foreground flex items-center justify-between gap-2 rounded-md px-[11px] py-[9px] text-[0.9rem] leading-snug font-medium transition-colors"
                 >
                   <span>{s.name}</span>
                   {s.isDraft && <DraftBadge />}

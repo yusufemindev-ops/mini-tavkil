@@ -192,9 +192,6 @@ function buildMemberColumns(onManage: (m: AdminTeamMember) => void): ColumnDef<A
   ];
 }
 
-// Read-only. Roles are fixed in code (PLAN.md §3) — there is no editor to open
-// and no role to delete, so an Edit or Delete button here would be a control that
-// cannot work. Tavkil's 421-line role editor is gone with them.
 function RoleRow({ role }: { role: AdminRole }) {
   const isSystem = role.type === 'system';
   return (

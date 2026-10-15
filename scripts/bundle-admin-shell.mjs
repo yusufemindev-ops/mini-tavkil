@@ -2,16 +2,7 @@ import { readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * Moves the admin SPA's HTML shell out of `public/` and into a generated module.
- *
- * This exists because a shell sitting in `public/` is reachable directly, and no
- * amount of middleware or route-handler logic can stop that: Next's public-file
- * serving and Cloudflare's asset layer both answer before any of our code runs.
- * Renaming it only changes which URL is unguarded — `/admin` first, then
- * `/admin/app.html`. The only way to gate it is for it not to be a file.
- *
- * The assets it references stay public, which is correct: they carry no data and
- * every visitor gets the same bytes.
+ * Moves `public/admin/index.html` into `src/generated/admin-shell.ts` so only the authenticated route handler can serve the shell.
  */
 const root = process.cwd();
 const shellPath = join(root, 'public/admin/index.html');

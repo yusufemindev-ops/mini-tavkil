@@ -5,25 +5,15 @@ import { SITE_INDEXABLE } from '@/lib/seo/metadata';
 import { publicSitemapEntries } from '@/lib/queries/public-product';
 
 /**
- * The sitemap.
- *
- * **`lastModified` is the row's own `updated_at`, never `new Date()`.** A sitemap
- * that claims everything changed today teaches Google the signal is worthless, and
- * it responds by crawling the site *less*. This is the single most consequential
- * line in this file, which is why the query returns `updatedAt` at all and why
- * `public-product.test.ts` asserts no bare `new Date()` exists in that module.
- *
- * One query per hour rather than one per crawl: at ~600 URLs an uncached sitemap
- * is a meaningful load for a bot that fetches it repeatedly.
+ * Generates sitemap.xml.
+ * `lastModified` uses row updatedAt timestamp (never current date).
  */
 export const revalidate = 3600;
 
 const STATIC_PATHS = ['', '/catalogue', '/about', '/contact'] as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // A deployment that isn't indexable advertises nothing. robots.ts already
-  // disallows everything, but a sitemap left reachable is an invitation to index
-  // the workers.dev URL anyway.
+  // Non-indexable deployments emit an empty sitemap.
   if (!SITE_INDEXABLE) return [];
 
   const base = env.baseUrl.replace(/\/+$/, '');
@@ -53,11 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const rows = await publicSitemapEntries();
 
-  // Group by entity id, because a catalogue slug differs per locale — grouping on
-  // the slug would treat each translation as a separate page and emit no
-  // alternates at all. Only locales with a complete translation are present (the
-  // query filters on isComplete), so a locale we don't serve is never advertised
-  // as an alternate, which is what makes the hreflang set reciprocal.
+  // Group by entity id to assemble hreflang alternates across localized slugs.
   const byEntity = new Map<string, typeof rows>();
   for (const row of rows) {
     const key = `${row.type}:${row.id}`;

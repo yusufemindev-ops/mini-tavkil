@@ -9,17 +9,7 @@ import {
 } from '@/lib/db/schema';
 import { LOCALES } from '@/lib/services/catalog-schemas';
 
-/**
- * Dashboard metrics.
- *
- * Tavkil's dashboard rendered fixtures — "Order requests today: 5", "Buyer
- * accounts: 18" — against an endpoint that was never built. Two of those KPIs are
- * about features this project doesn't have, and all of them were invented.
- *
- * These are counted from the database. The publish-readiness list is the useful
- * half: it answers "what is stopping me shipping the catalogue", which is the one
- * question this dashboard can answer better than the products table can.
- */
+/** Dashboard metrics aggregating live catalog KPIs and publish-readiness counts. */
 
 export interface DashboardData {
   kpis: { label: string; value: string; delta?: string; tone?: 'up' | 'down' | 'warn' }[];
@@ -54,8 +44,7 @@ export async function dashboardSummary(): Promise<DashboardData> {
         .from(suppliers)
         .where(and(isNull(suppliers.deletedAt), eq(suppliers.status, 'published'))),
 
-      // Published but with no image: the storefront card renders as a bare
-      // gradient, which reads as broken rather than as "photo coming".
+      // Count published products lacking images.
       db
         .select({ n: count() })
         .from(products)
@@ -67,9 +56,7 @@ export async function dashboardSummary(): Promise<DashboardData> {
           ),
         ),
 
-      // Published but missing at least one locale's complete translation. Those
-      // products simply don't exist on that locale's storefront — publicProducts
-      // filters them out — so this is the count of quietly-invisible pages.
+      // Count published products missing complete translations across all locales.
       db
         .select({ n: count() })
         .from(products)
@@ -119,9 +106,7 @@ export async function dashboardSummary(): Promise<DashboardData> {
         action: { label: 'Review', to: '/products?status=published' },
       },
     ],
-    // Tavkil's activity feed was fixtures over a dropped audit log. Nothing
-    // records these events now, so an empty list is the honest answer — the page
-    // already renders its empty state for it.
+    // Activity feed defaults to empty array until audit log ingestion is wired.
     activity: [],
   };
 }

@@ -11,31 +11,14 @@ import { useSession } from '@/features/auth/use-session';
 export function LoginPage() {
   const [pending, setPending] = useState(false);
 
-  /**
-   * A signed-in admin who lands here goes to the dashboard.
-   *
-   * `/admin/login` used to render its sign-in card to anyone, including someone
-   * already signed in — so navigating back to it offered a second sign-in for an
-   * account that was already active, which reads as though the session had been
-   * lost.
-   *
-   * The decision is made from `/api/admin/me`, the same source `ProtectedRoute`
-   * uses, rather than from the presence of a cookie. That distinction is what
-   * keeps it from looping: a stale or revoked cookie fails the session query, so
-   * this falls through and shows the form instead of bouncing to a page that
-   * would only send the visitor straight back.
-   */
+  // Validated via /api/admin/me so stale cookies show the login form instead of redirect-looping.
   const { data: session, isLoading } = useSession();
 
   const signInGoogle = async () => {
     setPending(true);
     const { error } = await authClient.signIn.social({
       provider: 'google',
-      // `/admin/dashboard`, not `/dashboard`. Tavkil served this SPA at the root
-      // of its own origin, so the bare path was right there. Here it is mounted
-      // under /admin, and Better Auth redirects at the ORIGIN — it knows nothing
-      // about the router's basename — so the bare path sent a completed sign-in
-      // to https://host/dashboard, which is not a route and returned 404.
+      // Better Auth redirects relative to origin, not the router basename.
       callbackURL: `${window.location.origin}/admin/dashboard`,
     });
     if (error) {
@@ -67,7 +50,7 @@ export function LoginPage() {
       </header>
 
       {/* Centered sign-in card */}
-      <main className="flex flex-1 flex-col items-center justify-start px-4 pb-4 pt-[14vh]">
+      <main className="flex flex-1 flex-col items-center justify-start px-4 pt-[14vh] pb-4">
         <div className="border-border bg-card w-full max-w-md rounded-2xl border p-8 shadow-sm sm:p-10">
           <div className="bg-primary/10 text-primary mb-6 grid size-12 place-items-center rounded-xl">
             <Building2 className="size-6" />

@@ -1,14 +1,5 @@
 /**
- * Permission catalog — the single source of truth for every permission.
- *
- * Notation is `domain:action`, one colon, never a dot (CLAUDE.md §6). Changing a
- * permission is a code change here plus `pnpm sync:permissions`; nothing syncs on
- * boot, because Workers have no boot (CLAUDE.md §8).
- *
- * Trimmed from Tavkil's 39 across 12 domains. Gone entirely, because the features
- * are gone: `orders`, `buyers`, `account_requests`, `audit_log`. Also gone:
- * `roles:*` — there is no role editor here, roles are fixed in code, so a
- * permission to create one would guard a page that doesn't exist.
+ * Permission catalog (`domain:action` colon notation, synced via `pnpm sync:permissions`).
  */
 
 export interface PermissionDef {
@@ -195,12 +186,7 @@ export const PERMISSION_CATALOG: readonly PermissionDef[] = [
 ];
 
 /**
- * The three fixed roles. `code` matches the rows the Tavkil migration already
- * created, so no migration is needed — only the labels change.
- *
- * `super_admin` (Owner) is deliberately absent from ROLE_GRANTS: it resolves to a
- * wildcard at runtime, so it needs no rows and can never drift out of date as the
- * catalog grows.
+ * System role labels (`super_admin` resolves to wildcard `*` at runtime and is omitted from `ROLE_GRANTS`).
  */
 export const ROLE_LABELS = {
   super_admin: 'Owner',

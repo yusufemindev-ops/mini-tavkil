@@ -186,16 +186,7 @@ export const auditLog = pgTable(
   ],
 );
 
-/*
- * The four auth* tables use camelCase COLUMN names in Postgres — Tavkil's Prisma
- * models never mapped them, unlike every other table here, which is snake_case.
- *
- * That matters because src/lib/db.ts sets `casing: 'snake_case'`, which rewrites
- * any property that has no explicit column name. Every column below therefore
- * states its name outright: without it, `expiresAt` was being queried as
- * `expires_at`, which does not exist, and Google sign-in failed with a 500 on the
- * very first insert.
- */
+/* Explicit camelCase column names required for `auth*` tables because `src/lib/db.ts` sets `casing: 'snake_case'`. */
 export const authVerification = pgTable(
   'authVerification',
   {

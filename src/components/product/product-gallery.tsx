@@ -8,15 +8,7 @@ import { Thumb } from '@/components/catalog/thumb';
 import type { PublicImage } from '@/lib/queries/public-product';
 
 /**
- * Product gallery — Tavkil's, with the vertical thumbnail strip, the main panel
- * that swaps on click, and the Images/Video switch intact.
- *
- * Two changes, both forced rather than chosen. The seeded-placeholder strip is
- * gone because it fetched from picsum.photos, which step 14h's CSP blocks and
- * which a production page should not do anyway — `Thumb` falls back to the brand
- * gradient instead. And `product_images` carries no video column, so the Video
- * tab renders in its disabled state exactly as it did in Tavkil when a product
- * had none.
+ * Product media gallery with vertical thumbnail strip and Images/Video toggle.
  */
 type Mode = 'images' | 'video';
 

@@ -100,7 +100,7 @@ export function PreviewDetail({
                 key={fact.label}
                 className={cn('min-w-[8rem] flex-1 p-3.5', i > 0 && 'border-border border-s')}
               >
-                <dt className="text-muted-foreground text-[0.72rem] uppercase tracking-wide">
+                <dt className="text-muted-foreground text-[0.72rem] tracking-wide uppercase">
                   {fact.label}
                 </dt>
                 <dd className={cn('text-foreground mt-1 text-sm', fact.mono && 'font-mono')}>
@@ -142,7 +142,7 @@ export function PreviewDetail({
 
             {product.supplier?.name && (
               <div className="border-border bg-card mb-4 rounded-lg border p-4">
-                <div className="text-muted-foreground text-[0.72rem] font-semibold uppercase tracking-wide">
+                <div className="text-muted-foreground text-[0.72rem] font-semibold tracking-wide uppercase">
                   Supplier
                 </div>
                 <div className="text-foreground mt-1.5 flex items-center gap-1.5 font-medium">

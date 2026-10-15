@@ -1,16 +1,6 @@
 /**
- * Identifies an image by its actual bytes.
- *
- * The declared `Content-Type` on a multipart part is attacker-controlled — it is
- * whatever the client typed. Trusting it means an SVG (or anything else) arrives
- * labelled `image/png`, gets stored, and is later served from the images host with
- * that content type. So the format is decided here, by the magic bytes, and the
- * declared type is only ever used to reject early.
- *
- * **SVG is not in this list on purpose.** It is XML, it can carry `<script>`, and
- * it is served from a host we treat as trusted — it is a stored-XSS vector, not an
- * image format (PLAN.md §14h). There is no sniff for it because there is no case
- * where we want one.
+ * Identifies an image format by its magic bytes rather than the client-supplied `Content-Type`.
+ * SVG is intentionally excluded because XML payloads can carry `<script>` (stored XSS).
  */
 export type ImageFormat = 'jpeg' | 'png' | 'webp';
 

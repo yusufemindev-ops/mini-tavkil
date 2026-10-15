@@ -10,15 +10,7 @@ interface ProductTab {
 }
 
 /**
- * Tab switcher for the product page.
- *
- * Every panel is server-rendered and passed in as `content`, so all of it is in
- * the HTML for crawlers — only visibility toggles client-side.
- *
- * Tavkil's version had `role="tablist"` and `aria-selected` but no `aria-controls`,
- * no `id` linking panel to tab, and no arrow-key handling, so a screen reader
- * announced tabs it could not navigate. This implements the full APG pattern:
- * roving tabindex, Arrow/Home/End keys, and both halves of the relationship.
+ * Accessible tab switcher (roving tabindex + Arrow/Home/End navigation) over server-rendered panels.
  */
 export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
   const baseId = useId();

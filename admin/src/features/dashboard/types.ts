@@ -1,11 +1,6 @@
 import type { KpiTone } from '@/components/ui/kpi-card';
 
-// Shapes for the dashboard's live aggregates, which come from /api/admin/dashboard.
-//
-// This file used to also hold Tavkil's prototype mock data — sample KPIs and an
-// activity feed of invented orders and buyer accounts. mini-tavkil has neither
-// orders nor buyers, and the dashboard reads real rows from Neon, so the arrays
-// were fiction nothing imported. Only the types survive.
+// Shapes for the dashboard's live aggregates from /api/admin/dashboard.
 
 export interface DashKpi {
   label: string;

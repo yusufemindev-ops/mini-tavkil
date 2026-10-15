@@ -2,35 +2,13 @@ import { deflateSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 
 /**
- * The admin image upload, driven through the real dropzone.
- *
- * This was the last unexercised path in the project, and it is the one that
- * cannot be proven any other way. `pnpm import:temsan` also writes to R2, so 243
- * photographs serving from the bucket says the *bucket* works — it says nothing
- * about the browser half, which is where the interesting failure lives:
- *
- *   Workers cannot run Sharp or any native image library (CLAUDE.md §2), so the
- *   resize happens in the page, on a canvas, before the bytes are ever sent. The
- *   file a person picks is a PNG or a JPEG; what reaches R2 must be WebP. If that
- *   conversion silently no-ops, everything still "works" — the upload succeeds,
- *   the image renders — and the bucket quietly fills with full-size originals.
- *
- * So this asserts on what came back out: the stored object is served as WebP, and
- * it is materially smaller than the file that went in.
- *
- * Everything created here is prefixed `e2e-` and deleted in the same test, pass
- * or fail. One database, no staging (CLAUDE.md §7). The R2 object itself outlives
- * the test — there is no delete endpoint for media, by design, since an image can
- * be referenced by more than one row — so the fixture is deliberately tiny.
+ * Tests admin media upload pipeline verifying in-browser canvas resize,
+ * WebP conversion, and Cloudflare R2 persistence.
  */
 
 const RUN = `e2e-media-${Date.now().toString(36)}`;
 
-/**
- * A PNG built here rather than committed as a binary fixture, so the dimensions
- * are visible in the diff and the file cannot drift from what the test claims.
- * Large enough that a downscale to WebP is unmistakable in the byte count.
- */
+/** Generates an uncompressed checkerboard PNG fixture in memory for upload testing. */
 function png(width: number, height: number): Buffer {
   const raw = Buffer.alloc(height * (1 + width * 3));
   let offset = 0;
@@ -38,8 +16,7 @@ function png(width: number, height: number): Buffer {
     raw[offset] = 0; // filter: none
     offset += 1;
     for (let x = 0; x < width; x += 1) {
-      // A coarse checker in the brand orange. Flat colour would compress to
-      // almost nothing and make the size comparison meaningless.
+      // Alternating checker pattern for realistic compression testing.
       const on = (Math.floor(x / 40) + Math.floor(y / 40)) % 2 === 0;
       raw[offset] = on ? 242 : 255;
       raw[offset + 1] = on ? 100 : 255;
@@ -114,14 +91,11 @@ test('an image picked in the admin is converted to WebP and stored in R2', async
     productId = ((await created.json()).data as { id: string }).id;
 
     await page.goto(`/admin/products/${productId}`, { waitUntil: 'load' });
-    // "Save changes" on a published product, "Save as draft" on one that is not.
-    // A fresh product is always a draft, so matching only the former waits out the
-    // timeout on a page that loaded perfectly well.
+    // Match either save button label depending on draft or published status.
     const save = page.getByRole('button', { name: /^Save (changes|as draft)$/ });
     await expect(save).toBeVisible({ timeout: 20_000 });
 
-    // The input is hidden behind a styled dropzone; Playwright sets files on it
-    // regardless, which is the same event the click-then-pick flow produces.
+    // Populate hidden file input inside dropzone.
     await page
       .locator('input[type="file"]')
       .first()
@@ -146,12 +120,7 @@ test('an image picked in the admin is converted to WebP and stored in R2', async
       `stored ${storedBytes} bytes against a ${source.byteLength}-byte source — no resize happened`,
     ).toBeLessThan(source.byteLength);
 
-    // And it survives a save, which is where the alt-text record broke before.
-    //
-    // Waiting on the write itself rather than on the click. Reading the product
-    // back immediately after clicking raced the request and failed once before
-    // passing on retry — a flake that would have been rerun-until-green forever
-    // rather than read as "the assertion is watching the wrong thing".
+    // Wait for the mutation response before checking persisted state.
     const written = page.waitForResponse(
       (response) =>
         response.url().includes(`/api/admin/products/${productId}`) &&

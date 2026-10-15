@@ -1,16 +1,10 @@
-// Public, admin-managed site settings (branding + contact + social details).
-//
-// In Tavkil these came from the backend over HTTP; here the storefront and the
-// admin are one deployable, so this reads the `system_settings` row directly.
-// Never contains pricing or supplier data — public data only.
+// Public, admin-managed site settings (branding, contact, and social links; never pricing or supplier data).
 
 import { cache } from 'react';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { systemSettings } from '@/lib/db/schema';
 
-// General settings live as a single JSON blob under this key — same key the
-// Tavkil admin writes, so the existing row is picked up unchanged.
 export const GENERAL_SETTINGS_KEY = 'general';
 
 export interface SiteSettings {

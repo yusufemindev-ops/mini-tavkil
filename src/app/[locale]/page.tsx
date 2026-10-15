@@ -61,12 +61,12 @@ function Hero({
             <span className="bg-primary size-1.5 rounded-full" />
             {t('hero_eyebrow')}
           </span>
-          <h1 className="text-foreground mt-6 text-balance text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="text-foreground mt-6 text-4xl leading-[1.08] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
             {t.rich('hero_h1', {
               em: (chunks) => <em className="text-primary not-italic">{chunks}</em>,
             })}
           </h1>
-          <p className="text-muted-foreground mt-6 max-w-xl text-pretty text-lg leading-relaxed">
+          <p className="text-muted-foreground mt-6 max-w-xl text-lg leading-relaxed text-pretty">
             {t('hero_lead')}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -128,9 +128,6 @@ function HowItWorks() {
   );
 }
 
-// Tavkil hid its Sectors and Premium-suppliers sections behind TSC-62 because
-// they showed invented counts. These render real rows, and they are what makes
-// every product reachable in ~3 clicks from the homepage (PLAN.md §11).
 function Sectors({ categories }: { categories: PublicCategory[] }) {
   const t = useTranslations('store');
   if (categories.length === 0) return null;
@@ -179,28 +176,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   setRequestLocale(locale);
 
+  // Single batch read for categories and published products to avoid N+1 queries.
   const [categories, allProducts] = await Promise.all([
     publicCategories(locale as Locale),
-    // Every published product, once. The homepage needs three things from this
-    // list — the featured strip, the showcase's product channel, and a cover
-    // image per category — and reading it once is the difference between two
-    // queries and a dozen.
     publicProducts({}, locale as Locale),
   ]);
 
   const roots = categories.filter((category) => category.parent === null);
   const featured = allProducts.filter((product) => product.isFeatured).slice(0, 8);
 
-  /**
-   * A channel needs a picture: the category's own image, else the first image of
-   * any product under it.
-   *
-   * Derived from the list above rather than a `publicProducts()` call per
-   * category. That loop was six extra reads per locale, and during a build —
-   * nine workers, three locales at once — it exhausted the outbound connection
-   * budget and prerendering died with `NeonDbError: fetch failed`. I wrote that
-   * off as a flaky database twice before reading the stack.
-   */
+  // Resolve a fallback cover image per root category from the first matching product.
   const childToRoot = new Map(
     categories
       .filter((category) => category.parent !== null)
@@ -221,9 +206,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     imageUrl: category.imageUrl ?? coverBySlug.get(category.slug) ?? null,
   }));
 
-  // The showcase's second set. No price and no supplier — `publicProducts()`
-  // cannot return either, which is what makes this safe where Tavkil's supplier
-  // channel would not be.
   const features: ShowcaseFeature[] = featured.slice(0, 6).map((product) => ({
     slug: product.slug,
     name: product.name,

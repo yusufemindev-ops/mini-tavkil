@@ -1,11 +1,5 @@
 /**
- * Shared leak assertion for the public-data test suites.
- *
- * A price or supplier reaching an anonymous visitor *is* the security bug for this
- * project (PLAN.md §14h), so the check is deliberately blunt: walk the entire
- * returned value — nested objects, arrays, Maps, the lot — and fail on any key
- * that looks like a price or a supplier, or any value that matches a known
- * supplier name.
+ * Recursively asserts that no public payload contains price/supplier keys or known supplier values.
  */
 
 const FORBIDDEN_KEY = /price|supplier|cost|margin|markup|wholesale_?amount/i;

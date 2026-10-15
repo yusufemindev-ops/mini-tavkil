@@ -19,9 +19,6 @@ export const dashboardKeys = {
 export function useDashboard() {
   return useQuery({
     queryKey: dashboardKeys.all,
-    // `/admin/dashboard`. Tavkil's Nest backend served this at `/dashboard`; the
-    // bare path 404'd here and the catch below turned that into a permanently
-    // empty dashboard. The 404 fallback stays as a genuine safety net.
     queryFn: async () => {
       try {
         return await api.get<DashboardData>('/admin/dashboard');

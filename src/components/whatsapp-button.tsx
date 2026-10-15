@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
  * the same one made for the brand orange — the colour is what identifies the
  * button, so the colour stays.
  *
- * Recorded rather than hidden: GO-LIVE.md carries it, and a11y.spec.ts allows
+ * Recorded rather than hidden: ARCHITECTURE.md carries it, and a11y.spec.ts allows
  * this exact pairing and no other.
  *
  * The link target comes from the caller via `waUrl(settings.whatsappNumber)`, so
@@ -84,7 +84,7 @@ export function WhatsAppFab({ href }: { href: string }) {
       aria-label="WhatsApp"
       title="WhatsApp"
       style={{ backgroundColor: WA_GREEN, color: WA_INK }}
-      className="wa-fab fixed bottom-5 right-5 z-40 grid size-14 place-items-center rounded-full shadow-[0_10px_24px_-6px_rgba(0,0,0,0.35)] transition-transform hover:scale-110"
+      className="wa-fab fixed right-5 bottom-5 z-40 grid size-14 place-items-center rounded-full shadow-[0_10px_24px_-6px_rgba(0,0,0,0.35)] transition-transform hover:scale-110"
     >
       <WhatsAppIcon className="size-7" />
     </a>

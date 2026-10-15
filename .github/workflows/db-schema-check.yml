@@ -1,0 +1,42 @@
+name: DB Schema Check
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/db/**'
+      - 'drizzle/**'
+      - 'drizzle.config.ts'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-schema:
+    name: Verify Drizzle Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for uncommitted migrations
+        run: |
+          pnpm db:generate
+          if ! git diff --exit-code drizzle/; then
+            echo "❌ Schema drift detected!"
+            echo "   You modified database schema files without committing the generated migration SQL."
+            echo "   Please run 'pnpm db:generate' locally and commit the new files in the 'drizzle/' folder."
+            exit 1
+          fi
+          echo "✅ Database schema and migrations are in sync"

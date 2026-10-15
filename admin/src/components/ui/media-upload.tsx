@@ -116,7 +116,7 @@ export function ImageDropzone({
         if (!uploading) void upload(e.dataTransfer.files);
       }}
       className={cn(
-        'border-border text-muted-foreground hover:border-primary hover:text-foreground flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-center outline-none transition-colors',
+        'border-border text-muted-foreground hover:border-primary hover:text-foreground flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-center transition-colors outline-none',
         'focus-visible:border-primary focus-visible:ring-primary/30 focus-visible:ring-2',
         iconOnly ? 'p-0' : compact ? 'gap-1 p-2' : 'px-4 py-6',
         dragging && 'border-primary bg-primary-soft/40 text-foreground',
@@ -187,7 +187,7 @@ export function SingleImageUpload({ value, onChange, label, size = 'md' }: Singl
             'bg-background/80 hover:bg-background absolute',
             size === 'sm'
               ? 'inset-0 size-full rounded-none opacity-0 hover:opacity-100'
-              : 'right-2 top-2 size-8',
+              : 'top-2 right-2 size-8',
           )}
           title="Remove image"
           onClick={() => onChange('')}

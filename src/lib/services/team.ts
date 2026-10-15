@@ -6,44 +6,13 @@ import { conflict, invalid } from '@/lib/api/errors';
 import { adminAllowlist } from '@/lib/permissions/allowlist';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type RoleCode } from '@/lib/permissions/catalog';
 
-/**
- * Who may sign in, beyond the bootstrap allowlist.
- *
- * `ADMIN_ALLOWLIST` is a Worker secret. That makes it a fine *bootstrap* — the
- * first owner has to exist before anyone can grant anything — but a terrible
- * team-management tool: adding a colleague meant editing a secret and
- * redeploying, and the admin's own "Add member" form had no endpoint behind it
- * at all. Pressing it did nothing.
- *
- * So access is now: **on the env allowlist, OR invited here by an admin who
- * holds `users:assign_role`**. That grants no authority the allowlist did not
- * already imply, because only an existing admin can add an entry, and every
- * request still resolves permissions from `auth_user_roles`.
- *
- * Stored in `system_settings` rather than its own table on purpose: it is a
- * short list that changes rarely, and a migration is a deliberate act with no
- * staging to catch a mistake (CLAUDE.md §7, §8).
- */
+/** Key in system_settings storing dynamic admin invites beyond the bootstrap allowlist. */
 export const TEAM_INVITES_KEY = 'admin_invites';
 
 export interface TeamInvite {
-  /**
-   * Lowercased. This is the matching key — `allowedEmails()`, `invitedRoleFor()`
-   * and the duplicate check all compare against it, so it must stay canonical.
-   */
+  /** Canonical lowercased email used for authorization matching. */
   email: string;
-  /**
-   * What the admin actually typed, for display only.
-   *
-   * Addresses were stored lowercased and then shown that way, so inviting
-   * `Omar.Assad99@gmail.com` listed a person as `omar.assad99@gmail.com` — the
-   * team page was quietly correcting someone's own name back at them. Mail
-   * providers treat the local part case-insensitively in practice, so matching
-   * must stay lowercase; only the rendering was wrong.
-   *
-   * Optional because invites written before this existed have no value for it,
-   * and those fall back to `email`.
-   */
+  /** Original user-entered email casing for UI display. */
   displayEmail?: string;
   role: RoleCode;
   firstName: string;
@@ -52,13 +21,10 @@ export interface TeamInvite {
 }
 
 export const createMemberSchema = z.object({
-  // Not `.toLowerCase()` here: the casing the admin typed is kept for display
-  // and lowercased where it is compared. See `TeamInvite.displayEmail`.
   email: z.string().trim().email('Enter a valid email address.'),
   firstName: z.string().trim().max(80).default(''),
   lastName: z.string().trim().max(80).default(''),
-  // The SPA sends the role's database id; it also accepts a bare code so the API
-  // is usable by hand.
+  // Accepts role database id or role code.
   roleId: z.string().trim().min(1, 'Pick a role.'),
 });
 export type CreateMemberInput = z.infer<typeof createMemberSchema>;
@@ -103,10 +69,7 @@ async function writeInvites(invites: TeamInvite[], actorId: string): Promise<voi
     });
 }
 
-/**
- * Invite someone. They sign in with Google as normal; the role is applied when
- * their account is created, and `getAdmin()` lets them past from this moment.
- */
+/** Invites a new admin member with assigned role. */
 export async function inviteMember(
   input: CreateMemberInput,
   actorId: string,
@@ -144,19 +107,7 @@ export const updateMemberSchema = z.object({
 });
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;
 
-/**
- * Correct an invite that has not been accepted yet.
- *
- * Only invites. Once someone signs in, their name and address come from Google
- * on every sign-in, so a value edited here would be silently overwritten the
- * next time they logged in — and the address is the identity the account is
- * matched on, which makes editing it a way to hand one person's access to
- * another. The dashboard therefore offers this only while `status === 'invited'`,
- * and the endpoint enforces the same rule rather than trusting it.
- *
- * Before this existed, a typo in an invited address could only be fixed by
- * revoking and re-inviting.
- */
+/** Updates an unaccepted pending invite. Active accounts cannot be modified here. */
 export async function updateInvite(
   currentEmail: string,
   input: UpdateMemberInput,

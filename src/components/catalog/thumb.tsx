@@ -4,17 +4,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Image tile with a tinted brand gradient underneath, matching the prototype `.ph`.
- *
- * Two differences from Tavkil's version. It has no picsum.photos placeholder — a
- * production page must not fetch decorative images from a third party, and step
- * 14h's CSP names its `img-src` hosts explicitly. And the
- * gradient is not decoration: it *is* the empty state, so a product whose image
- * hasn't been uploaded yet renders as a deliberate brand-coloured tile rather than
- * a hole.
- *
- * A failed load (a stored URL whose object is gone) is caught and hidden, so a
- * missing file never shows a broken-image icon.
+ * Image tile with a tinted brand-gradient fallback when missing or failed to load.
  */
 export function Thumb({
   src,
@@ -32,8 +22,7 @@ export function Thumb({
   priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
-  // Fade in over the gradient rather than popping. The `ref` check covers cached
-  // images, whose `onLoad` never fires — without it they would stay invisible.
+  // Check `el.complete` via ref so cached images whose `onLoad` already fired still fade in.
   const [loaded, setLoaded] = useState(false);
 
   return (
@@ -44,8 +33,7 @@ export function Thumb({
       }}
     >
       {src && !failed && (
-        // R2 objects have no stored dimensions (see PLAN.md §5), and the fixed
-        // aspect-ratio wrapper already reserves the space next/image would.
+        // R2 objects have no stored dimensions; the fixed aspect-ratio wrapper reserves layout space.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
@@ -59,7 +47,7 @@ export function Thumb({
           }}
           onError={() => setFailed(true)}
           className={cn(
-            'pointer-events-none absolute inset-0 size-full select-none object-cover transition-opacity duration-500',
+            'pointer-events-none absolute inset-0 size-full object-cover transition-opacity duration-500 select-none',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
         />

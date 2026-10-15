@@ -1,6 +1,3 @@
-import { betterAuth } from 'better-auth';
-import { eq } from 'drizzle-orm';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/lib/db';
 import {
   authAccount,
@@ -11,24 +8,15 @@ import {
   roles,
 } from '@/lib/db/schema';
 import { isAllowlisted } from '@/lib/permissions/allowlist';
-import { invitedRoleFor } from '@/lib/services/team';
 import { OWNER_ROLE } from '@/lib/permissions/catalog';
+import { invitedRoleFor } from '@/lib/services/team';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { eq } from 'drizzle-orm';
 
 /**
- * Better Auth, Google only, admins only.
- *
- * There is no buyer sign-in on this site (PLAN.md §3), so this exists purely to
- * gate `/admin` and `/api/admin/*`. Two consequences worth stating:
- *
- *   - `emailAndPassword` is off. Every account is a Google account, so there is no
- *     password to leak, no reset flow to abuse, and no credential stuffing surface.
- *   - Sign-up is not open. Passing the Google flow is necessary but not sufficient;
- *     `ADMIN_ALLOWLIST` decides who actually gets in, and that check lives in
- *     auth-guard.ts so it applies to pages and API routes alike.
- *
- * The table names are Tavkil's (`authUser`, not `user`), so the adapter is given an
- * explicit schema map rather than relying on Better Auth's defaults. Those tables
- * already exist — do not create new ones.
+ * Better Auth configuration for Google OAuth admin authentication.
+ * Email/password is disabled; access is gated via ADMIN_ALLOWLIST.
  */
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -43,66 +31,22 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: { enabled: false },
-  /**
-   * `userType` has to be DECLARED, not just written.
-   *
-   * Better Auth serialises only the columns it knows about into the session
-   * payload. Writing `userType` to the row (see the create hook below) was not
-   * enough: `authClient.getSession()` returned a user object without the field,
-   * so the admin SPA's `user.userType !== 'admin'` test compared against
-   * `undefined` and failed on every single load — sign in, land on the
-   * dashboard, bounce back to login, forever.
-   *
-   * `input: false` keeps it server-owned: a client cannot send `userType` in a
-   * sign-up or update payload and promote itself.
-   */
+  // Expose userType in session payload; server-owned to prevent client tampering.
   user: {
     additionalFields: {
       userType: { type: 'string', input: false, required: false },
     },
   },
-  /**
-   * Stamp `userType` on the row, because the admin SPA reads it.
-   *
-   * Tavkil's Nest backend set this at signup and its dashboard gates on it —
-   * `features/auth/me-api.ts` throws `unauthorized` unless the session user is
-   * `userType: 'admin'`, which sends the SPA to its own /login. The column
-   * defaults to `'buyer'`, so every Google sign-in here produced a valid session
-   * that the dashboard then rejected: sign in, land on /admin/dashboard, bounce
-   * straight back to the login screen.
-   *
-   * Setting it from the allowlist keeps that ported check meaningful instead of
-   * deleting it. It is not the security boundary — `requireAdmin()` re-reads
-   * ADMIN_ALLOWLIST on every request, so a stale `'admin'` here grants nothing.
-   */
+  // Assign initial userType and bootstrap roles via database hooks.
   databaseHooks: {
     user: {
       create: {
         before: async (user) => {
-          // Invited from the dashboard counts as staff too, not just the env
-          // allowlist — otherwise a colleague added in the UI signs in as a
-          // 'buyer' and the dashboard turns them away.
           const staff = isAllowlisted(user.email) || (await invitedRoleFor(user.email)) !== null;
           return { data: { ...user, userType: staff ? 'admin' : 'buyer' } };
         },
-        /**
-         * Give an allowlisted admin the Owner role on first sign-in.
-         *
-         * Without this the project cannot be bootstrapped. `permissionsFor()`
-         * reads `auth_user_roles`, which starts empty, so a brand-new admin
-         * signs in with **zero** permissions and the SPA hides every nav item
-         * but Dashboard. The only way to grant a role is the Users page, which
-         * itself requires `users:assign_role` — nobody can ever hold it. That
-         * deadlock is exactly what the first real sign-in hit.
-         *
-         * The allowlist is already the "who runs this site" list (CLAUDE.md §6),
-         * so deriving Owner from it introduces no new authority: an address that
-         * is not on it fails `requireAdmin()` on every request regardless of any
-         * role row.
-         */
+        // Assign default role on first sign-in (Owner for allowlist, or invited role).
         after: async (user) => {
-          // Env-allowlisted accounts are Owners (the bootstrap); an invited
-          // colleague gets whatever role they were invited with.
           const invited = await invitedRoleFor(user.email);
           const code = isAllowlisted(user.email) ? OWNER_ROLE : invited;
           if (!code) return;
@@ -112,7 +56,7 @@ export const auth = betterAuth({
             .from(roles)
             .where(eq(roles.code, code))
             .limit(1);
-          if (!row) return; // `pnpm sync:permissions` has not run yet.
+          if (!row) return;
           await db
             .insert(authUserRoles)
             .values({ authUserId: user.id, roleId: row.id })
@@ -122,18 +66,7 @@ export const auth = betterAuth({
     },
     session: {
       create: {
-        /**
-         * Stamp `lastSeenAt`.
-         *
-         * Nothing wrote this column, so the users table reported "Invited · Not
-         * signed in yet" about an admin who was signed in and looking at the
-         * page — `status` is derived from it (services/rbac.ts), so an empty
-         * column made the whole column wrong rather than merely blank.
-         *
-         * On session create, not on every request: one write per sign-in answers
-         * "is this account in use", and writing on every request would add a
-         * round-trip to the hot path for nothing.
-         */
+        // Update user's lastSeenAt timestamp on sign-in session creation.
         after: async (session) => {
           await db
             .update(authUser)
@@ -143,11 +76,7 @@ export const auth = betterAuth({
       },
     },
   },
-  // Where a failed OAuth round-trip lands. Without this, Better Auth redirects to
-  // its own /api/auth/error, which redirects to `/`, which the i18n middleware
-  // then rewrites to `/en?error=…` — so a failed sign-in dropped the admin on the
-  // storefront homepage with the reason hidden in a query string nothing reads.
-  // Sending it to /admin/login puts the message on the page that can act on it.
+  // Direct OAuth error redirects to admin login page.
   onAPIError: { errorURL: '/admin/login' },
   socialProviders: {
     google: {
@@ -160,8 +89,7 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24,
   },
   advanced: {
-    // Cookies must be Secure + HttpOnly + SameSite=Lax and never readable from
-    // JavaScript (PLAN.md §14h). Session state never goes in localStorage.
+    // HttpOnly, Secure, SameSite=Lax cookie session protection.
     defaultCookieAttributes: {
       httpOnly: true,
       sameSite: 'lax',

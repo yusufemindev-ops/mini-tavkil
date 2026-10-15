@@ -546,7 +546,7 @@ export function CategoriesPage() {
               <div
                 className={cn(
                   ROW_COLS,
-                  'border-border text-muted-foreground bg-muted/40 border-b px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide',
+                  'border-border text-muted-foreground bg-muted/40 border-b px-4 py-2.5 text-[11px] font-semibold tracking-wide uppercase',
                 )}
               >
                 <div>Category</div>

@@ -5,13 +5,7 @@ import messages from '../../../messages/en.json';
 import { ProductGallery } from './product-gallery';
 import type { PublicImage } from '@/lib/queries/public-product';
 
-/**
- * The gallery's interactive parts can't be verified against the live site: every
- * seeded product carries exactly one image, so the thumbnail strip never renders
- * there, and no product has options either. These tests exercise the multi-image
- * case the data doesn't currently produce — which is precisely the code that was
- * dropped once and had to be restored from Tavkil.
- */
+// Multi-image gallery interaction tests (thumbnail switching and keyboard navigation).
 const image = (n: number): PublicImage => ({
   url: `https://example.test/${n}.webp`,
   alt: `Alt ${n}`,

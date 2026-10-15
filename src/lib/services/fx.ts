@@ -3,25 +3,8 @@ import { createDb, db as requestDb } from '@/lib/db';
 import { currencies, fxRateRuns, fxRates } from '@/lib/db/schema';
 
 /**
- * FX rate refresh, ported from Tavkil's Nest service.
- *
- * Every guard here survived the port because each one prevents a specific, real
- * failure — none of it is defensive noise:
- *
- *   - **Pegged currencies are never fetched.** SAR and AED are fixed by their
- *     central banks. Asking a market feed for them invites a wrong answer that
- *     overwrites a rate that was correct by definition.
- *   - **A move larger than 20% in a day is refused** and the previous rate kept.
- *     A free key-less provider returning garbage — or being compromised — would
- *     otherwise silently reprice the whole catalogue.
- *   - **It never throws.** A provider outage records a failed run and leaves the
- *     last-good rates in place. Conversion is decorative here (no public prices
- *     at all), so an FX failure must never surface to anyone.
- *
- * The Nest version ran on a 2-hourly `@Cron` gated to the worker process. Workers
- * have no long-lived process, so the schedule is a Cloudflare Cron Trigger and
- * the "one success per day, retry until then" behaviour comes from the
- * `hasSucceededToday` guard, exactly as it did before.
+ * FX rate service. Fetches market rates, filters pegged currencies (SAR, AED),
+ * guards against jumps >20%, and records run telemetry.
  */
 
 const BASE_CURRENCY = 'USD';
@@ -44,13 +27,7 @@ export function fxDbFromEnv(connectionString: string): Db {
   return createDb(connectionString);
 }
 
-/**
- * Has a refresh already succeeded today (UTC)?
- *
- * This is what turns a 2-hourly trigger into "once a day, retrying until it
- * works" without a separate retry scheduler — the same behaviour Tavkil's
- * `@Cron` had, minus the worker-process gate that Workers can't provide.
- */
+/** Returns whether an FX refresh run has already succeeded today (UTC). */
 export async function hasSucceededToday(db: Db = requestDb): Promise<boolean> {
   const startOfDay = new Date();
   startOfDay.setUTCHours(0, 0, 0, 0);

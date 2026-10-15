@@ -13,15 +13,7 @@ import { revalidateSettings } from '@/lib/cache';
 export { generalSettingsSchema, updateSettingsSchema };
 export type { GeneralSettings, UpdateSettingsInput };
 
-/**
- * Admin settings — the same `system_settings` row the storefront reads, but the
- * whole blob rather than the public allow-list.
- *
- * Tavkil's settings page had six sections; the Transactional-emails template table
- * is gone (PLAN.md §3) and replaced by one field: where an enquiry should land.
- * A template editor for a site that sends exactly one kind of email is machinery,
- * not capability.
- */
+/** Admin settings service managing general system_settings row and cache revalidation. */
 
 export const ADMIN_SETTINGS_DEFAULTS: GeneralSettings = {
   ...(SETTINGS_DEFAULTS as SiteSettings),
@@ -60,8 +52,7 @@ export async function updateGeneralSettings(
     });
 
   const updated = merged;
-  // Site name, logo and contact details render in the header and footer of
-  // every public page, so this one invalidates the whole storefront.
+  // Invalidate storefront cache across pages that display site settings.
   revalidateSettings();
   return updated;
 }

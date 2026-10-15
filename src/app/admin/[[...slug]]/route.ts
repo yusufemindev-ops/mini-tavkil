@@ -3,26 +3,12 @@ import { getAdmin } from '@/lib/auth-guard';
 import { ADMIN_SHELL } from '@/generated/admin-shell';
 
 /**
- * Serves the admin SPA, and is the reason `run_worker_first` exists in
- * wrangler.jsonc.
- *
- * Cloudflare answers static-asset requests *before* the Worker runs. With the SPA
- * built into public/admin, every /admin request used to be served straight from
- * the asset store and Next's middleware never executed — the gate was bypassed in
- * production while working perfectly under `next dev`, which has no asset layer.
- * Deep links 404'd for the same reason: no file exists at /admin/products and the
- * Worker was never asked.
- *
- * Routing /admin* to the Worker fixes the routes. The shell needed one more step:
- * while it was a file under public/ it stayed directly reachable no matter what
- * this handler did, so `pnpm admin:build` lifts it into a generated module and
- * deletes it from public/. Its assets stay public, which is right — they carry no
- * data and every visitor gets identical bytes.
+ * Serves the admin SPA HTML shell or delegates static assets to Cloudflare ASSETS binding.
+ * Enforces session authentication before serving protected admin routes.
  */
 export const dynamic = 'force-dynamic';
 
-// A path with a file extension is an asset request; anything else is a
-// client-side route.
+// File extensions denote static assets; all other paths route to SPA shell.
 const LOOKS_LIKE_A_FILE = /\.[a-z0-9]+$/i;
 
 export async function GET(request: Request) {
@@ -34,21 +20,15 @@ export async function GET(request: Request) {
         ASSETS?: { fetch: (r: Request) => Promise<Response> };
       }
     ).ASSETS;
-    // `next dev` has no asset binding and serves public/ itself, so this branch
-    // only runs on the Worker.
+    // Forward asset requests to Cloudflare ASSETS binding in Worker runtime.
     if (assets) return assets.fetch(request);
     return new Response('Not found', { status: 404 });
   }
 
-  // `/admin/login` is the SPA's own sign-in screen. It has to render for a
-  // signed-out visitor — gating it would redirect the login page to itself.
-  // It carries no data: the shell is identical for everyone, and every API call
-  // the SPA makes afterwards is still checked server-side.
+  // Permit public access to login screen without session check.
   const isLoginScreen = url.pathname === '/admin/login';
 
-  // Every other admin path is gated. A signed-out visitor is redirected by the
-  // middleware; this catches anyone who got past it with a forged cookie, and is
-  // a real session check rather than the cookie-presence test middleware affords.
+  // Verify authenticated admin session for all protected admin routes.
   if (!isLoginScreen) {
     const admin = await getAdmin(request);
     if (!admin) {

@@ -2,24 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * Removes secret values from the OpenNext build artifact.
- *
- * OpenNext captures `.env` at build time and writes it into
- * `.open-next/cloudflare/next-env.mjs`, so DATABASE_URL (with password),
- * BETTER_AUTH_SECRET and GOOGLE_CLIENT_SECRET end up in plaintext in the bundle.
- *
- * They are never *read* at runtime — `populateProcessEnv` assigns Worker bindings
- * first and only fills gaps with `??=`, and every one of these is a real
- * `wrangler secret`. But a copied or shared build directory would be a full
- * credential dump, so they are blanked here rather than left lying around.
- *
- * Blanking rather than deleting the key is deliberate: `??=` treats `""` as
- * present, so a missing Worker secret still fails loudly at first use instead of
- * silently falling back to a stale build-time value.
- *
- * Only names confirmed to exist as Worker secrets or as non-Worker values are
- * listed. Stripping something the Worker actually needs from `.env` would break
- * production, so this list is deliberately explicit rather than pattern-matched.
+ * Blanks server secret values in `.open-next/cloudflare/next-env.mjs` so credentials are never embedded in the build artifact.
  */
 const STRIP = [
   // Confirmed via `wrangler secret list`.

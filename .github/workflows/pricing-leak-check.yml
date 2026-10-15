@@ -1,0 +1,15 @@
+name: Pricing leak check
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run pricing-leak smoke test
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL || 'https://mini-tavkil.yusufemin-dev.workers.dev' }}
+        run: bash scripts/check-pricing-leak.sh "$STAGING_URL"

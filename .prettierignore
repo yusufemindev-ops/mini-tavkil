@@ -1,7 +1,11 @@
 .next/
 .open-next/
+.wrangler/
 node_modules/
 pnpm-lock.yaml
 src/generated/
-prisma/migrations/
+public/admin/
+drizzle/
 playwright-report/
+test-results/
+*.tsbuildinfo

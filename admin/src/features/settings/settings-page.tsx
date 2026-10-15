@@ -88,13 +88,13 @@ function GeneralForm({ initial }: { initial: GeneralSettings }) {
         <PanelHead
           title="Contact & social"
           action={
-            <span className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">
+            <span className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">
               Admin-managed
             </span>
           }
         />
         <PanelBody>
-          <FieldHelp className="mb-3.5 mt-0">
+          <FieldHelp className="mt-0 mb-3.5">
             These details feed the storefront navbar (WhatsApp), the footer social icons, and the
             Contact page (WhatsApp button + map). The WhatsApp <code>wa.me</code> link is derived
             from the number. <strong>Leave a social URL blank to hide that icon</strong> on the
