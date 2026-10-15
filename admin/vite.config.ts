@@ -6,6 +6,14 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   base: '/admin/',
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     outDir: path.resolve(__dirname, '../public/admin'),
     emptyOutDir: true,

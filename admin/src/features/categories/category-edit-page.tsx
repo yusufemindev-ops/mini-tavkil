@@ -54,9 +54,9 @@ function draftsToPayload(drafts: Record<LocaleCode, TranslationDraft>): Translat
       name: d.name.trim(),
       slug: d.slug.trim() || toSlug(d.name),
       description: d.description.trim() || null,
-      seo_title: d.seoTitle.trim() || null,
-      seo_description: d.seoDescription.trim() || null,
-      is_complete: isDraftComplete(d),
+      seoTitle: d.seoTitle.trim() || null,
+      seoDescription: d.seoDescription.trim() || null,
+      isComplete: isDraftComplete(d),
     };
   });
 }

@@ -14,6 +14,10 @@ const LOOKS_LIKE_A_FILE = /\.[a-z0-9]+$/i;
 export async function GET(request: Request) {
   const url = new URL(request.url);
 
+  if (process.env.NODE_ENV === 'development') {
+    return Response.redirect(new URL(`${url.pathname}${url.search}`, 'http://localhost:5173'), 307);
+  }
+
   if (LOOKS_LIKE_A_FILE.test(url.pathname)) {
     const assets = (
       getCloudflareContext().env as unknown as {

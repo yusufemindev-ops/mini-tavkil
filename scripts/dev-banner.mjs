@@ -15,11 +15,7 @@ const services = [
     name: 'Storefront (Next.js)',
     url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   },
-  { name: 'Admin Dashboard (Vite)', url: 'http://localhost:5173' },
-  {
-    name: 'Admin (Embedded)',
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin`,
-  },
+  { name: 'Admin Dashboard (Vite)', url: 'http://localhost:5173/admin' },
 ];
 
 // Automatically include backend API server if configured in .env or environment

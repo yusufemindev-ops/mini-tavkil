@@ -440,7 +440,7 @@ async function upsertTranslations(
         specsMd: translation.specsMd ?? null,
         seoTitle: translation.seoTitle ?? null,
         seoDescription: translation.seoDescription ?? null,
-        isComplete: translation.isComplete ?? false,
+        isComplete: translation.isComplete ?? true,
         isMachineTranslated: translation.isMachineTranslated ?? false,
       };
       await db

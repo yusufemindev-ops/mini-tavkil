@@ -48,6 +48,11 @@ export default function middleware(request: NextRequest): NextResponse {
   }
 
   if (pathname.startsWith('/admin')) {
+    if (process.env.NODE_ENV === 'development') {
+      return NextResponse.redirect(
+        new URL(`${pathname}${request.nextUrl.search}`, 'http://localhost:5173'),
+      );
+    }
     // Bypass gating for static assets and public admin login route.
     if (ADMIN_ASSET.test(pathname)) return NextResponse.next();
     if (pathname === '/admin/login') return NextResponse.next();

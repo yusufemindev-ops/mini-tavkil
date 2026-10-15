@@ -48,7 +48,7 @@ function buildTranslations(name: string, slug: string): TranslationPayload[] {
       locale: 'en',
       name: trimmedName,
       slug: finalSlug,
-      is_complete: trimmedName.length > 0 && finalSlug.length > 0,
+      isComplete: trimmedName.length > 0 && finalSlug.length > 0,
     },
   ];
 }

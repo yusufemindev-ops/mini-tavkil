@@ -22,7 +22,7 @@ jobs:
       # Public values — they ship in every page's HTML, so they are not secrets.
       # .env.production is gitignored, so CI has to be given them here.
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      NEXT_PUBLIC_R2_PUBLIC_URL: https://images.tavkil.com
+      NEXT_PUBLIC_R2_PUBLIC_URL: https://pub-479db5c01d9a458faab4b55912a59114.r2.dev
       SITE_INDEXABLE: 'false'
     steps:
       - uses: actions/checkout@v4

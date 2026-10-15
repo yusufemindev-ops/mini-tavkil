@@ -40,11 +40,14 @@ function contentSecurityPolicy(): string {
 }
 
 function r2Host(): string {
+  const hosts = new Set<string>(['https://images.tavkil.com']);
   try {
-    return new URL(process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '').origin;
+    const configured = new URL(process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '').origin;
+    if (configured) hosts.add(configured);
   } catch {
-    return '';
+    // Ignore empty or invalid URL.
   }
+  return [...hosts].join(' ');
 }
 
 const SECURITY_HEADERS = [
