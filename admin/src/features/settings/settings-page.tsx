@@ -19,6 +19,7 @@ import { SETTINGS_TABS } from './tabs';
 import { settingsKeys, updateSettings, useSettings, type GeneralSettings } from './queries';
 import {
   currenciesKeys,
+  deduplicateFxRuns,
   fxKeys,
   refreshFx,
   toggleCurrency,
@@ -176,9 +177,16 @@ function CurrenciesTab() {
   );
 }
 
+const FX_INITIAL_VISIBLE = 5;
+
 function FxRunsPanel() {
   const queryClient = useQueryClient();
-  const { data: runs, isLoading } = useFxRuns();
+  const { data: rawRuns, isLoading } = useFxRuns();
+  const [expanded, setExpanded] = useState(false);
+
+  const runs = rawRuns ? deduplicateFxRuns(rawRuns) : [];
+  const visibleRuns = expanded ? runs : runs.slice(0, FX_INITIAL_VISIBLE);
+  const hiddenCount = Math.max(0, runs.length - FX_INITIAL_VISIBLE);
 
   const refresh = useMutation({
     mutationFn: refreshFx,
@@ -215,16 +223,29 @@ function FxRunsPanel() {
       <PanelBody tight>
         {isLoading ? (
           <div className="text-muted-foreground px-[18px] py-4 text-sm">Loading…</div>
-        ) : !runs || runs.length === 0 ? (
+        ) : runs.length === 0 ? (
           <div className="text-muted-foreground px-[18px] py-4 text-sm">
             No runs yet. The worker fetches daily — use “Refresh now” to run it immediately.
           </div>
         ) : (
-          <ul className="divide-border divide-y">
-            {runs.map((run) => (
-              <FxRunRow key={run.id} run={run} />
-            ))}
-          </ul>
+          <>
+            <ul className="divide-border divide-y">
+              {visibleRuns.map((run) => (
+                <FxRunRow key={run.id} run={run} />
+              ))}
+            </ul>
+            {hiddenCount > 0 && (
+              <div className="border-border border-t px-[18px] py-2">
+                <button
+                  type="button"
+                  onClick={() => setExpanded((prev) => !prev)}
+                  className="text-primary text-xs font-medium hover:underline"
+                >
+                  {expanded ? 'Show less' : `Show older runs (${hiddenCount})`}
+                </button>
+              </div>
+            )}
+          </>
         )}
         <div className="border-border text-muted-foreground flex items-start gap-2 border-t px-[18px] py-3 text-xs">
           <Info className="mt-0.5 size-3.5 flex-none" />

@@ -3,6 +3,8 @@ import { createFactory } from 'hono/factory';
 import type { ZodType } from 'zod';
 import { requirePermission, type AdminUser } from '@/lib/auth-guard';
 import { invalid } from '@/lib/api/errors';
+import { recordAudit } from '@/lib/services/audit-log';
+import type { AuditResourceType } from '@/lib/services/audit-log-schema';
 
 export type R2BucketLike = {
   put: (
@@ -47,4 +49,28 @@ export async function parseJson<T>(c: Context<AppEnv>, schema: ZodType<T>): Prom
 /** Wraps admin responses in `{ data }` with `Cache-Control: private, no-store`. */
 export function adminJson<T>(c: Context<AppEnv>, data: T, status: 200 | 201 = 200) {
   return c.json({ data }, status, { 'Cache-Control': 'private, no-store' });
+}
+
+/** Records an admin mutation in `audit_log` with the authenticated actor and request metadata. */
+export async function auditAdmin(
+  c: Context<AppEnv>,
+  entry: {
+    action: string;
+    resourceType: AuditResourceType;
+    resourceId?: string | null;
+    target?: string | null;
+    summary: string;
+  },
+): Promise<void> {
+  await recordAudit({
+    actorId: c.var.admin?.id ?? null,
+    actorType: 'user',
+    action: entry.action,
+    resourceType: entry.resourceType,
+    resourceId: entry.resourceId ?? null,
+    target: entry.target ?? null,
+    summary: entry.summary,
+    ipAddress: c.req.header('cf-connecting-ip') ?? c.req.header('x-forwarded-for') ?? null,
+    userAgent: c.req.header('user-agent') ?? null,
+  });
 }

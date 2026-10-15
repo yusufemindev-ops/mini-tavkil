@@ -270,6 +270,20 @@ const ROUTE_META: Record<string, RouteMeta> = {
     summary: 'Upload an image file (multipart/form-data) to Cloudflare R2',
     permission: 'media:upload',
   },
+  'GET /api/admin/audit-logs': {
+    summary: 'Paginated admin activity log with resource type and search filters',
+    permission: 'audit_log:view',
+    queryParams: [
+      { name: 'page', example: '1', description: 'Page number (1-indexed)' },
+      { name: 'pageSize', example: '25', description: 'Items per page (max 100)' },
+      {
+        name: 'resourceType',
+        example: '',
+        description: 'product | category | supplier | settings | currency | user | media',
+      },
+      { name: 'search', example: '', description: 'Filter by actor, action, target, or summary' },
+    ],
+  },
 };
 
 function tagForPath(path: string): string {
@@ -294,6 +308,7 @@ function tagForPath(path: string): string {
     return 'Admin · Users & RBAC';
   }
   if (path.startsWith('/api/admin/media')) return 'Admin · Media (R2)';
+  if (path.startsWith('/api/admin/audit-logs')) return 'Admin · Audit Log';
   return 'Other';
 }
 
