@@ -1,8 +1,14 @@
-import { and, asc, count, eq, inArray } from 'drizzle-orm';
-import { z } from 'zod';
+import { and, asc, count, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { authAccount, authUser, authUserRoles, roles } from '@/lib/db/schema';
-import { invalid, notFound } from '@/lib/api/errors';
+import {
+  authAccount,
+  authUser,
+  authUserRoles,
+  permissions,
+  rolePermissions,
+  roles,
+} from '@/lib/db/schema';
+import { conflict, invalid, notFound } from '@/lib/api/errors';
 import { adminAllowlist } from '@/lib/permissions/allowlist';
 import { listInvites } from '@/lib/services/team';
 import {
@@ -14,19 +20,27 @@ import {
   roleGrants,
   type RoleCode,
 } from '@/lib/permissions/catalog';
+import {
+  assignRoleSchema,
+  createRoleSchema,
+  slugifyRoleCode,
+  updateRoleSchema,
+  type AssignRoleInput,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+} from './rbac-schema';
 
-/**
- * Admin users and RBAC role assignments. Roles are fixed in code.
- */
+export {
+  assignRoleSchema,
+  createRoleSchema,
+  slugifyRoleCode,
+  updateRoleSchema,
+  type AssignRoleInput,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+};
 
-/** Accepts either role code or database roleId to resolve target role. */
-export const assignRoleSchema = z
-  .object({
-    role: z.enum(ASSIGNABLE_ROLES as [RoleCode, ...RoleCode[]]).optional(),
-    roleId: z.string().trim().min(1).optional(),
-  })
-  .refine((value) => value.role || value.roleId, { message: 'Pick a role.' });
-export type AssignRoleInput = z.infer<typeof assignRoleSchema>;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Shape matching admin dashboard team member row requirements. */
 export interface AdminUserRow {
@@ -53,9 +67,12 @@ function asUtcIso(value: string | null): string | null {
   return hasZone ? value : `${value.replace(' ', 'T')}Z`;
 }
 
+function resolveRoleLabel(code: string, roleNameByCode: Map<string, string>): string {
+  return (ROLE_LABELS as Record<string, string>)[code] ?? roleNameByCode.get(code) ?? code;
+}
+
 export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]> {
   const invites = await listInvites();
-  // Include both env allowlist and dashboard invitees.
   const allowed = new Set([...adminAllowlist(), ...invites.map((i) => i.email.toLowerCase())]);
 
   const rows = await db
@@ -71,8 +88,6 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
     .from(authUser)
     .orderBy(asc(authUser.createdAt));
 
-  // Only accounts that are, or once were, staff. A row for someone who never had
-  // admin access is noise in this list.
   const staff = rows.filter((row) => allowed.has(row.email.toLowerCase()));
   const ids = staff.map((row) => row.id);
 
@@ -87,22 +102,12 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
 
   const roleByUser = new Map(assignments.map((row) => [row.userId, row.code]));
 
-  /**
-   * Every role's database id, read from `roles` rather than from the assignments
-   * above.
-   *
-   * Deriving it from assignments only knows about roles somebody already holds,
-   * and an invited member holds none — so their `role.id` fell back to the role
-   * *code*. The drawer's `<SelectMenu>` keys its options on the role id, nothing
-   * matched, and "Manage member" showed an empty Role box over a row the table
-   * had just labelled "Catalog manager".
-   */
-  const allRoles = await db.select({ id: roles.id, code: roles.code }).from(roles);
+  const allRoles = await db
+    .select({ id: roles.id, code: roles.code, name: roles.name })
+    .from(roles);
   const roleIdByCode = new Map(allRoles.map((row) => [row.code, row.id]));
+  const roleNameByCode = new Map(allRoles.map((row) => [row.code, row.name]));
 
-  // Which accounts have a Google identity linked. The users table shows this as a
-  // column, and it is the only sign-in method here, so it doubles as "can this
-  // person actually get in".
   const googleLinked = new Set(
     ids.length === 0
       ? []
@@ -114,7 +119,6 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
         ).map((row) => row.userId),
   );
 
-  // Synthesize pending rows for invited members who have not yet signed in.
   const signedInEmails = new Set(staff.map((row) => row.email.toLowerCase()));
   const pending: AdminUserRow[] = invites
     .filter((invite) => !signedInEmails.has(invite.email.toLowerCase()))
@@ -129,7 +133,7 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
       role: {
         id: roleIdByCode.get(invite.role) ?? invite.role,
         code: invite.role,
-        name: ROLE_LABELS[invite.role] ?? invite.role,
+        name: resolveRoleLabel(invite.role, roleNameByCode),
       },
       status: 'invited' as const,
       googleConnected: false,
@@ -150,7 +154,11 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
       lastName: row.name?.split(/\s+/).slice(1).join(' ') || null,
       banned: row.banned ?? false,
       role: code
-        ? { id: roleIdByCode.get(code) ?? code, code, name: ROLE_LABELS[code as RoleCode] ?? code }
+        ? {
+            id: roleIdByCode.get(code) ?? code,
+            code,
+            name: resolveRoleLabel(code, roleNameByCode),
+          }
         : null,
       status: row.banned
         ? ('suspended' as const)
@@ -168,38 +176,41 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
   return [...existing, ...pending];
 }
 
-/** Assigns a single fixed role to a user. */
-export async function assignRole(userId: string, role: RoleCode): Promise<AdminUserRow> {
-  const [user] = await db
-    .select({ id: authUser.id, email: authUser.email })
-    .from(authUser)
-    .where(eq(authUser.id, userId))
-    .limit(1);
-  if (!user) throw notFound('User not found.');
+/** Assigns a single system or custom role to a user while protecting the last active Owner. */
+export async function assignRole(userId: string, roleCode: string): Promise<AdminUserRow> {
+  const users = await listAdminUsers();
+  const current = users.find((row) => row.id === userId);
+  if (!current) throw notFound('User not found.');
+
+  if (current.role?.code === OWNER_ROLE && roleCode !== OWNER_ROLE) {
+    const activeOwners = users.filter(
+      (row) => row.role?.code === OWNER_ROLE && !row.banned && row.allowlisted,
+    );
+    if (activeOwners.length <= 1) {
+      throw invalid('Cannot demote the last active owner.');
+    }
+  }
 
   const [target] = await db
     .select({ id: roles.id })
     .from(roles)
-    .where(eq(roles.code, role))
+    .where(eq(roles.code, roleCode))
     .limit(1);
-  if (!target)
-    throw notFound(`Role "${role}" is not present in the database — run pnpm sync:permissions.`);
+  if (!target) {
+    throw notFound(`Role "${roleCode}" is not present in the database.`);
+  }
 
-  await db.delete(authUserRoles).where(eq(authUserRoles.authUserId, userId));
-  await db.insert(authUserRoles).values({ authUserId: userId, roleId: target.id });
+  await db.batch([
+    db.delete(authUserRoles).where(eq(authUserRoles.authUserId, userId)),
+    db.insert(authUserRoles).values({ authUserId: userId, roleId: target.id }),
+  ]);
 
   const updated = (await listAdminUsers()).find((row) => row.id === userId);
   if (!updated) throw notFound('User not found.');
   return updated;
 }
 
-/**
- * Suspend or reactivate an admin.
- *
- * Refuses to suspend the last active Owner. Locking every owner out of an admin
- * whose only escape hatch is the admin itself is unrecoverable without database
- * access.
- */
+/** Suspends or reactivates an admin while refusing to lock out the last active Owner. */
 export async function setUserSuspended(userId: string, banned: boolean): Promise<AdminUserRow> {
   const users = await listAdminUsers();
   const target = users.find((row) => row.id === userId);
@@ -224,7 +235,7 @@ export async function setUserSuspended(userId: string, banned: boolean): Promise
   return updated;
 }
 
-/** Remove a user's role. They keep their account but can do nothing. */
+/** Removes a user's role assignment while refusing to remove the last active Owner. */
 export async function removeRole(userId: string): Promise<AdminUserRow> {
   const users = await listAdminUsers();
   const target = users.find((row) => row.id === userId);
@@ -243,58 +254,349 @@ export async function removeRole(userId: string): Promise<AdminUserRow> {
   return updated;
 }
 
-/** Returns all system roles with member counts and granted permissions. */
-export async function listRoles(): Promise<AdminRole[]> {
-  const [rows, counts] = await Promise.all([
-    db.select({ id: roles.id, code: roles.code }).from(roles),
-    db
-      .select({ roleId: authUserRoles.roleId, n: count() })
-      .from(authUserRoles)
-      .groupBy(authUserRoles.roleId),
-  ]);
-  const idByCode = new Map(rows.map((row) => [row.code, row.id]));
-  const countById = new Map(counts.map((row) => [row.roleId, Number(row.n)]));
-
-  return ASSIGNABLE_ROLES.map((code) => {
-    const id = idByCode.get(code) ?? code;
-    return {
-      id,
-      code,
-      name: ROLE_LABELS[code],
-      description: ROLE_DESCRIPTIONS[code] ?? null,
-      type: 'system' as const,
-      memberCount: countById.get(id) ?? 0,
-      permissions: [...roleGrants(code)].sort(),
-    };
-  });
-}
-
 export interface AdminRole {
   id: string;
   code: string;
   name: string;
   description: string | null;
-  type: 'system';
+  type: 'system' | 'custom';
   memberCount: number;
   permissions: string[];
+}
+
+/** Returns all system and custom roles with member counts and granted permissions. */
+export async function listRoles(): Promise<AdminRole[]> {
+  const [rows, counts, customGrants, invites, signedInUsers] = await Promise.all([
+    db
+      .select({
+        id: roles.id,
+        code: roles.code,
+        name: roles.name,
+        description: roles.description,
+        isSystem: roles.isSystem,
+      })
+      .from(roles)
+      .orderBy(asc(roles.createdAt)),
+    db
+      .select({ roleId: authUserRoles.roleId, n: count() })
+      .from(authUserRoles)
+      .groupBy(authUserRoles.roleId),
+    db
+      .select({ roleId: rolePermissions.roleId, code: permissions.code })
+      .from(rolePermissions)
+      .innerJoin(
+        permissions,
+        and(eq(permissions.id, rolePermissions.permissionId), eq(permissions.deprecated, false)),
+      ),
+    listInvites(),
+    db.select({ email: authUser.email }).from(authUser),
+  ]);
+
+  const signedInEmails = new Set(signedInUsers.map((u) => u.email.toLowerCase()));
+  const inviteCountByCode = new Map<string, number>();
+  for (const inv of invites) {
+    if (!signedInEmails.has(inv.email.toLowerCase())) {
+      inviteCountByCode.set(inv.role, (inviteCountByCode.get(inv.role) ?? 0) + 1);
+    }
+  }
+
+  const rowByCode = new Map(rows.map((row) => [row.code, row]));
+  const countById = new Map(counts.map((row) => [row.roleId, Number(row.n)]));
+  const permsByRoleId = new Map<string, string[]>();
+  for (const grant of customGrants) {
+    const list = permsByRoleId.get(grant.roleId) ?? [];
+    list.push(grant.code);
+    permsByRoleId.set(grant.roleId, list);
+  }
+
+  const systemList: AdminRole[] = ASSIGNABLE_ROLES.map((code) => {
+    const dbRow = rowByCode.get(code);
+    const id = dbRow?.id ?? code;
+    return {
+      id,
+      code,
+      name: ROLE_LABELS[code],
+      description: ROLE_DESCRIPTIONS[code] ?? dbRow?.description ?? null,
+      type: 'system' as const,
+      memberCount: (countById.get(id) ?? 0) + (inviteCountByCode.get(code) ?? 0),
+      permissions: [...roleGrants(code)].sort(),
+    };
+  });
+
+  const systemCodes = new Set<string>(ASSIGNABLE_ROLES);
+  const customList: AdminRole[] = rows
+    .filter((row) => !row.isSystem && !systemCodes.has(row.code))
+    .map((row) => ({
+      id: row.id,
+      code: row.code,
+      name: row.name,
+      description: row.description,
+      type: 'custom' as const,
+      memberCount: (countById.get(row.id) ?? 0) + (inviteCountByCode.get(row.code) ?? 0),
+      permissions: (permsByRoleId.get(row.id) ?? []).sort(),
+    }));
+
+  return [...systemList, ...customList];
+}
+
+/** Returns a single system or custom role by database UUID or role code. */
+export async function getRoleById(roleIdOrCode: string): Promise<AdminRole> {
+  const all = await listRoles();
+  const found = all.find((r) => r.id === roleIdOrCode || r.code === roleIdOrCode);
+  if (!found) throw notFound('Role not found.');
+  return found;
+}
+
+async function resolveCatalogPermissionIds(codes: string[]): Promise<Map<string, string>> {
+  const uniqueCodes = [...new Set(codes)];
+  let existing = await db
+    .select({ id: permissions.id, code: permissions.code })
+    .from(permissions)
+    .where(inArray(permissions.code, uniqueCodes));
+
+  if (existing.length < uniqueCodes.length) {
+    const existingSet = new Set(existing.map((r) => r.code));
+    const missing = PERMISSION_CATALOG.filter(
+      (def) => uniqueCodes.includes(def.code) && !existingSet.has(def.code),
+    );
+    if (missing.length > 0) {
+      await db
+        .insert(permissions)
+        .values(
+          missing.map((def) => ({
+            code: def.code,
+            domain: def.domain,
+            name: def.name,
+            description: def.description,
+            deprecated: false,
+          })),
+        )
+        .onConflictDoNothing();
+      existing = await db
+        .select({ id: permissions.id, code: permissions.code })
+        .from(permissions)
+        .where(inArray(permissions.code, uniqueCodes));
+    }
+  }
+
+  return new Map(existing.map((row) => [row.code, row.id]));
+}
+
+/** Creates a new custom RBAC role and grants the selected catalog permissions. */
+export async function createCustomRole(
+  input: CreateRoleInput,
+  actorId?: string,
+): Promise<AdminRole> {
+  const parsed = createRoleSchema.parse(input);
+  const code = slugifyRoleCode(parsed.name);
+  if (!code) {
+    throw invalid('Role name must contain letters or numbers.');
+  }
+  if ((ASSIGNABLE_ROLES as string[]).includes(code)) {
+    throw conflict('A system role with that name already exists.');
+  }
+
+  const [conflictRow] = await db
+    .select({ id: roles.id })
+    .from(roles)
+    .where(or(eq(roles.code, code), sql`lower(${roles.name}) = ${parsed.name.toLowerCase()}`))
+    .limit(1);
+  if (conflictRow) {
+    throw conflict('A role with that name already exists.');
+  }
+
+  const uniqueCodes = [...new Set(parsed.permissions)].sort();
+  const permIdByCode = await resolveCatalogPermissionIds(uniqueCodes);
+  const now = new Date().toISOString();
+
+  const [created] = await db
+    .insert(roles)
+    .values({
+      code,
+      name: parsed.name,
+      description: parsed.description || null,
+      isSystem: false,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning({
+      id: roles.id,
+      code: roles.code,
+      name: roles.name,
+      description: roles.description,
+    });
+
+  const grantValues = uniqueCodes
+    .map((c) => permIdByCode.get(c))
+    .filter((id): id is string => Boolean(id))
+    .map((permissionId) => ({
+      roleId: created.id,
+      permissionId,
+      grantedAt: now,
+      grantedBy: actorId ?? null,
+    }));
+
+  if (grantValues.length > 0) {
+    await db.insert(rolePermissions).values(grantValues).onConflictDoNothing();
+  }
+
+  return {
+    id: created.id,
+    code: created.code,
+    name: created.name,
+    description: created.description,
+    type: 'custom',
+    memberCount: 0,
+    permissions: uniqueCodes,
+  };
+}
+
+/** Updates a custom RBAC role's metadata and permission grants. */
+export async function updateCustomRole(
+  roleId: string,
+  input: UpdateRoleInput,
+  actorId?: string,
+): Promise<AdminRole> {
+  if (!UUID_RE.test(roleId)) throw notFound('Role not found.');
+  const parsed = updateRoleSchema.parse(input);
+
+  const [existing] = await db
+    .select({
+      id: roles.id,
+      code: roles.code,
+      name: roles.name,
+      description: roles.description,
+      isSystem: roles.isSystem,
+    })
+    .from(roles)
+    .where(eq(roles.id, roleId))
+    .limit(1);
+
+  if (!existing) throw notFound('Role not found.');
+  if (existing.isSystem || (ASSIGNABLE_ROLES as string[]).includes(existing.code)) {
+    throw invalid('System roles are fixed in code and cannot be modified.');
+  }
+
+  if (parsed.name !== undefined) {
+    const [duplicate] = await db
+      .select({ id: roles.id })
+      .from(roles)
+      .where(
+        and(ne(roles.id, roleId), sql`lower(${roles.name}) = ${parsed.name.trim().toLowerCase()}`),
+      )
+      .limit(1);
+    if (duplicate) {
+      throw conflict('A role with that name already exists.');
+    }
+  }
+
+  const now = new Date().toISOString();
+  await db
+    .update(roles)
+    .set({
+      ...(parsed.name !== undefined ? { name: parsed.name } : {}),
+      ...(parsed.description !== undefined ? { description: parsed.description || null } : {}),
+      updatedAt: now,
+    })
+    .where(eq(roles.id, roleId));
+
+  if (parsed.permissions !== undefined) {
+    const uniqueCodes = [...new Set(parsed.permissions)].sort();
+    const permIdByCode = await resolveCatalogPermissionIds(uniqueCodes);
+    const grantValues = uniqueCodes
+      .map((c) => permIdByCode.get(c))
+      .filter((id): id is string => Boolean(id))
+      .map((permissionId) => ({
+        roleId,
+        permissionId,
+        grantedAt: now,
+        grantedBy: actorId ?? null,
+      }));
+
+    if (grantValues.length > 0) {
+      await db.batch([
+        db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId)),
+        db.insert(rolePermissions).values(grantValues).onConflictDoNothing(),
+      ]);
+    } else {
+      await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
+    }
+  }
+
+  const updated = (await listRoles()).find((r) => r.id === roleId);
+  if (!updated) throw notFound('Role not found.');
+  return updated;
+}
+
+/** Deletes a custom RBAC role if it is not a system role and has no assigned members. */
+export async function deleteCustomRole(
+  roleId: string,
+): Promise<{ id: string; code: string; name: string }> {
+  if (!UUID_RE.test(roleId)) throw notFound('Role not found.');
+
+  const [existing] = await db
+    .select({
+      id: roles.id,
+      code: roles.code,
+      name: roles.name,
+      isSystem: roles.isSystem,
+    })
+    .from(roles)
+    .where(eq(roles.id, roleId))
+    .limit(1);
+
+  if (!existing) throw notFound('Role not found.');
+  if (existing.isSystem || (ASSIGNABLE_ROLES as string[]).includes(existing.code)) {
+    throw invalid('System roles cannot be deleted.');
+  }
+
+  const [[assignmentCount], invites] = await Promise.all([
+    db.select({ n: count() }).from(authUserRoles).where(eq(authUserRoles.roleId, roleId)),
+    listInvites(),
+  ]);
+
+  const activeAssigned = Number(assignmentCount?.n ?? 0);
+  const invitedAssigned = invites.filter((inv) => inv.role === existing.code).length;
+  if (activeAssigned > 0 || invitedAssigned > 0) {
+    throw conflict(
+      'Cannot delete a role while members are assigned to it. Reassign those members first.',
+    );
+  }
+
+  await db.delete(roles).where(eq(roles.id, roleId));
+  return { id: existing.id, code: existing.code, name: existing.name };
 }
 
 /** The permission catalog, grouped by domain, for the admin's roles screen. */
 export function permissionCatalog() {
   const byDomain = new Map<string, typeof PERMISSION_CATALOG>();
   for (const permission of PERMISSION_CATALOG) {
+    if (permission.domain === 'self_profile') continue;
     byDomain.set(permission.domain, [...(byDomain.get(permission.domain) ?? []), permission]);
   }
-  return [...byDomain.entries()].map(([domain, permissions]) => ({ domain, permissions }));
+  return [...byDomain.entries()].map(([domain, perms]) => ({
+    domain,
+    actions: perms.map((p) => ({
+      action: p.code.split(':')[1] ?? p.code,
+      code: p.code,
+      name: p.name,
+      description: p.description,
+    })),
+    permissions: perms,
+  }));
 }
 
-/** Resolves role id or code string to a validated RoleCode enum value. */
-export async function roleCodeFromIdOrCode(value: string): Promise<RoleCode | null> {
-  if ((ASSIGNABLE_ROLES as string[]).includes(value)) return value as RoleCode;
+/** Resolves role id or code string to a validated role code in the database. */
+export async function roleCodeFromIdOrCode(value: string): Promise<string | null> {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if ((ASSIGNABLE_ROLES as string[]).includes(trimmed)) return trimmed as RoleCode;
+
+  const isUuid = UUID_RE.test(trimmed);
   const [row] = await db
     .select({ code: roles.code })
     .from(roles)
-    .where(eq(roles.id, value))
+    .where(isUuid ? or(eq(roles.id, trimmed), eq(roles.code, trimmed)) : eq(roles.code, trimmed))
     .limit(1);
-  return row && (ASSIGNABLE_ROLES as string[]).includes(row.code) ? (row.code as RoleCode) : null;
+  return row?.code ?? null;
 }

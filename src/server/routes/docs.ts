@@ -290,8 +290,34 @@ const ROUTE_META: Record<string, RouteMeta> = {
     permission: 'users:edit',
   },
   'GET /api/admin/roles': {
-    summary: 'List all RBAC roles with their granted permissions',
+    summary: 'List all RBAC roles (system and custom) with their granted permissions',
     permission: 'users:view',
+  },
+  'GET /api/admin/roles/:id': {
+    summary: 'Get a single RBAC role by UUID or role code',
+    permission: 'users:view',
+  },
+  'POST /api/admin/roles': {
+    summary: 'Create a custom RBAC role with selected catalog permissions',
+    permission: 'users:assign_role',
+    sampleBody: {
+      name: 'Order Coordinator',
+      description: 'Reviews and confirms buyer order requests',
+      permissions: ['orders:view', 'orders:confirm', 'buyers:view'],
+    },
+  },
+  'PATCH /api/admin/roles/:id': {
+    summary: 'Update a custom RBAC role name, description, or granted permissions',
+    permission: 'users:assign_role',
+    sampleBody: {
+      name: 'Order Coordinator',
+      description: 'Updated description',
+      permissions: ['orders:view', 'orders:confirm'],
+    },
+  },
+  'DELETE /api/admin/roles/:id': {
+    summary: 'Delete an unassigned custom RBAC role',
+    permission: 'users:assign_role',
   },
   'GET /api/admin/permissions/catalog': {
     summary: 'List the complete RBAC permission catalog grouped by domain',

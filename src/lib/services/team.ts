@@ -14,7 +14,7 @@ export interface TeamInvite {
   email: string;
   /** Original user-entered email casing for UI display. */
   displayEmail?: string;
-  role: RoleCode;
+  role: string;
   firstName: string;
   lastName: string;
   invitedAt: string;
@@ -46,7 +46,7 @@ export async function allowedEmails(): Promise<Set<string>> {
 }
 
 /** The role an invited address should be given on first sign-in, if any. */
-export async function invitedRoleFor(email: string): Promise<RoleCode | null> {
+export async function invitedRoleFor(email: string): Promise<string | null> {
   const match = (await listInvites()).find(
     (entry) => entry.email.toLowerCase() === email.trim().toLowerCase(),
   );
@@ -73,7 +73,7 @@ async function writeInvites(invites: TeamInvite[], actorId: string): Promise<voi
 export async function inviteMember(
   input: CreateMemberInput,
   actorId: string,
-  resolveRole: (roleIdOrCode: string) => Promise<RoleCode | null>,
+  resolveRole: (roleIdOrCode: string) => Promise<string | null>,
 ): Promise<TeamInvite> {
   const role = await resolveRole(input.roleId);
   if (!role) throw invalid('That role does not exist.');
@@ -142,6 +142,24 @@ export async function updateInvite(
   return next;
 }
 
+/** Updates the assigned role code of an unaccepted pending invite. */
+export async function updateInviteRole(
+  email: string,
+  role: string,
+  actorId: string,
+): Promise<TeamInvite> {
+  const key = email.trim().toLowerCase();
+  const invites = await listInvites();
+  const index = invites.findIndex((entry) => entry.email.toLowerCase() === key);
+  if (index === -1) throw invalid('That invite no longer exists.');
+
+  const next = { ...invites[index], role };
+  const updated = [...invites];
+  updated[index] = next;
+  await writeInvites(updated, actorId);
+  return next;
+}
+
 /** Remove an invite. Takes effect on their next request, not their next login. */
 export async function revokeInvite(email: string, actorId: string): Promise<void> {
   const target = email.trim().toLowerCase();
@@ -153,8 +171,8 @@ export async function revokeInvite(email: string, actorId: string): Promise<void
 }
 
 /** Human label for a role code, for building an `AdminTeamMember` response. */
-export function roleLabel(code: RoleCode): string {
-  return ROLE_LABELS[code];
+export function roleLabel(code: string): string {
+  return (ROLE_LABELS as Record<string, string>)[code] ?? code;
 }
 
 export function isRoleCode(value: string): value is RoleCode {

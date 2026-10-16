@@ -3,17 +3,24 @@ import { invalid } from '@/lib/api/errors';
 import {
   assignRole,
   assignRoleSchema,
+  createCustomRole,
+  createRoleSchema,
+  deleteCustomRole,
+  getRoleById,
   listAdminUsers,
   listRoles,
   permissionCatalog,
   removeRole,
   roleCodeFromIdOrCode,
   setUserSuspended,
+  updateCustomRole,
+  updateRoleSchema,
 } from '@/lib/services/rbac';
 import {
   createMemberSchema,
   inviteMember,
   updateInvite,
+  updateInviteRole,
   updateMemberSchema,
 } from '@/lib/services/team';
 import { adminJson, auditAdmin, parseJson, requireAdminPerm, type AppEnv } from '@/server/factory';
@@ -60,9 +67,24 @@ export const adminUsersRoutes = new Hono<AppEnv>()
   })
   .patch('/:id/role', requireAdminPerm('users:assign_role'), async (c) => {
     const body = await parseJson(c, assignRoleSchema);
-    const code = body.role ?? (await roleCodeFromIdOrCode(body.roleId!));
+    const code = await roleCodeFromIdOrCode((body.role ?? body.roleId)!);
     if (!code) throw invalid('That role does not exist.');
-    const targetId = c.req.param('id');
+    const targetId = decodeURIComponent(c.req.param('id'));
+    if (targetId.startsWith('invite:')) {
+      const inviteEmail = targetId.slice('invite:'.length);
+      await updateInviteRole(inviteEmail, code, c.var.admin.id);
+      const members = await listAdminUsers(c.var.admin.id);
+      const updated =
+        members.find((m) => m.email.toLowerCase() === inviteEmail.toLowerCase()) ?? members[0];
+      await auditAdmin(c, {
+        action: 'user.role_assigned',
+        resourceType: 'user',
+        resourceId: targetId,
+        target: inviteEmail,
+        summary: `Assigned role "${code}" to invited member ${inviteEmail}`,
+      });
+      return adminJson(c, updated);
+    }
     const updated = await assignRole(targetId, code);
     await auditAdmin(c, {
       action: 'user.role_assigned',
@@ -110,14 +132,49 @@ export const adminUsersRoutes = new Hono<AppEnv>()
     return adminJson(c, updated);
   });
 
-export const adminRolesRoutes = new Hono<AppEnv>().get(
-  '/',
-  requireAdminPerm('users:view'),
-  async (c) => adminJson(c, await listRoles()),
-);
+export const adminRolesRoutes = new Hono<AppEnv>()
+  .get('/', requireAdminPerm('users:view'), async (c) => adminJson(c, await listRoles()))
+  .get('/:id', requireAdminPerm('users:view'), async (c) =>
+    adminJson(c, await getRoleById(c.req.param('id'))),
+  )
+  .post('/', requireAdminPerm('users:assign_role'), async (c) => {
+    const body = await parseJson(c, createRoleSchema);
+    const created = await createCustomRole(body, c.var.admin.id);
+    await auditAdmin(c, {
+      action: 'role.created',
+      resourceType: 'user',
+      resourceId: created.id,
+      target: created.name,
+      summary: `Created custom role "${created.name}" (${created.permissions.length} permissions)`,
+    });
+    return adminJson(c, created, 201);
+  })
+  .patch('/:id', requireAdminPerm('users:assign_role'), async (c) => {
+    const body = await parseJson(c, updateRoleSchema);
+    const updated = await updateCustomRole(c.req.param('id'), body, c.var.admin.id);
+    await auditAdmin(c, {
+      action: 'role.updated',
+      resourceType: 'user',
+      resourceId: updated.id,
+      target: updated.name,
+      summary: `Updated custom role "${updated.name}" (${updated.permissions.length} permissions)`,
+    });
+    return adminJson(c, updated);
+  })
+  .delete('/:id', requireAdminPerm('users:assign_role'), async (c) => {
+    const deleted = await deleteCustomRole(c.req.param('id'));
+    await auditAdmin(c, {
+      action: 'role.deleted',
+      resourceType: 'user',
+      resourceId: deleted.id,
+      target: deleted.name,
+      summary: `Deleted custom role "${deleted.name}"`,
+    });
+    return adminJson(c, { id: deleted.id });
+  });
 
 export const adminPermissionsRoutes = new Hono<AppEnv>().get(
   '/catalog',
   requireAdminPerm('users:view'),
-  async (c) => adminJson(c, await permissionCatalog()),
+  async (c) => adminJson(c, permissionCatalog()),
 );
