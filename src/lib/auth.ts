@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import {
+  accountRequests,
   authAccount,
   authSession,
   authUser,
@@ -12,10 +13,11 @@ import { OWNER_ROLE } from '@/lib/permissions/catalog';
 import { invitedRoleFor } from '@/lib/services/team';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { eq } from 'drizzle-orm';
+import { APIError } from 'better-auth/api';
+import { and, eq, sql } from 'drizzle-orm';
 
 /**
- * Better Auth configuration for Google OAuth admin authentication.
+ * Better Auth configuration for Google OAuth admin and admin-provisioned buyer authentication.
  * Initialized lazily on first access so Worker bindings hydrate `process.env` first.
  */
 function createAuth() {
@@ -33,21 +35,49 @@ function createAuth() {
     baseURL: process.env.BETTER_AUTH_URL,
     trustedOrigins: process.env.NODE_ENV === 'development' ? ['http://localhost:5173'] : undefined,
     emailAndPassword: { enabled: false },
-    // Expose userType in session payload; server-owned to prevent client tampering.
+    account: {
+      accountLinking: { enabled: true, trustedProviders: ['google'] },
+    },
+    // Expose buyer-safe fields in session payload; commercial fields (tierMarkupPercent) stay server-only.
     user: {
       additionalFields: {
         userType: { type: 'string', input: false, required: false },
+        companyName: { type: 'string', input: false, required: false },
+        contactName: { type: 'string', input: false, required: false },
+        firstName: { type: 'string', input: false, required: false },
+        lastName: { type: 'string', input: false, required: false },
+        jobTitle: { type: 'string', input: false, required: false },
+        phone: { type: 'string', input: false, required: false },
+        country: { type: 'string', input: false, required: false },
+        city: { type: 'string', input: false, required: false },
+        address: { type: 'string', input: false, required: false },
+        verified: { type: 'boolean', input: false, required: false },
+        preferredLocale: { type: 'string', input: false, required: false },
       },
     },
-    // Assign initial userType and bootstrap roles via database hooks.
+    // Gate sign-up: only allowlisted/invited staff can auto-create on first login; buyers must be provisioned first.
     databaseHooks: {
       user: {
         create: {
           before: async (user) => {
             const staff = isAllowlisted(user.email) || (await invitedRoleFor(user.email)) !== null;
-            return { data: { ...user, userType: staff ? 'admin' : 'buyer' } };
+            if (!staff) {
+              const email = user.email.trim().toLowerCase();
+              const [pending] = await db
+                .select({ id: accountRequests.id })
+                .from(accountRequests)
+                .where(
+                  and(
+                    sql`lower(${accountRequests.businessEmail}) = ${email}`,
+                    eq(accountRequests.status, 'pending'),
+                  ),
+                )
+                .limit(1);
+              const code = pending ? 'REQUEST_PENDING' : 'BUYER_NOT_REGISTERED';
+              throw new APIError('FORBIDDEN', { code, message: code });
+            }
+            return { data: { ...user, userType: 'admin' } };
           },
-          // Assign default role on first sign-in (Owner for allowlist, or invited role).
           after: async (user) => {
             const invited = await invitedRoleFor(user.email);
             const code = isAllowlisted(user.email) ? OWNER_ROLE : invited;
@@ -68,7 +98,16 @@ function createAuth() {
       },
       session: {
         create: {
-          // Update user's lastSeenAt timestamp on sign-in session creation.
+          before: async (session) => {
+            const [row] = await db
+              .select({ banned: authUser.banned })
+              .from(authUser)
+              .where(eq(authUser.id, session.userId))
+              .limit(1);
+            if (row?.banned) {
+              throw new APIError('FORBIDDEN', { code: 'BANNED_USER', message: 'BANNED_USER' });
+            }
+          },
           after: async (session) => {
             await db
               .update(authUser)
@@ -78,8 +117,7 @@ function createAuth() {
         },
       },
     },
-    // Direct OAuth error redirects to admin login page.
-    onAPIError: { errorURL: '/admin/login' },
+    onAPIError: { errorURL: '/en/login' },
     socialProviders: {
       google: {
         clientId: process.env.GOOGLE_CLIENT_ID ?? '',

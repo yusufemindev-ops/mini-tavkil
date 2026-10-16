@@ -1,18 +1,73 @@
-import { and, asc, count, desc, eq, ilike, inArray, isNull, or } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { authUser, buyerProfiles, orderRequestItems, orderRequests } from '@/lib/db/schema';
-import { assertUuid, conflict, notFound } from '@/lib/api/errors';
+import {
+  authUser,
+  buyerProfiles,
+  orderNumberSequence,
+  orderRequestItems,
+  orderRequests,
+  productImages,
+  products,
+  productTranslations,
+  productVariants,
+  systemSettings,
+} from '@/lib/db/schema';
+import { assertUuid, conflict, forbidden, invalid, notFound } from '@/lib/api/errors';
+import { resolveImageUrl } from '@/lib/media/image-url';
+import { notifyOrderConfirmed, notifyOrderSubmitted } from '@/lib/services/notifications';
 import type {
   AssignOrderInput,
   ConfirmOrderInput,
   ListAdminOrdersQuery,
+  ListBuyerOrdersQuery,
   OrderStatus,
   RejectOrderInput,
+  SubmitBuyerOrderInput,
 } from '@/lib/services/orders-schema';
 
 export interface OrderItemOption {
   name: string;
   value: string;
+}
+
+export interface BuyerOrderItem {
+  id: string;
+  productId: string;
+  name: string;
+  imageUrl: string | null;
+  unit: string;
+  moq: number;
+  quantity: number;
+  unitPrice: number;
+  originalUnitPrice: number;
+  lineSubtotal: number;
+  options: OrderItemOption[];
+  buyerNote: string | null;
+}
+
+export interface BuyerOrder {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  currency: string;
+  subtotal: number;
+  originalSubtotal: number;
+  grandTotal: number | null;
+  items: BuyerOrderItem[];
+  notes: string | null;
+  rejectionReason: string | null;
+  submittedAt: string;
+  confirmedAt: string | null;
+  acceptedAt: string | null;
+  rejectedAt: string | null;
+  expiredAt: string | null;
+}
+
+export interface BuyerOrderPage {
+  items: BuyerOrder[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface AdminOrderItem {
@@ -340,7 +395,24 @@ export async function confirmAdminOrder(
 
   await db.batch([orderUpdate, ...itemUpdates]);
 
-  return getAdminOrder(id);
+  const confirmedOrder = await getAdminOrder(id);
+  const [buyerRow] = await db
+    .select({ email: authUser.email, contactName: authUser.contactName, name: authUser.name })
+    .from(authUser)
+    .where(eq(authUser.id, order.buyerId))
+    .limit(1);
+
+  if (buyerRow) {
+    void notifyOrderConfirmed({
+      to: buyerRow.email,
+      contactName: buyerRow.contactName ?? buyerRow.name,
+      orderNumber: confirmedOrder.orderNumber,
+      confirmedTotalAmount: confirmedOrder.confirmedGrandTotal ?? confirmedOrder.submittedSubtotal,
+      currency: confirmedOrder.currency,
+    });
+  }
+
+  return confirmedOrder;
 }
 
 export async function rejectAdminOrder(id: string, input: RejectOrderInput): Promise<AdminOrder> {
@@ -389,4 +461,412 @@ export async function assignAdminOrder(id: string, input: AssignOrderInput): Pro
     .where(eq(orderRequests.id, id));
 
   return getAdminOrder(id);
+}
+
+/**
+ * Transitions stale `submitted` or `confirmed` orders older than `order.auto_expire_days`
+ * (default 30 days) to `expired`. Safe to run repeatedly in Cloudflare Cron Triggers.
+ */
+export async function expireStaleOrders(
+  dbClient: typeof db = db,
+  defaultDays = 30,
+): Promise<number> {
+  const [setting] = await dbClient
+    .select({ value: systemSettings.value })
+    .from(systemSettings)
+    .where(eq(systemSettings.key, 'order.auto_expire_days'))
+    .limit(1);
+
+  const rawDays = (setting?.value as { days?: unknown } | null)?.days;
+  const days = typeof rawDays === 'number' && rawDays > 0 ? rawDays : defaultDays;
+  const cutoffIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const nowIso = new Date().toISOString();
+
+  const expired = await dbClient
+    .update(orderRequests)
+    .set({
+      status: 'expired',
+      expiredAt: nowIso,
+      updatedAt: nowIso,
+    })
+    .where(
+      and(
+        inArray(orderRequests.status, ['submitted', 'confirmed']),
+        lt(orderRequests.submittedAt, cutoffIso),
+        isNull(orderRequests.deletedAt),
+      ),
+    )
+    .returning({ id: orderRequests.id });
+
+  return expired.length;
+}
+
+// ── Buyer Order Lifecycle (Strict 3-Audience Pricing Guard) ──────────────────
+
+async function hydrateBuyerOrders(
+  rows: (typeof orderRequests.$inferSelect)[],
+): Promise<BuyerOrder[]> {
+  if (rows.length === 0) return [];
+  const orderIds = rows.map((r) => r.id);
+
+  const itemRows = await db
+    .select()
+    .from(orderRequestItems)
+    .where(inArray(orderRequestItems.orderRequestId, orderIds))
+    .orderBy(asc(orderRequestItems.sortOrder));
+
+  const itemsByOrder = new Map<string, (typeof orderRequestItems.$inferSelect)[]>();
+  for (const item of itemRows) {
+    const list = itemsByOrder.get(item.orderRequestId) ?? [];
+    list.push(item);
+    itemsByOrder.set(item.orderRequestId, list);
+  }
+
+  return rows.map((o) => {
+    const rawItems = itemsByOrder.get(o.id) ?? [];
+    const tierMarkup = Number(o.tierMarkupPercentAtSubmit);
+    const items: BuyerOrderItem[] = rawItems.map((it) => {
+      const originalUnitPrice =
+        it.submittedUnitPrice !== null
+          ? Number(it.submittedUnitPrice)
+          : round2(Number(it.unitPriceBase) * (1 + tierMarkup / 100));
+      const unitPrice = it.unitPriceFinal !== null ? Number(it.unitPriceFinal) : originalUnitPrice;
+      return {
+        id: it.id,
+        productId: it.productId,
+        name: resolveProductName(it.productNameSnapshot, o.locale),
+        imageUrl: it.productImageUrlSnapshot ?? null,
+        unit: it.productUnitSnapshot,
+        moq: it.productMoqSnapshot,
+        quantity: it.quantity,
+        unitPrice,
+        originalUnitPrice,
+        lineSubtotal: round2(unitPrice * it.quantity),
+        options: parseOptions(it.selectedOptions, o.locale),
+        buyerNote: it.buyerNote ?? null,
+      };
+    });
+
+    const confirmed = o.confirmedSubtotalAmount !== null;
+    return {
+      id: o.id,
+      orderNumber: o.orderNumber,
+      status: o.status as OrderStatus,
+      currency: (confirmed ? o.confirmedCurrency : o.submittedCurrency)?.trim() || 'USD',
+      subtotal: Number(confirmed ? o.confirmedSubtotalAmount : o.submittedSubtotalAmount),
+      originalSubtotal: Number(o.submittedSubtotalAmount),
+      grandTotal: o.confirmedGrandTotalAmount !== null ? Number(o.confirmedGrandTotalAmount) : null,
+      items,
+      notes: o.notesBuyer ?? null,
+      rejectionReason: o.rejectionReason ?? null,
+      submittedAt: asUtcIso(o.submittedAt) ?? o.submittedAt,
+      confirmedAt: asUtcIso(o.confirmedAt),
+      acceptedAt: asUtcIso(o.acceptedAt),
+      rejectedAt: asUtcIso(o.rejectedAt),
+      expiredAt: asUtcIso(o.expiredAt),
+    };
+  });
+}
+
+export async function listBuyerOrders(
+  buyerId: string,
+  query: ListBuyerOrdersQuery,
+): Promise<BuyerOrderPage> {
+  const { page, pageSize, status } = query;
+  const offset = (page - 1) * pageSize;
+
+  const filters = [eq(orderRequests.buyerId, buyerId), isNull(orderRequests.deletedAt)];
+  if (status) {
+    filters.push(eq(orderRequests.status, status));
+  }
+  const whereClause = and(...filters);
+
+  const [rows, [{ value: total }]] = await Promise.all([
+    db
+      .select()
+      .from(orderRequests)
+      .where(whereClause)
+      .orderBy(desc(orderRequests.submittedAt))
+      .limit(pageSize)
+      .offset(offset),
+    db.select({ value: count() }).from(orderRequests).where(whereClause),
+  ]);
+
+  const items = await hydrateBuyerOrders(rows);
+  return {
+    items,
+    total: Number(total ?? 0),
+    page,
+    pageSize,
+  };
+}
+
+export async function getBuyerOrder(buyerId: string, orderNumber: string): Promise<BuyerOrder> {
+  const normalized = orderNumber.trim().toUpperCase();
+  const [row] = await db
+    .select()
+    .from(orderRequests)
+    .where(
+      and(
+        eq(orderRequests.buyerId, buyerId),
+        eq(orderRequests.orderNumber, normalized),
+        isNull(orderRequests.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  if (!row) throw notFound('Order not found.');
+  const [hydrated] = await hydrateBuyerOrders([row]);
+  return hydrated!;
+}
+
+export async function submitBuyerOrder(
+  buyerId: string,
+  input: SubmitBuyerOrderInput,
+): Promise<BuyerOrder> {
+  const [buyer] = await db
+    .select({
+      email: authUser.email,
+      contactName: authUser.contactName,
+      name: authUser.name,
+      verified: authUser.verified,
+      banned: authUser.banned,
+      tierMarkupPercent: buyerProfiles.tierMarkupPercent,
+    })
+    .from(authUser)
+    .leftJoin(buyerProfiles, eq(buyerProfiles.authUserId, authUser.id))
+    .where(and(eq(authUser.id, buyerId), eq(authUser.userType, 'buyer')))
+    .limit(1);
+
+  if (!buyer || buyer.banned) throw forbidden('Account is not active.');
+  if (!buyer.verified) {
+    throw forbidden('Your account must be verified before submitting an order request.');
+  }
+
+  const tier = Number(buyer.tierMarkupPercent ?? 0);
+  const markupFactor = 1 + tier / 100;
+  const skus = [...new Set(input.items.map((i) => i.sku.trim()))];
+
+  const [variantRows, productRows] = await Promise.all([
+    db
+      .select({
+        variantSku: productVariants.sku,
+        variantBasePrice: productVariants.basePriceAmount,
+        variantCurrency: productVariants.basePriceCurrency,
+        product: products,
+      })
+      .from(productVariants)
+      .innerJoin(products, eq(products.id, productVariants.productId))
+      .where(
+        and(
+          inArray(productVariants.sku, skus),
+          eq(productVariants.isActive, true),
+          eq(products.status, 'published'),
+          isNull(products.deletedAt),
+        ),
+      ),
+    db
+      .select()
+      .from(products)
+      .where(
+        and(
+          inArray(products.sku, skus),
+          eq(products.status, 'published'),
+          isNull(products.deletedAt),
+        ),
+      ),
+  ]);
+
+  const byVariantSku = new Map(variantRows.map((v) => [v.variantSku!, v]));
+  const byProductSku = new Map(productRows.map((p) => [p.sku!, p]));
+
+  const resolvedProductIds = new Set<string>();
+  const resolvedLines = input.items.map((item) => {
+    const sku = item.sku.trim();
+    const v = byVariantSku.get(sku);
+    if (v) {
+      const base = Number(v.variantBasePrice ?? v.product.basePriceAmount ?? 0);
+      const currency = (v.variantCurrency ?? v.product.basePriceCurrency ?? 'USD').trim();
+      if (base <= 0) throw invalid(`Product ${sku} is not available for ordering.`);
+      if (item.quantity < v.product.moq) {
+        throw invalid(`Minimum order quantity for ${sku} is ${v.product.moq}.`);
+      }
+      resolvedProductIds.add(v.product.id);
+      return { product: v.product, base, currency, item };
+    }
+    const p = byProductSku.get(sku);
+    if (p) {
+      const base = Number(p.basePriceAmount ?? 0);
+      const currency = (p.basePriceCurrency ?? 'USD').trim();
+      if (base <= 0) throw invalid(`Product ${sku} is not available for ordering.`);
+      if (item.quantity < p.moq) {
+        throw invalid(`Minimum order quantity for ${sku} is ${p.moq}.`);
+      }
+      resolvedProductIds.add(p.id);
+      return { product: p, base, currency, item };
+    }
+    throw invalid(`Product ${sku} was not found.`);
+  });
+
+  const pIds = [...resolvedProductIds];
+  const [translations, images] = await Promise.all([
+    db.select().from(productTranslations).where(inArray(productTranslations.productId, pIds)),
+    db
+      .select()
+      .from(productImages)
+      .where(inArray(productImages.productId, pIds))
+      .orderBy(asc(productImages.sortOrder)),
+  ]);
+
+  const nameByProduct = new Map<string, string>();
+  for (const pId of pIds) {
+    const prodTrans = translations.filter((t) => t.productId === pId);
+    const chosen =
+      prodTrans.find((t) => t.locale === input.locale)?.name ||
+      prodTrans.find((t) => t.locale === 'en')?.name ||
+      prodTrans[0]?.name ||
+      'Product';
+    nameByProduct.set(pId, chosen);
+  }
+
+  const imageByProduct = new Map<string, string | null>();
+  for (const pId of pIds) {
+    const prodImgs = images.filter((img) => img.productId === pId);
+    const chosen = prodImgs.find((img) => img.isPrimary) ?? prodImgs[0];
+    imageByProduct.set(pId, chosen ? resolveImageUrl(chosen.url) : null);
+  }
+
+  const year = new Date().getUTCFullYear();
+  const [seq] = await db
+    .insert(orderNumberSequence)
+    .values({ year, lastNumber: 1 })
+    .onConflictDoUpdate({
+      target: orderNumberSequence.year,
+      set: { lastNumber: sql`${orderNumberSequence.lastNumber} + 1` },
+    })
+    .returning({ lastNumber: orderNumberSequence.lastNumber });
+
+  const orderNumber = `O-${year}-${String(seq!.lastNumber).padStart(4, '0')}`;
+  const orderId = crypto.randomUUID();
+  const nowIso = new Date().toISOString();
+  const currency = resolvedLines[0]!.currency;
+
+  let subtotal = 0;
+  const itemValues = resolvedLines.map((line, index) => {
+    const submittedUnit = round2(line.base * markupFactor);
+    subtotal = round2(subtotal + round2(submittedUnit * line.item.quantity));
+    return {
+      orderRequestId: orderId,
+      productId: line.product.id,
+      productNameSnapshot: nameByProduct.get(line.product.id) ?? 'Product',
+      productImageUrlSnapshot: imageByProduct.get(line.product.id) ?? null,
+      productUnitSnapshot: line.product.unit,
+      productMoqSnapshot: line.product.moq,
+      quantity: line.item.quantity,
+      unitPriceBase: String(line.base),
+      submittedUnitPrice: String(submittedUnit),
+      currency,
+      selectedOptions: line.item.options && line.item.options.length > 0 ? line.item.options : null,
+      sortOrder: index,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+  });
+
+  await db.batch([
+    db.insert(orderRequests).values({
+      id: orderId,
+      orderNumber,
+      buyerId,
+      locale: input.locale,
+      status: 'submitted',
+      tierMarkupPercentAtSubmit: String(tier),
+      submittedSubtotalAmount: String(subtotal),
+      submittedCurrency: currency,
+      notesBuyer: input.notes?.trim() || null,
+      submittedAt: nowIso,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    }),
+    db.insert(orderRequestItems).values(itemValues),
+  ]);
+
+  void notifyOrderSubmitted({
+    to: buyer.email,
+    contactName: buyer.contactName ?? buyer.name,
+    orderNumber,
+    submittedSubtotalAmount: subtotal,
+    currency,
+  });
+
+  return getBuyerOrder(buyerId, orderNumber);
+}
+
+export async function acceptBuyerOrder(buyerId: string, orderNumber: string): Promise<BuyerOrder> {
+  const normalized = orderNumber.trim().toUpperCase();
+  const [order] = await db
+    .select()
+    .from(orderRequests)
+    .where(
+      and(
+        eq(orderRequests.buyerId, buyerId),
+        eq(orderRequests.orderNumber, normalized),
+        isNull(orderRequests.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  if (!order) throw notFound('Order not found.');
+  if (order.status !== 'confirmed') {
+    throw conflict(`Only confirmed quotes can be accepted (current status: ${order.status}).`);
+  }
+
+  const nowIso = new Date().toISOString();
+  await db
+    .update(orderRequests)
+    .set({
+      status: 'accepted',
+      acceptedAt: nowIso,
+      updatedAt: nowIso,
+    })
+    .where(eq(orderRequests.id, order.id));
+
+  return getBuyerOrder(buyerId, orderNumber);
+}
+
+export async function rejectBuyerOrder(
+  buyerId: string,
+  orderNumber: string,
+  input: RejectOrderInput,
+): Promise<BuyerOrder> {
+  const normalized = orderNumber.trim().toUpperCase();
+  const [order] = await db
+    .select()
+    .from(orderRequests)
+    .where(
+      and(
+        eq(orderRequests.buyerId, buyerId),
+        eq(orderRequests.orderNumber, normalized),
+        isNull(orderRequests.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  if (!order) throw notFound('Order not found.');
+  if (order.status !== 'confirmed' && order.status !== 'submitted') {
+    throw conflict(`Cannot reject an order in status "${order.status}".`);
+  }
+
+  const nowIso = new Date().toISOString();
+  await db
+    .update(orderRequests)
+    .set({
+      status: 'rejected',
+      rejectionReason: input.reason?.trim() || null,
+      rejectedAt: nowIso,
+      updatedAt: nowIso,
+    })
+    .where(eq(orderRequests.id, order.id));
+
+  return getAdminOrder(order.id).then(() => getBuyerOrder(buyerId, orderNumber));
 }

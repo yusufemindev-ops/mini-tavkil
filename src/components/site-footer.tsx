@@ -11,8 +11,10 @@ const COMPANY_LINKS = [
   { href: '/contact', key: 'foot_contact' },
 ] as const;
 
-export async function SiteFooter() {
-  const t = await getTranslations('store');
+export async function SiteFooter({ locale }: Readonly<{ locale?: string }> = {}) {
+  const t = locale
+    ? await getTranslations({ locale, namespace: 'store' })
+    : await getTranslations('store');
   const settings = await getSiteSettings();
   const year = new Date().getFullYear();
   const siteName = settings.siteName || 'Tavkil';
@@ -78,7 +80,7 @@ export async function SiteFooter() {
   );
 }
 
-function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
+function FooterColumn({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
     <div>
       <h2 className="mb-3 text-[0.76rem] font-bold tracking-wider text-white uppercase">{title}</h2>

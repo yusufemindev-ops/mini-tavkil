@@ -2,6 +2,7 @@
 // is why the deploy script always builds before bundling.
 import openNextHandler from './.open-next/worker.js';
 import { fxDbFromEnv, hasSucceededToday, refreshFxRates } from './src/lib/services/fx';
+import { expireStaleOrders } from './src/lib/services/orders';
 
 /**
  * The Worker entry point.
@@ -18,7 +19,7 @@ interface Env {
   DATABASE_URL?: string;
 }
 
-export default {
+const worker = {
   fetch: openNextHandler.fetch,
 
   async scheduled(
@@ -27,7 +28,7 @@ export default {
     ctx: { waitUntil: (p: Promise<unknown>) => void },
   ) {
     if (!env.DATABASE_URL) {
-      console.error('Cron: DATABASE_URL is not set; skipping FX refresh.');
+      console.error('Cron: DATABASE_URL is not set; skipping scheduled tasks.');
       return;
     }
 
@@ -35,10 +36,11 @@ export default {
       (async () => {
         const db = fxDbFromEnv(env.DATABASE_URL!);
 
-        // The trigger fires every 2h, but only the first success each day does
-        // any work. That is what gives "once a day, with automatic retries until
-        // it works" without a second scheduler — a daily-only trigger would leave
-        // rates a full day stale after one bad morning.
+        const expiredCount = await expireStaleOrders(db).catch(() => 0);
+        if (expiredCount > 0) {
+          console.log(`Cron: Auto-expired ${expiredCount} stale order request(s).`);
+        }
+
         if (await hasSucceededToday(db)) return;
 
         const result = await refreshFxRates(db);
@@ -51,3 +53,5 @@ export default {
     );
   },
 };
+
+export default worker;
