@@ -32,6 +32,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: SAST & Architecture Guards
+        run: pnpm scan:quick
+
       # Generates src/generated/admin-shell.ts (gitignored), which the /admin
       # route imports — so it must exist before the Next typecheck.
       - name: Build admin SPA

@@ -533,8 +533,8 @@ export function createDocsRoutes(rootApp: Hono<AppEnv>) {
 
       const meta = ROUTE_META[key] ?? { summary: `${r.method} ${r.path}` };
       const tag = tagForPath(r.path);
-      const pathParams = [...r.path.matchAll(/:([a-zA-Z0-9_]+)/g)].map((m) => m[1]);
-      const openApiPath = r.path.replace(/:([a-zA-Z0-9_]+)/g, '{$1}');
+      const pathParams = [...r.path.matchAll(/:(\w+)/g)].map((m) => m[1]);
+      const openApiPath = r.path.replace(/:(\w+)/g, '{$1}');
 
       routeList.push({
         method: r.method,

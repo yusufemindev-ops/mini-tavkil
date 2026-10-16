@@ -82,7 +82,7 @@ export function BuyerNewPage() {
     const next: Errors = {};
     if (!firstName.trim()) next.firstName = 'First name is required.';
     if (!lastName.trim()) next.lastName = 'Last name is required.';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) next.email = 'Enter a valid email.';
+    if (!/^[^\s@]+@[^\s@.]+\.[^\s@]+$/.test(email.trim())) next.email = 'Enter a valid email.';
     if (!phoneNumber.trim()) next.phoneNumber = 'Phone number is required.';
     if (!country) next.country = 'Select a country.';
     if (markupPct < 0 || markupPct > 100)

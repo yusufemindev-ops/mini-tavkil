@@ -129,7 +129,7 @@ export function pickValid(codes: string[], rates: Record<string, unknown>): Reco
 
 /** True when a new rate is too far from the current one to be believable. */
 export function isImplausibleJump(current: number, next: number): boolean {
-  if (!(current > 0)) return false;
+  if (!Number.isFinite(current) || current <= 0) return false;
   return Math.abs(next - current) / current > MAX_JUMP;
 }
 

@@ -26,6 +26,10 @@ pre-commit:
       glob: '**/*.{ts,tsx}'
       run: pnpm exec eslint {staged_files}
 
+    - name: scan-guards
+      glob: '**/*.{ts,tsx}'
+      run: pnpm scan:quick
+
 commit-msg:
   jobs:
     - name: commit-format

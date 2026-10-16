@@ -683,7 +683,8 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
         .replace(/[^a-zA-Z]/g, '')
         .slice(0, 3)
         .toUpperCase() || 'PRD';
-    setSku(`${prefix}-${Math.floor(1000 + Math.random() * 9000)}`);
+    const rand = crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
+    setSku(`${prefix}-${1000 + (rand % 9000)}`);
     clearError('sku');
   }
 
