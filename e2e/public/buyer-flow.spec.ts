@@ -6,7 +6,6 @@ loadEnv({ path: ['.env.local', '.env'] });
 import { and, eq, gt, isNull, like } from 'drizzle-orm';
 import { db } from '../../src/lib/db';
 import {
-  auditLog,
   authSession,
   authUser,
   buyerProfiles,
@@ -140,7 +139,6 @@ test.describe.serial('Authenticated Buyer Portal Flow', () => {
     await db.delete(buyerProfiles).where(like(buyerProfiles.authUserId, 'e2e-buyer-pw-%'));
     await db.delete(authSession).where(like(authSession.userId, 'e2e-buyer-pw-%'));
     await db.delete(authUser).where(like(authUser.id, 'e2e-buyer-pw-%'));
-    await db.delete(auditLog).where(like(auditLog.actorId, 'e2e-%'));
   });
 
   test('buyer sees personalized unitPrice without base_price/tier_markup leaks, submits RFQ, and accepts confirmed quote', async ({

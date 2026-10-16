@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
-import { Copy, Info, UserPlus, X } from 'lucide-react';
+import { Copy, Info, Plus, UserPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { type ColumnDef } from '@tanstack/react-table';
+import { NotFoundPage } from '@/components/not-found-page';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel, PanelBody, PanelHead } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import {
   type AdminRole,
   type AdminTeamMember,
 } from './queries';
+import { RoleEditorSheet } from './role-dialog';
 
 interface RoleOption {
   value: string;
@@ -192,7 +194,7 @@ function buildMemberColumns(onManage: (m: AdminTeamMember) => void): ColumnDef<A
   ];
 }
 
-function RoleRow({ role }: { role: AdminRole }) {
+function RoleRow({ role, onInspect }: { role: AdminRole; onInspect: (role: AdminRole) => void }) {
   const isSystem = role.type === 'system';
   return (
     <tr>
@@ -205,6 +207,13 @@ function RoleRow({ role }: { role: AdminRole }) {
       </td>
       <td className="text-muted-foreground">{role.memberCount}</td>
       <td className="text-muted-foreground">{role.permissions.length}</td>
+      <td>
+        <div className="flex justify-end">
+          <Button variant="ghost" size="sm" onClick={() => onInspect(role)}>
+            {isSystem ? 'View' : 'Edit'}
+          </Button>
+        </div>
+      </td>
     </tr>
   );
 }
@@ -213,8 +222,6 @@ const TABS = [
   { id: 'users', label: 'Users', to: '/users' },
   { id: 'roles', label: 'Roles', to: '/users/roles' },
 ];
-
-import { NotFoundPage } from '@/components/not-found-page';
 
 export function UsersPage() {
   const navigate = useNavigate();
@@ -226,6 +233,7 @@ export function UsersPage() {
   const { data: roles = [] } = useRoles();
   const [inviting, setInviting] = useState(false);
   const [managing, setManaging] = useState<AdminTeamMember | null>(null);
+  const [editingRole, setEditingRole] = useState<AdminRole | 'new' | null>(null);
 
   const columns = useMemo(() => buildMemberColumns(setManaging), []);
   const roleOptions = useMemo<RoleOption[]>(
@@ -234,6 +242,7 @@ export function UsersPage() {
   );
 
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: rbacKeys.users });
+  const invalidateRoles = () => queryClient.invalidateQueries({ queryKey: rbacKeys.roles });
 
   if (tab && tab !== 'roles') {
     return <NotFoundPage />;
@@ -250,7 +259,12 @@ export function UsersPage() {
               <UserPlus className="size-4" />
               Add member
             </Button>
-          ) : undefined
+          ) : (
+            <Button onClick={() => setEditingRole('new')}>
+              <Plus className="size-4" />
+              Create role
+            </Button>
+          )
         }
       />
 
@@ -325,7 +339,7 @@ export function UsersPage() {
               </thead>
               <tbody>
                 {roles.map((role) => (
-                  <RoleRow key={role.id} role={role} />
+                  <RoleRow key={role.id} role={role} onInspect={setEditingRole} />
                 ))}
               </tbody>
             </Table>
@@ -333,9 +347,8 @@ export function UsersPage() {
           <div className="border-border text-muted-foreground flex items-center gap-2 border-t px-[18px] py-3 text-xs">
             <Info className="size-3.5 flex-none" />
             <span>
-              Roles are fixed in code and the same for every deployment. Change what a role can do
-              by editing the permission catalog and running{' '}
-              <code className="font-mono">pnpm sync:permissions</code>.
+              System roles are fixed in code. Create custom roles above to grant tailored permission
+              sets to specific operators.
             </span>
           </div>
         </Panel>
@@ -363,6 +376,22 @@ export function UsersPage() {
             onClose={() => setManaging(null)}
             onChanged={(m) => {
               setManaging(m);
+              void invalidateUsers();
+              void invalidateRoles();
+            }}
+          />
+        )}
+      </Sheet>
+
+      <Sheet open={editingRole !== null} onOpenChange={(open) => !open && setEditingRole(null)}>
+        {editingRole !== null && (
+          <RoleEditorSheet
+            key={editingRole === 'new' ? 'new' : editingRole.id}
+            role={editingRole === 'new' ? null : editingRole}
+            onClose={() => setEditingRole(null)}
+            onSaved={() => {
+              setEditingRole(null);
+              void invalidateRoles();
               void invalidateUsers();
             }}
           />

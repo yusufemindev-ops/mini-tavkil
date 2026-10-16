@@ -24,6 +24,8 @@ const eslintConfig = defineConfig([
     'drizzle/**',
     'node_modules/**',
     'cloudflare-env.d.ts',
+    'playwright-report/**',
+    'test-results/**',
   ]),
 
   // Senior Engineering, SonarJS & Security Rules

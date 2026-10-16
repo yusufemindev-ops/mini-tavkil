@@ -92,6 +92,7 @@ export function extractAuditDetails(
 /** Writes an audit log entry without failing the parent request on error. */
 export async function recordAudit(input: RecordAuditInput): Promise<void> {
   if (!process.env.DATABASE_URL) return;
+  if (input.actorId?.startsWith('e2e-')) return;
   try {
     await db.insert(auditLog).values({
       actorType: input.actorType ?? 'user',
@@ -117,7 +118,9 @@ export async function listAuditLogs(query: ListAuditLogsQuery): Promise<AdminAud
   const { page, pageSize, resourceType, search } = query;
   const offset = (page - 1) * pageSize;
 
-  const filters = [];
+  const filters: (ReturnType<typeof sql> | undefined)[] = [
+    sql`(${auditLog.actorId} IS NULL OR ${auditLog.actorId} NOT LIKE 'e2e-%')`,
+  ];
   if (resourceType) {
     filters.push(eq(auditLog.resourceType, resourceType));
   }
