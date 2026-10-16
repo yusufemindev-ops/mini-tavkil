@@ -35,3 +35,26 @@ export const updateBuyerSchema = z.object({
 });
 
 export type UpdateBuyerInput = z.infer<typeof updateBuyerSchema>;
+
+export const listBuyersQuerySchema = z.object({
+  status: z.enum(['active', 'suspended', 'unverified']).optional(),
+  search: z.string().trim().min(1).max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(500),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export type ListBuyersQuery = z.infer<typeof listBuyersQuerySchema>;
+
+export const updateBuyerProfileSchema = z.object({
+  firstName: z.string().trim().min(1, 'First name is required.').max(80),
+  lastName: z.string().trim().min(1, 'Last name is required.').max(80),
+  company: z.string().trim().max(160).nullable().optional(),
+  jobTitle: z.string().trim().max(120).nullable().optional(),
+  phone: z.string().trim().max(40).nullable().optional(),
+  country: z.string().trim().length(2, 'Select a valid 2-letter country code.').toUpperCase(),
+  city: z.string().trim().max(120).nullable().optional(),
+  address: z.string().trim().max(300).nullable().optional(),
+  preferredLocale: z.enum(['en', 'tr', 'ar']).optional(),
+});
+
+export type UpdateBuyerProfileInput = z.infer<typeof updateBuyerProfileSchema>;

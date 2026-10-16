@@ -19,8 +19,11 @@ import {
   adminUsersRoutes,
 } from '@/server/routes/admin/users';
 import { authRoutes } from '@/server/routes/auth';
+import { buyerRoutes } from '@/server/routes/buyer';
+import { publicCurrenciesRoutes } from '@/server/routes/currencies';
 import { createDocsRoutes } from '@/server/routes/docs';
 import { healthRoutes } from '@/server/routes/health';
+import { publicAccountRequestsRoutes, publicContactRoutes } from '@/server/routes/public-intake';
 
 /**
  * Root Hono backend application serving all `/api/*` endpoints.
@@ -48,6 +51,10 @@ app.notFound((c) =>
 const _routes = app
   .route('/health', healthRoutes)
   .route('/auth', authRoutes)
+  .route('/currencies', publicCurrenciesRoutes)
+  .route('/account-requests', publicAccountRequestsRoutes)
+  .route('/contact', publicContactRoutes)
+  .route('/buyer', buyerRoutes)
   .route('/admin/me', adminMeRoutes)
   .route('/admin/dashboard', adminDashboardRoutes)
   .route('/admin/categories', adminCategoriesRoutes)

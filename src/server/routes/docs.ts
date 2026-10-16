@@ -19,6 +19,40 @@ const ROUTE_META: Record<string, RouteMeta> = {
   'POST /api/auth/*': {
     summary: 'Better Auth OAuth & session POST handler (e.g. /api/auth/sign-out)',
   },
+  'GET /api/currencies': {
+    summary: 'Active storefront currencies with latest rateToUsd',
+  },
+  'POST /api/account-requests': {
+    summary: 'Submit a public wholesale buyer account application',
+  },
+  'POST /api/contact': {
+    summary: 'Submit a public wholesale trade enquiry',
+  },
+  'GET /api/buyer/me': {
+    summary: 'Current authenticated buyer profile (never exposes tierMarkupPercent)',
+  },
+  'PATCH /api/buyer/me': {
+    summary: 'Update current buyer contact details and preferred locale',
+  },
+  'GET /api/buyer/products/:slug': {
+    summary:
+      'Personalized buyer unitPrice for a published product (never exposes basePrice or tierMarkup)',
+  },
+  'GET /api/buyer/orders': {
+    summary: 'Paginated order request history for the authenticated buyer',
+  },
+  'POST /api/buyer/orders': {
+    summary: 'Submit a new wholesale order request (RFQ) from the buyer cart',
+  },
+  'GET /api/buyer/orders/:orderNumber': {
+    summary: 'Get a single buyer order request and line items by order number',
+  },
+  'POST /api/buyer/orders/:orderNumber/accept': {
+    summary: 'Accept a confirmed proforma order quote',
+  },
+  'POST /api/buyer/orders/:orderNumber/reject': {
+    summary: 'Decline or cancel a submitted/confirmed order quote',
+  },
   'GET /api/admin/me': {
     summary: 'Current authenticated admin profile, roles, and resolved permissions',
   },

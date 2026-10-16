@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ProductBuyerBox } from '@/components/product/product-buyer-box';
 import { buttonVariants } from '@/components/ui/button';
 import { WhatsAppButton } from '@/components/whatsapp-button';
 import { Link } from '@/i18n/navigation';
@@ -15,13 +16,13 @@ export async function ProductEnquiryPanel({
   moq,
   unit,
   packSize,
-}: {
+}: Readonly<{
   slug: string;
   name: string;
   moq: number;
   unit: string;
   packSize: number | null;
-}) {
+}>) {
   const t = await getTranslations('store');
   const settings = await getSiteSettings();
   const whatsapp = waUrl(settings.whatsappNumber);
@@ -31,6 +32,8 @@ export async function ProductEnquiryPanel({
 
   return (
     <section className="border-border bg-card mt-6 rounded-lg border p-5">
+      <ProductBuyerBox slug={slug} name={name} moq={moq} unit={unit} packSize={packSize} />
+
       <p className="text-muted-foreground text-sm">
         {t('pd_moq_note')}{' '}
         {/* Without a direction of its own, bidi reorders "12 L" to "L 12" inside

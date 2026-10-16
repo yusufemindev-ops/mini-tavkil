@@ -46,6 +46,12 @@ export async function parseJson<T>(c: Context<AppEnv>, schema: ZodType<T>): Prom
   return schema.parse(raw);
 }
 
+/** Parses and validates URL search query parameters with Zod. */
+export function parseQuery<T>(c: Context<AppEnv>, schema: ZodType<T>): T {
+  const url = new URL(c.req.url);
+  return schema.parse(Object.fromEntries(url.searchParams.entries()));
+}
+
 /** Wraps admin responses in `{ data }` with `Cache-Control: private, no-store`. */
 export function adminJson<T>(c: Context<AppEnv>, data: T, status: 200 | 201 = 200) {
   return c.json({ data }, status, { 'Cache-Control': 'private, no-store' });

@@ -8,13 +8,22 @@ import {
 } from '@/lib/services/account-requests';
 import {
   approveAccountRequestSchema,
+  listAccountRequestsQuerySchema,
   rejectAccountRequestSchema,
 } from '@/lib/services/account-requests-schema';
-import { adminJson, auditAdmin, parseJson, requireAdminPerm, type AppEnv } from '@/server/factory';
+import {
+  adminJson,
+  auditAdmin,
+  parseJson,
+  parseQuery,
+  requireAdminPerm,
+  type AppEnv,
+} from '@/server/factory';
 
 export const adminAccountRequestsRoutes = new Hono<AppEnv>()
   .get('/', requireAdminPerm('account_requests:view'), async (c) => {
-    return adminJson(c, await listAccountRequests());
+    const query = parseQuery(c, listAccountRequestsQuerySchema);
+    return adminJson(c, await listAccountRequests(query));
   })
   .post('/:id/approve', requireAdminPerm('account_requests:review'), async (c) => {
     const body = await parseJson(c, approveAccountRequestSchema);

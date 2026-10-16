@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gt, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   accountRequests,
@@ -9,7 +9,12 @@ import {
   orderRequests,
 } from '@/lib/db/schema';
 import { conflict, notFound } from '@/lib/api/errors';
-import type { CreateBuyerInput, UpdateBuyerInput } from '@/lib/services/buyers-schema';
+import { notifyAccountApproved } from '@/lib/services/notifications';
+import type {
+  CreateBuyerInput,
+  ListBuyersQuery,
+  UpdateBuyerInput,
+} from '@/lib/services/buyers-schema';
 
 export interface AdminBuyerRow {
   id: string;
@@ -104,13 +109,37 @@ async function hydrateBuyers(users: RawBuyerUser[]): Promise<AdminBuyerRow[]> {
   });
 }
 
-export async function listBuyers(): Promise<AdminBuyerRow[]> {
+export async function listBuyers(query?: Partial<ListBuyersQuery>): Promise<AdminBuyerRow[]> {
+  const filters = [eq(authUser.userType, 'buyer')];
+  if (query?.status === 'suspended') {
+    filters.push(eq(authUser.banned, true));
+  } else if (query?.status === 'active') {
+    filters.push(eq(authUser.banned, false));
+  } else if (query?.status === 'unverified') {
+    filters.push(eq(authUser.banned, false), eq(authUser.verified, false));
+  }
+  if (query?.search) {
+    const pattern = `%${query.search}%`;
+    filters.push(
+      or(
+        ilike(authUser.email, pattern),
+        ilike(authUser.companyName, pattern),
+        ilike(authUser.contactName, pattern),
+        ilike(authUser.name, pattern),
+      )!,
+    );
+  }
+
+  const limit = Math.min(Math.max(query?.limit ?? 500, 1), 500);
+  const offset = Math.max(query?.offset ?? 0, 0);
+
   const users = await db
     .select()
     .from(authUser)
-    .where(eq(authUser.userType, 'buyer'))
+    .where(and(...filters))
     .orderBy(desc(authUser.createdAt))
-    .limit(500);
+    .limit(limit)
+    .offset(offset);
   return hydrateBuyers(users);
 }
 
@@ -142,6 +171,7 @@ export async function createBuyer(input: CreateBuyerInput): Promise<CreatedBuyer
   const firstName = input.firstName.trim();
   const lastName = input.lastName.trim();
   const fullName = `${firstName} ${lastName}`.trim();
+  const companyName = input.companyName?.trim() || null;
   const tierMarkup = String(input.tierMarkup ?? 0);
 
   await db.batch([
@@ -154,7 +184,7 @@ export async function createBuyer(input: CreateBuyerInput): Promise<CreatedBuyer
       firstName,
       lastName,
       contactName: fullName,
-      companyName: input.companyName?.trim() || null,
+      companyName,
       jobTitle: input.jobTitle?.trim() || null,
       phone: input.phone.trim(),
       country: input.country.trim().toUpperCase(),
@@ -183,6 +213,12 @@ export async function createBuyer(input: CreateBuyerInput): Promise<CreatedBuyer
         },
       }),
   ]);
+
+  void notifyAccountApproved({
+    to: email,
+    contactName: fullName,
+    companyName: companyName ?? fullName,
+  });
 
   return { id, email };
 }

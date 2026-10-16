@@ -8,12 +8,24 @@ import {
   setBuyerVerified,
   updateBuyer,
 } from '@/lib/services/buyers';
-import { createBuyerSchema, updateBuyerSchema } from '@/lib/services/buyers-schema';
-import { adminJson, auditAdmin, parseJson, requireAdminPerm, type AppEnv } from '@/server/factory';
+import {
+  createBuyerSchema,
+  listBuyersQuerySchema,
+  updateBuyerSchema,
+} from '@/lib/services/buyers-schema';
+import {
+  adminJson,
+  auditAdmin,
+  parseJson,
+  parseQuery,
+  requireAdminPerm,
+  type AppEnv,
+} from '@/server/factory';
 
 export const adminBuyersRoutes = new Hono<AppEnv>()
   .get('/', requireAdminPerm('buyers:view'), async (c) => {
-    return adminJson(c, await listBuyers());
+    const query = parseQuery(c, listBuyersQuerySchema);
+    return adminJson(c, await listBuyers(query));
   })
   .post('/', requireAdminPerm('buyers:create'), async (c) => {
     const body = await parseJson(c, createBuyerSchema);
