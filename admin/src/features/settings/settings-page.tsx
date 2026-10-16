@@ -387,9 +387,14 @@ function CurrencyRow({
   );
 }
 
+import { NotFoundPage } from '@/components/not-found-page';
+
 export function SettingsPage() {
   const navigate = useNavigate();
   const { tab: tabParam } = useParams<{ tab: string }>();
+  if (tabParam && !SETTINGS_TABS.some((t) => t.id === tabParam)) {
+    return <NotFoundPage />;
+  }
   // The active tab lives in the URL (/settings/:tab) so a refresh stays put.
   const active = SETTINGS_TABS.find((t) => t.id === tabParam) ?? SETTINGS_TABS[0];
 

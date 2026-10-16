@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { Toaster } from '@/components/ui/sonner';
 import { AppLayout } from '@/components/app-layout';
+import { NotFoundPage } from '@/components/not-found-page';
 import { ProtectedRoute } from '@/components/protected-route';
 import { RequirePermission } from '@/components/require-permission';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
@@ -14,6 +15,12 @@ import { CategoriesPage } from '@/features/categories/categories-page';
 import { CategoryEditPage } from '@/features/categories/category-edit-page';
 import { SuppliersPage } from '@/features/suppliers/suppliers-page';
 import { SupplierEditPage } from '@/features/suppliers/supplier-edit-page';
+import { BuyersPage } from '@/features/buyers/buyers-page';
+import { BuyerNewPage } from '@/features/buyers/buyer-new-page';
+import { BuyerEditPage } from '@/features/buyers/buyer-edit-page';
+import { AccountRequestsPage } from '@/features/buyers/account-requests-page';
+import { OrdersPage } from '@/features/orders/orders-page';
+import { OrderDetailPage } from '@/features/orders/order-detail-page';
 import { UsersPage } from '@/features/users/users-page';
 import { AuditLogPage } from '@/features/audit/audit-log-page';
 import { SettingsPage } from '@/features/settings/settings-page';
@@ -31,7 +38,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             {/* Always available to any signed-in admin */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
 
@@ -50,6 +57,20 @@ export default function App() {
               <Route path="/suppliers/:id" element={<SupplierEditPage />} />
             </Route>
 
+            {/* Buyers & Operations */}
+            <Route element={<RequirePermission permission="buyers:view" />}>
+              <Route path="/buyer-accounts" element={<BuyersPage />} />
+              <Route path="/buyer-accounts/new" element={<BuyerNewPage />} />
+              <Route path="/buyer-accounts/:id" element={<BuyerEditPage />} />
+            </Route>
+            <Route element={<RequirePermission permission="account_requests:view" />}>
+              <Route path="/account-requests" element={<AccountRequestsPage />} />
+            </Route>
+            <Route element={<RequirePermission permission="orders:view" />}>
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/orders/:id" element={<OrderDetailPage />} />
+            </Route>
+
             {/* Admin settings */}
             <Route element={<RequirePermission permission="users:assign_role" />}>
               <Route path="/users" element={<UsersPage />} />
@@ -62,6 +83,9 @@ export default function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/settings/:tab" element={<SettingsPage />} />
             </Route>
+
+            {/* Global 404 inside AppLayout */}
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
 
           {/* Full-screen storefront previews — under auth + products:view, but
@@ -73,7 +97,6 @@ export default function App() {
             <Route path="/preview/category/:categoryId" element={<CategoryPreviewPage />} />
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <Toaster />
     </>

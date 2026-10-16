@@ -214,6 +214,8 @@ const TABS = [
   { id: 'roles', label: 'Roles', to: '/users/roles' },
 ];
 
+import { NotFoundPage } from '@/components/not-found-page';
+
 export function UsersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -232,6 +234,10 @@ export function UsersPage() {
   );
 
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: rbacKeys.users });
+
+  if (tab && tab !== 'roles') {
+    return <NotFoundPage />;
+  }
 
   return (
     <div>

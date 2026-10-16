@@ -45,7 +45,11 @@ function mapAuditToneAndIcon(action: string): {
     action.endsWith('.published') ||
     action.endsWith('.invited') ||
     action.endsWith('.reactivated') ||
-    action.endsWith('.restored')
+    action.endsWith('.restored') ||
+    action.endsWith('.approved') ||
+    action.endsWith('.confirmed') ||
+    action.endsWith('.verified') ||
+    action.endsWith('.reopened')
   ) {
     return { icon: 'check', tone: 'success' };
   }
@@ -54,7 +58,9 @@ function mapAuditToneAndIcon(action: string): {
     action.endsWith('.suspended') ||
     action.endsWith('.archived') ||
     action.endsWith('.role_revoked') ||
-    action.endsWith('.unpublished')
+    action.endsWith('.unpublished') ||
+    action.endsWith('.rejected') ||
+    action.endsWith('.unverified')
   ) {
     return { icon: 'alert', tone: 'warning' };
   }
