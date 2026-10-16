@@ -94,10 +94,10 @@ export function ProductBuyerBox({
     return (
       <div className="border-border bg-background-2 mb-5 rounded-md border p-4">
         <div className="flex items-start gap-3">
-          <Lock className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+          <Lock className="text-foreground-soft mt-0.5 size-4 shrink-0" aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="text-foreground text-sm font-semibold">{t('pd_price_lock_t')}</p>
-            <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+            <p className="text-foreground-soft mt-0.5 text-xs leading-relaxed">
               {t('pd_price_lock_d')}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -124,7 +124,7 @@ export function ProductBuyerBox({
           <Clock className="text-primary mt-0.5 size-4 shrink-0" aria-hidden />
           <div>
             <p className="text-foreground text-sm font-semibold">{t('pd_pending_t')}</p>
-            <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+            <p className="text-foreground-soft mt-0.5 text-xs leading-relaxed">
               {t('pd_pending_d')}
             </p>
           </div>
@@ -135,7 +135,7 @@ export function ProductBuyerBox({
 
   if (fetching && !pricing) {
     return (
-      <div className="border-border bg-background-2 text-muted-foreground mb-5 rounded-md border p-4 text-xs">
+      <div className="border-border bg-background-2 text-foreground-soft mb-5 rounded-md border p-4 text-xs">
         {t('acc_loading')}…
       </div>
     );
@@ -180,20 +180,18 @@ export function ProductBuyerBox({
   return (
     <div className="border-primary/25 bg-primary/5 mb-5 rounded-md border p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        <span className="text-foreground-soft text-xs font-medium tracking-wide uppercase">
           {t('pd_your_price')}
         </span>
         <div dir="auto" className="text-foreground font-mono text-2xl font-bold">
           {formatMoney(activeRate, activeCurrency)}
-          <span className="text-muted-foreground ms-1 font-sans text-xs font-normal">
+          <span className="text-foreground-soft ms-1 font-sans text-xs font-normal">
             / {pricing?.unit ?? unit}
           </span>
         </div>
       </div>
 
-      <p className="text-muted-foreground mt-1.5 text-xs leading-relaxed">
-        {t('price_indicative')}
-      </p>
+      <p className="text-foreground-soft mt-1.5 text-xs leading-relaxed">{t('price_indicative')}</p>
 
       {pricing && pricing.variants.length > 1 && (
         <div className="mt-3">
