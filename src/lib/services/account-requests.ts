@@ -1,7 +1,8 @@
-import { and, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, ne, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { accountRequests, authUser, buyerProfiles } from '@/lib/db/schema';
 import { assertUuid, conflict, notFound } from '@/lib/api/errors';
+import { sanitizeIp } from '@/lib/services/audit-log';
 import { createBuyer, type CreatedBuyer } from '@/lib/services/buyers';
 import { notifyAccountApproved } from '@/lib/services/notifications';
 import type {
@@ -86,6 +87,7 @@ export async function listAccountRequests(
 
 export async function submitPublicAccountRequest(
   input: SubmitAccountRequestInput,
+  meta?: { ipAddress?: string | null; userAgent?: string | null },
 ): Promise<{ id: string; status: 'pending' }> {
   const email = input.email.trim().toLowerCase();
 
@@ -126,6 +128,8 @@ export async function submitPublicAccountRequest(
       message: input.message?.trim() || null,
       locale: input.locale,
       status: 'pending',
+      ipAddress: sanitizeIp(meta?.ipAddress),
+      userAgent: meta?.userAgent?.slice(0, 500) ?? null,
     })
     .returning({ id: accountRequests.id });
 
@@ -241,6 +245,30 @@ export async function reopenAccountRequest(
   if (!req) throw notFound('Account request not found.');
   if (req.status !== 'rejected') {
     throw conflict('Only rejected requests can be moved back to review.');
+  }
+
+  const email = req.businessEmail.trim().toLowerCase();
+  const [existingBuyer, otherPending] = await Promise.all([
+    db
+      .select({ id: authUser.id })
+      .from(authUser)
+      .where(sql`lower(${authUser.email}) = ${email}`)
+      .limit(1),
+    db
+      .select({ id: accountRequests.id })
+      .from(accountRequests)
+      .where(
+        and(
+          sql`lower(${accountRequests.businessEmail}) = ${email}`,
+          eq(accountRequests.status, 'pending'),
+          ne(accountRequests.id, id),
+        ),
+      )
+      .limit(1),
+  ]);
+
+  if (existingBuyer.length > 0 || otherPending.length > 0) {
+    throw conflict('Another request or account with this email already exists.');
   }
 
   await db

@@ -1,36 +1,13 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertCircle, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Link } from '@/i18n/navigation';
+import { useBuyer } from '@/features/buyer/buyer-context';
+import { Link, useRouter } from '@/i18n/navigation';
+import { COUNTRIES, countryName, type CountryLocale } from '@/lib/countries';
 import { cn } from '@/lib/utils';
-
-const COUNTRIES = [
-  { code: 'TR', name: 'Türkiye' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'US', name: 'United States' },
-  { code: 'FR', name: 'France' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'AE', name: 'United Arab Emirates' },
-  { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'JO', name: 'Jordan' },
-  { code: 'IQ', name: 'Iraq' },
-  { code: 'KW', name: 'Kuwait' },
-  { code: 'QA', name: 'Qatar' },
-  { code: 'EG', name: 'Egypt' },
-  { code: 'LB', name: 'Lebanon' },
-  { code: 'SY', name: 'Syria' },
-  { code: 'DZ', name: 'Algeria' },
-  { code: 'MA', name: 'Morocco' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'PL', name: 'Poland' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-] as const;
 
 const INPUT_CLASS =
   'border-border bg-background text-foreground flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus:outline-none';
@@ -39,6 +16,24 @@ const LABEL_CLASS = 'text-foreground block text-xs font-medium';
 export function RequestAccountView() {
   const t = useTranslations('store');
   const locale = useLocale();
+  const router = useRouter();
+  const { buyer, loading } = useBuyer();
+  const countryLocale: CountryLocale = locale === 'tr' || locale === 'ar' ? locale : 'en';
+
+  const sortedCountries = useMemo(
+    () =>
+      [...COUNTRIES].sort((a, b) =>
+        countryName(a, countryLocale).localeCompare(countryName(b, countryLocale), countryLocale),
+      ),
+    [countryLocale],
+  );
+
+  useEffect(() => {
+    if (!loading && buyer) {
+      router.replace('/account');
+    }
+  }, [buyer, loading, router]);
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -74,7 +69,7 @@ export function RequestAccountView() {
           city: city.trim() || undefined,
           address: address.trim() || undefined,
           message: message.trim() || undefined,
-          locale: locale === 'tr' || locale === 'ar' ? locale : 'en',
+          locale: countryLocale,
         }),
       });
 
@@ -84,7 +79,13 @@ export function RequestAccountView() {
       }
 
       if (!res.ok) {
-        setErrorMessage(t('rq_submit_error'));
+        const body = (await res.json().catch(() => null)) as {
+          error?: { message?: string; details?: Record<string, string[]> };
+        } | null;
+        const firstFieldErr = body?.error?.details
+          ? Object.values(body.error.details).flat()[0]
+          : undefined;
+        setErrorMessage(firstFieldErr || body?.error?.message || t('rq_submit_error'));
         return;
       }
 
@@ -245,9 +246,9 @@ export function RequestAccountView() {
                 onChange={(e) => setCountry(e.target.value)}
                 className={INPUT_CLASS}
               >
-                {COUNTRIES.map((c) => (
+                {sortedCountries.map((c) => (
                   <option key={c.code} value={c.code}>
-                    {c.name} ({c.code})
+                    {c.flag} {countryName(c, countryLocale)} ({c.code})
                   </option>
                 ))}
               </select>

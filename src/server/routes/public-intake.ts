@@ -41,7 +41,10 @@ export const publicAccountRequestsRoutes = new Hono<AppEnv>().post('/', async (c
   const body = await parseJson(c, submitAccountRequestSchema);
   const ip = c.req.header('cf-connecting-ip') ?? c.req.header('x-forwarded-for') ?? null;
   await verifyTurnstileToken(body.turnstileToken, ip);
-  const created = await submitPublicAccountRequest(body);
+  const created = await submitPublicAccountRequest(body, {
+    ipAddress: ip,
+    userAgent: c.req.header('user-agent') ?? null,
+  });
   return c.json({ data: created }, 201, { 'Cache-Control': 'private, no-store' });
 });
 

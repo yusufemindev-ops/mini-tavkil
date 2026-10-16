@@ -136,19 +136,21 @@ export function useBuyerOrders(buyerId: string, enabled = true) {
   });
 }
 
-export function useAccountRequests() {
+export function useAccountRequests(enabled = true) {
   return useQuery({
     queryKey: buyersKeys.accountRequests,
     queryFn: () => api.get<AccountRequest[]>('/admin/account-requests'),
+    enabled,
     staleTime: 0,
   });
 }
 
-export function useProfileEditRequests(status: RequestStatus) {
+export function useProfileEditRequests(status: RequestStatus, enabled = true) {
   return useQuery({
     queryKey: buyersKeys.profileEditRequests(status),
     queryFn: () =>
       api.get<AdminProfileEditRequest[]>(`/admin/profile-edit-requests?status=${status}`),
+    enabled,
     staleTime: 0,
   });
 }
