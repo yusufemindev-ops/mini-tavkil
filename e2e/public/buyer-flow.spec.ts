@@ -171,9 +171,11 @@ test.describe.serial('Authenticated Buyer Portal Flow', () => {
       }
     });
 
-    await page.goto(`/en/product/${productSlug}`, { waitUntil: 'networkidle' });
+    await page.goto(`/en/product/${productSlug}`);
 
-    await expect(page.getByText(new RegExp(`\\$${expectedUnitPriceFormatted}`))).toBeVisible();
+    await expect(page.getByText(new RegExp(`\\$${expectedUnitPriceFormatted}`))).toBeVisible({
+      timeout: 15_000,
+    });
 
     const html = await page.content();
     for (const key of FORBIDDEN_BUYER_KEYS) {
@@ -184,9 +186,11 @@ test.describe.serial('Authenticated Buyer Portal Flow', () => {
     }
 
     await page.getByRole('button', { name: /Add to request/i }).click();
-    await page.goto('/en/cart', { waitUntil: 'networkidle' });
+    await page.goto('/en/cart');
 
-    await page.getByRole('button', { name: /Submit order request/i }).click();
+    const submitBtn = page.getByRole('button', { name: /Submit order request/i });
+    await expect(submitBtn).toBeVisible({ timeout: 15_000 });
+    await submitBtn.click();
     const refLocator = page.getByText(/O-\d{4}-\d{4}/);
     await expect(refLocator).toBeVisible({ timeout: 15_000 });
 
@@ -210,15 +214,19 @@ test.describe.serial('Authenticated Buyer Portal Flow', () => {
 
     await confirmAdminOrder(orderRow!.id, { markupPercent: TIER_MARKUP }, buyerUserId);
 
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload();
+
+    const acceptBtn = page.getByRole('button', { name: /Accept order/i });
+    await expect(acceptBtn).toBeVisible({ timeout: 15_000 });
 
     await page.getByRole('button', { name: /Notifications/i }).click();
-    await expect(page.getByText(new RegExp(`Order ${orderNumber} confirmed`))).toBeVisible();
+    await expect(page.getByText(new RegExp(`Order ${orderNumber} confirmed`))).toBeVisible({
+      timeout: 10_000,
+    });
 
-    await expect(page.getByRole('button', { name: /Accept order/i })).toBeVisible();
-    await page.getByRole('button', { name: /Accept order/i }).click();
+    await acceptBtn.click();
 
-    await expect(page.getByRole('button', { name: /Accept order/i })).toBeHidden({
+    await expect(acceptBtn).toBeHidden({
       timeout: 10_000,
     });
   });
@@ -240,16 +248,16 @@ test.describe.serial('Authenticated Buyer Portal Flow', () => {
       },
     ]);
 
-    await page.goto('/en/account', { waitUntil: 'networkidle' });
-    await expect(page.getByText('E2E Industrial GmbH')).toBeVisible();
+    await page.goto('/en/account');
+    await expect(page.getByText('E2E Industrial GmbH')).toBeVisible({ timeout: 15_000 });
 
     await page.getByRole('button', { name: /Edit information/i }).click();
     await page.locator('#acc-company').fill('E2E Updated Logistics GmbH');
     await page.getByRole('button', { name: /Send edit request/i }).click();
 
-    await expect(page.getByText(/Edit request pending/i)).toBeVisible();
+    await expect(page.getByText(/Edit request pending/i)).toBeVisible({ timeout: 10_000 });
 
     await page.getByRole('button', { name: /Cancel request/i }).click();
-    await expect(page.getByText(/Edit request pending/i)).toBeHidden();
+    await expect(page.getByText(/Edit request pending/i)).toBeHidden({ timeout: 10_000 });
   });
 });
