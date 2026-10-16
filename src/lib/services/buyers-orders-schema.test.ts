@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { approveAccountRequestSchema, rejectAccountRequestSchema } from './account-requests-schema';
+import {
+  approveAccountRequestSchema,
+  isDisposableEmail,
+  rejectAccountRequestSchema,
+  submitAccountRequestSchema,
+} from './account-requests-schema';
 import { createBuyerSchema, updateBuyerSchema } from './buyers-schema';
 import {
   assignOrderSchema,
@@ -37,6 +42,33 @@ describe('account-requests-schema', () => {
     expect(rejectAccountRequestSchema.parse({ reason: ' Duplicate request ' })).toEqual({
       reason: 'Duplicate request',
     });
+  });
+
+  it('blocks disposable email domains and accepts business emails on submitAccountRequestSchema', () => {
+    expect(isDisposableEmail('user@mailinator.com')).toBe(true);
+    expect(isDisposableEmail('user@sub.10minutemail.com')).toBe(true);
+    expect(isDisposableEmail('procurement@industrial-gmbh.de')).toBe(false);
+
+    expect(() =>
+      submitAccountRequestSchema.parse({
+        firstName: 'Hans',
+        lastName: 'Mueller',
+        email: 'hans@mailinator.com',
+        phone: '+49 170 1234567',
+        company: 'Industrial GmbH',
+        country: 'DE',
+      }),
+    ).toThrow(/Disposable email/);
+
+    const valid = submitAccountRequestSchema.parse({
+      firstName: 'Hans',
+      lastName: 'Mueller',
+      email: 'hans@industrial-gmbh.de',
+      phone: '+49 170 1234567',
+      company: 'Industrial GmbH',
+      country: 'de',
+    });
+    expect(valid.country).toBe('DE');
   });
 });
 

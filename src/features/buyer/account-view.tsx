@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
-import { useTranslations } from 'next-intl';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Building2,
   CheckCircle2,
@@ -17,6 +17,7 @@ import {
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useBuyer } from '@/features/buyer/buyer-context';
 import { Link, useRouter } from '@/i18n/navigation';
+import { COUNTRIES, countryName, type CountryLocale } from '@/lib/countries';
 import { cn } from '@/lib/utils';
 
 const INPUT_CLASS =
@@ -40,8 +41,18 @@ interface PendingProfileEdit {
 
 export function AccountView() {
   const t = useTranslations('store');
+  const locale = useLocale();
   const router = useRouter();
   const { buyer, loading, signOutBuyer } = useBuyer();
+  const countryLocale: CountryLocale = locale === 'tr' || locale === 'ar' ? locale : 'en';
+
+  const sortedCountries = useMemo(
+    () =>
+      [...COUNTRIES].sort((a, b) =>
+        countryName(a, countryLocale).localeCompare(countryName(b, countryLocale), countryLocale),
+      ),
+    [countryLocale],
+  );
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -384,16 +395,21 @@ export function AccountView() {
               </div>
               <div className="space-y-1.5">
                 <label htmlFor="acc-country" className={LABEL_CLASS}>
-                  {t('prof_country')} (ISO-2)
+                  {t('prof_country')}
                 </label>
-                <input
+                <select
                   id="acc-country"
                   required
-                  maxLength={2}
                   value={country}
-                  onChange={(e) => setCountry(e.target.value.toUpperCase())}
+                  onChange={(e) => setCountry(e.target.value)}
                   className={INPUT_CLASS}
-                />
+                >
+                  {sortedCountries.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {countryName(c, countryLocale)} ({c.code})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

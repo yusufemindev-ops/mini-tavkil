@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/features/auth/use-permissions';
+import { useAccountRequests, useProfileEditRequests } from '@/features/buyers/queries';
+import { useOrders } from '@/features/orders/queries';
 import { NAV_GROUPS } from './nav-items';
 import { BrandSeal } from '@/components/brand-seal';
 
@@ -10,6 +12,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   // Only show nav the current role can access (matches the router's RequirePermission
   // guards); drop groups left empty after filtering.
   const { can } = usePermissions();
+  const canRequests = can('account_requests:view');
+  const canOrders = can('orders:view');
+
+  const { data: accountRequests = [] } = useAccountRequests(canRequests);
+  const { data: pendingEdits = [] } = useProfileEditRequests('pending', canRequests);
+  const { data: orders = [] } = useOrders(canOrders);
+
+  const pendingRequestsCount =
+    accountRequests.filter((r) => r.status === 'pending').length + pendingEdits.length;
+  const pendingOrdersCount = orders.filter((o) => o.status === 'submitted').length;
 
   const groups = NAV_GROUPS.map((group) => ({
     ...group,
@@ -35,7 +47,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               </div>
             )}
             {group.items.map((item) => {
-              const badge = item.badge;
+              let badge = item.badge;
+              if (item.to === '/account-requests' && pendingRequestsCount > 0) {
+                badge = pendingRequestsCount;
+              } else if (item.to === '/orders' && pendingOrdersCount > 0) {
+                badge = pendingOrdersCount;
+              }
               return (
                 <NavLink
                   key={item.to}
