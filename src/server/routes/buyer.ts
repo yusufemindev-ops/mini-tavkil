@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { getBuyerSession, requireBuyerSession, toBuyerProfilePublic } from '@/lib/buyer-guard';
-import { getBuyerProductPricing, updateBuyerProfile } from '@/lib/services/buyer-portal';
-import { updateBuyerProfileSchema } from '@/lib/services/buyers-schema';
+import { getBuyerProductPricing, listBuyerNotifications } from '@/lib/services/buyer-portal';
 import {
   acceptBuyerOrder,
   getBuyerOrder,
@@ -14,6 +13,12 @@ import {
   rejectOrderSchema,
   submitBuyerOrderSchema,
 } from '@/lib/services/orders-schema';
+import {
+  cancelProfileEditRequest,
+  getPendingProfileEditRequest,
+  submitProfileEditRequest,
+} from '@/lib/services/profile-edit-requests';
+import { submitProfileEditRequestSchema } from '@/lib/services/profile-edit-requests-schema';
 import { adminJson, parseJson, type AppEnv } from '@/server/factory';
 
 export const buyerRoutes = new Hono<AppEnv>()
@@ -21,11 +26,26 @@ export const buyerRoutes = new Hono<AppEnv>()
     const buyer = await getBuyerSession(c.req.raw);
     return adminJson(c, buyer ? toBuyerProfilePublic(buyer) : null);
   })
-  .patch('/me', async (c) => {
+  .get('/profile-edit-requests/pending', async (c) => {
     const buyer = await requireBuyerSession(c.req.raw);
-    const body = await parseJson(c, updateBuyerProfileSchema);
-    const updated = await updateBuyerProfile(buyer.id, body);
-    return adminJson(c, updated);
+    const pending = await getPendingProfileEditRequest(buyer.id);
+    return adminJson(c, pending);
+  })
+  .post('/profile-edit-requests', async (c) => {
+    const buyer = await requireBuyerSession(c.req.raw);
+    const body = await parseJson(c, submitProfileEditRequestSchema);
+    const created = await submitProfileEditRequest(buyer.id, body);
+    return adminJson(c, created, 201);
+  })
+  .delete('/profile-edit-requests/pending', async (c) => {
+    const buyer = await requireBuyerSession(c.req.raw);
+    const res = await cancelProfileEditRequest(buyer.id);
+    return adminJson(c, res);
+  })
+  .get('/notifications', async (c) => {
+    const buyer = await requireBuyerSession(c.req.raw);
+    const items = await listBuyerNotifications(buyer.id);
+    return adminJson(c, items);
   })
   .get('/products/:slug', async (c) => {
     const buyer = await requireBuyerSession(c.req.raw);

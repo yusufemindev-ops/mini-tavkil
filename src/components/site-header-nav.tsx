@@ -10,6 +10,7 @@ import { LocaleSwitcher } from '@/components/locale-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Link, usePathname } from '@/i18n/navigation';
 import { BrandLogo } from '@/components/brand-logo';
+import { NotificationBell } from '@/components/notification-bell';
 import { useBuyer } from '@/features/buyer/buyer-context';
 
 const NAV_LINKS = [
@@ -103,6 +104,7 @@ export function SiteHeaderNav({
 
           {buyer ? (
             <>
+              <NotificationBell />
               <Link
                 href="/cart"
                 className={cn(
