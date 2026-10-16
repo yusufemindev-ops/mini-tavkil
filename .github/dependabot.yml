@@ -3,6 +3,7 @@ updates:
   # Root (Next.js + Drizzle + Workers)
   - package-ecosystem: npm
     directory: '/'
+    target-branch: 'develop'
     schedule:
       interval: weekly
       day: monday
@@ -24,6 +25,7 @@ updates:
   # Admin (Vite + React)
   - package-ecosystem: npm
     directory: '/admin'
+    target-branch: 'develop'
     schedule:
       interval: weekly
       day: monday
@@ -36,6 +38,7 @@ updates:
   # GitHub Actions
   - package-ecosystem: github-actions
     directory: '/'
+    target-branch: 'develop'
     schedule:
       interval: monthly
     labels: ['dependencies', 'ci']

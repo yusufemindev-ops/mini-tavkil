@@ -300,6 +300,9 @@ function main() {
     steps.push(runStep('SonarJS & Security Lint (Admin SPA)', 'pnpm admin:lint'));
     steps.push(runStep('TypeScript Strict Check (Storefront + API)', 'pnpm typecheck'));
     steps.push(runStep('TypeScript Strict Check (Admin SPA)', 'pnpm admin:typecheck'));
+    steps.push(
+      runStep('Dependency Vulnerability Audit (Prod CVEs)', 'pnpm audit --prod --audit-level=high'),
+    );
   }
 
   console.log('\n─────────────────────────────────────────────────────────────');
