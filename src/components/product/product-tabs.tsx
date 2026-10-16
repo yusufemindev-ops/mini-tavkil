@@ -21,7 +21,7 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
 
   function onKeyDown(event: React.KeyboardEvent) {
     const index = tabs.findIndex((tab) => tab.id === active);
-    let next = index;
+    let next: number;
     if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
     else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
     else if (event.key === 'Home') next = 0;

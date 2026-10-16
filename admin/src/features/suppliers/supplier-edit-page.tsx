@@ -53,7 +53,7 @@ function buildTranslations(name: string, slug: string): TranslationPayload[] {
   ];
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@.]+\.[^\s@]+$/;
 function isHttpUrl(value: string): boolean {
   try {
     new URL(value);

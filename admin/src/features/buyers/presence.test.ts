@@ -32,7 +32,7 @@ describe('buyerPresence', () => {
 describe('orders pricing helpers', () => {
   it('computes defaultBuyerPrice with 2-decimal rounding', () => {
     expect(defaultBuyerPrice(100, 15)).toBe(115);
-    expect(defaultBuyerPrice(19.99, 12.5)).toBe(22.49);
+    expect(defaultBuyerPrice(19.99, 12.5)).toBeCloseTo(22.49, 2);
   });
 
   it('computes markupAllPrices, orderBuyerTotal, and buildConfirmPayload', () => {

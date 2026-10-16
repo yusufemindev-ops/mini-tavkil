@@ -38,7 +38,7 @@ export function buildCountryOptions(
  * Keeps each picker's search input honest about what it filters on.
  */
 export function isSearchCharAllowed(char: string, variant: CountrySelectVariant): boolean {
-  const isDigit = /[0-9]/.test(char);
+  const isDigit = /\d/.test(char);
   return variant === 'dial' ? isDigit : !isDigit;
 }
 

@@ -516,7 +516,7 @@ interface FieldErrors {
 
 // Mirrors the backend rules (1–30 chars, no markup, valid email) so the user sees
 // per-field errors before the request, not a generic toast.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@.]+\.[^\s@]+$/;
 const NO_MARKUP = /[<>{}[\]\\]/;
 
 function validateMember(v: {
