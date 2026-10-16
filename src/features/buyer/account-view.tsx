@@ -23,14 +23,31 @@ const INPUT_CLASS =
   'border-border bg-background text-foreground flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus:outline-none';
 const LABEL_CLASS = 'text-foreground block text-xs font-medium';
 
+interface PendingProfileEdit {
+  id: string;
+  updatedAt: string;
+  proposed: {
+    firstName: string | null;
+    lastName: string | null;
+    company: string | null;
+    phone: string | null;
+    jobTitle: string | null;
+    country: string | null;
+    city: string | null;
+    address: string | null;
+  };
+}
+
 export function AccountView() {
   const t = useTranslations('store');
   const router = useRouter();
-  const { buyer, loading, refreshBuyer, signOutBuyer } = useBuyer();
+  const { buyer, loading, signOutBuyer } = useBuyer();
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [pendingEdit, setPendingEdit] = useState<PendingProfileEdit | null>(null);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -47,6 +64,20 @@ export function AccountView() {
     }
   }, [buyer, loading, router]);
 
+  useEffect(() => {
+    if (!buyer) return;
+    let cancelled = false;
+    fetch('/api/buyer/profile-edit-requests/pending', { credentials: 'include' })
+      .then((res) => (res.ok ? (res.json() as Promise<{ data: PendingProfileEdit | null }>) : null))
+      .then((body) => {
+        if (!cancelled) setPendingEdit(body?.data ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [buyer]);
+
   if (loading || !buyer) {
     return (
       <div className="text-muted-foreground py-16 text-center text-sm">{t('acc_loading')}…</div>
@@ -54,14 +85,15 @@ export function AccountView() {
   }
 
   const startEditing = () => {
-    setFirstName(buyer.firstName ?? '');
-    setLastName(buyer.lastName ?? '');
-    setCompanyName(buyer.companyName ?? '');
-    setJobTitle(buyer.jobTitle ?? '');
-    setPhone(buyer.phone ?? '');
-    setCountry(buyer.country ?? '');
-    setCity(buyer.city ?? '');
-    setAddress(buyer.address ?? '');
+    const source = pendingEdit?.proposed;
+    setFirstName(source?.firstName ?? buyer.firstName ?? '');
+    setLastName(source?.lastName ?? buyer.lastName ?? '');
+    setCompanyName(source?.company ?? buyer.companyName ?? '');
+    setJobTitle(source?.jobTitle ?? buyer.jobTitle ?? '');
+    setPhone(source?.phone ?? buyer.phone ?? '');
+    setCountry(source?.country ?? buyer.country ?? '');
+    setCity(source?.city ?? buyer.city ?? '');
+    setAddress(source?.address ?? buyer.address ?? '');
     setErrorMsg(null);
     setEditing(true);
   };
@@ -72,8 +104,8 @@ export function AccountView() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/buyer/me', {
-        method: 'PATCH',
+      const res = await fetch('/api/buyer/profile-edit-requests', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
@@ -93,12 +125,30 @@ export function AccountView() {
         return;
       }
 
-      await refreshBuyer();
+      const body = (await res.json()) as { data?: PendingProfileEdit };
+      if (body.data) {
+        setPendingEdit(body.data);
+      }
       setEditing(false);
     } catch {
       setErrorMsg(t('prof_edit_error'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    setWithdrawing(true);
+    try {
+      const res = await fetch('/api/buyer/profile-edit-requests/pending', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setPendingEdit(null);
+      }
+    } finally {
+      setWithdrawing(false);
     }
   };
 
@@ -127,7 +177,7 @@ export function AccountView() {
                 {t('prof_verified')}
               </span>
             ) : (
-              <span className="border-border bg-background-2 text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+              <span className="border-border bg-background-2 text-foreground-soft inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
                 <Clock className="size-3.5" />
                 {t('prof_unverified')}
               </span>
@@ -150,9 +200,32 @@ export function AccountView() {
         </div>
       </div>
 
+      {pendingEdit && !editing && (
+        <div className="border-primary/30 bg-primary/5 flex flex-wrap items-center justify-between gap-4 rounded-lg border px-5 py-4">
+          <div className="flex items-start gap-3">
+            <Clock className="text-primary mt-0.5 size-4 shrink-0" />
+            <div>
+              <p className="text-foreground text-sm font-semibold">{t('prof_edit_pending_t')}</p>
+              <p className="text-foreground-soft mt-0.5 text-xs">{t('prof_edit_pending_d')}</p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleWithdraw}
+            disabled={withdrawing}
+          >
+            {t('prof_edit_withdraw')}
+          </Button>
+        </div>
+      )}
+
       <section className="border-border bg-card rounded-lg border p-6 sm:p-8">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-foreground text-lg font-semibold">{t('prof_acct')}</h2>
+          <h2 className="text-foreground text-lg font-semibold">
+            {editing ? t('prof_edit_t') : t('prof_acct')}
+          </h2>
           {!editing && (
             <Button
               type="button"
@@ -166,6 +239,7 @@ export function AccountView() {
             </Button>
           )}
         </div>
+        {editing && <p className="text-muted-foreground mt-1 text-xs">{t('prof_edit_d')}</p>}
 
         {!editing ? (
           <dl className="mt-6 grid gap-5 sm:grid-cols-2">

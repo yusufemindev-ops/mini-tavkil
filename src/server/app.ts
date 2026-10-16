@@ -11,6 +11,7 @@ import { adminMeRoutes } from '@/server/routes/admin/me';
 import { adminMediaRoutes } from '@/server/routes/admin/media';
 import { adminOrdersRoutes } from '@/server/routes/admin/orders';
 import { adminProductsRoutes } from '@/server/routes/admin/products';
+import { adminProfileEditRequestsRoutes } from '@/server/routes/admin/profile-edit-requests';
 import { adminSettingsRoutes } from '@/server/routes/admin/settings';
 import { adminSuppliersRoutes } from '@/server/routes/admin/suppliers';
 import {
@@ -62,6 +63,7 @@ const _routes = app
   .route('/admin/suppliers', adminSuppliersRoutes)
   .route('/admin/buyers', adminBuyersRoutes)
   .route('/admin/account-requests', adminAccountRequestsRoutes)
+  .route('/admin/profile-edit-requests', adminProfileEditRequestsRoutes)
   .route('/admin/orders', adminOrdersRoutes)
   .route('/admin/currencies', adminCurrenciesRoutes)
   .route('/admin/fx', adminFxRoutes)

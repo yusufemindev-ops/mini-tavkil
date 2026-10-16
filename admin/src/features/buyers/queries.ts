@@ -77,11 +77,35 @@ export interface UpdateBuyerInput {
   notes?: string | null;
 }
 
+export interface ProfileSnapshot {
+  firstName: string | null;
+  lastName: string | null;
+  company: string | null;
+  phone: string | null;
+  jobTitle: string | null;
+  country: string | null;
+  city: string | null;
+  address: string | null;
+}
+
+export interface AdminProfileEditRequest {
+  id: string;
+  buyerAuthUserId: string;
+  buyerEmail: string;
+  status: RequestStatus;
+  current: ProfileSnapshot;
+  proposed: ProfileSnapshot;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const buyersKeys = {
   all: ['buyers'] as const,
   detail: (id: string) => ['buyers', id] as const,
   orders: (id: string) => ['buyers', id, 'orders'] as const,
   accountRequests: ['account-requests'] as const,
+  profileEditRequests: (status: RequestStatus) => ['profile-edit-requests', status] as const,
 };
 
 export function useBuyers() {
@@ -120,6 +144,15 @@ export function useAccountRequests() {
   });
 }
 
+export function useProfileEditRequests(status: RequestStatus) {
+  return useQuery({
+    queryKey: buyersKeys.profileEditRequests(status),
+    queryFn: () =>
+      api.get<AdminProfileEditRequest[]>(`/admin/profile-edit-requests?status=${status}`),
+    staleTime: 0,
+  });
+}
+
 export function createBuyer(input: CreateBuyerInput): Promise<CreatedBuyer> {
   return api.post<CreatedBuyer>('/admin/buyers', input);
 }
@@ -154,4 +187,25 @@ export function reopenAccountRequest(id: string): Promise<{ status: 'pending' }>
 
 export function deleteAccountRequest(id: string): Promise<{ id: string }> {
   return api.delete<{ id: string }>(`/admin/account-requests/${id}`);
+}
+
+export function approveProfileEditRequest(id: string): Promise<{ id: string; status: 'approved' }> {
+  return api.post<{ id: string; status: 'approved' }>(`/admin/profile-edit-requests/${id}/approve`);
+}
+
+export function rejectProfileEditRequest(
+  id: string,
+  reason?: string,
+): Promise<{ id: string; status: 'rejected' }> {
+  return api.post<{ id: string; status: 'rejected' }>(`/admin/profile-edit-requests/${id}/reject`, {
+    reason,
+  });
+}
+
+export function reopenProfileEditRequest(id: string): Promise<{ id: string; status: 'pending' }> {
+  return api.post<{ id: string; status: 'pending' }>(`/admin/profile-edit-requests/${id}/reopen`);
+}
+
+export function deleteProfileEditRequest(id: string): Promise<{ id: string }> {
+  return api.delete<{ id: string }>(`/admin/profile-edit-requests/${id}`);
 }

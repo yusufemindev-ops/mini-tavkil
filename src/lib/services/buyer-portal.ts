@@ -1,18 +1,13 @@
-import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { notFound } from '@/lib/api/errors';
-import {
-  type BuyerProfilePublic,
-  type BuyerSessionContext,
-  toBuyerProfilePublic,
-} from '@/lib/buyer-guard';
+import type { BuyerSessionContext } from '@/lib/buyer-guard';
 import { db } from '@/lib/db';
 import {
-  auditLog,
-  authUser,
   buyerProfiles,
   currencies,
   fxRates,
+  orderRequests,
   productImages,
   productOptions,
   productOptionValues,
@@ -22,7 +17,6 @@ import {
   productVariants,
 } from '@/lib/db/schema';
 import { resolveImageUrl } from '@/lib/media/image-url';
-import type { UpdateBuyerProfileInput } from '@/lib/services/buyers-schema';
 import { BASE_CURRENCY } from '@/lib/services/currencies';
 
 function round2(n: number): number {
@@ -101,101 +95,6 @@ export async function listPublicCurrencies(): Promise<PublicCurrencyItem[]> {
           ? Number(row.rateToUsd)
           : 1,
   }));
-}
-
-export async function updateBuyerProfile(
-  buyerId: string,
-  input: UpdateBuyerProfileInput,
-): Promise<BuyerProfilePublic> {
-  const [existing] = await db
-    .select({
-      id: authUser.id,
-      email: authUser.email,
-      name: authUser.name,
-      firstName: authUser.firstName,
-      lastName: authUser.lastName,
-      contactName: authUser.contactName,
-      companyName: authUser.companyName,
-      jobTitle: authUser.jobTitle,
-      phone: authUser.phone,
-      country: authUser.country,
-      city: authUser.city,
-      address: authUser.address,
-      preferredLocale: authUser.preferredLocale,
-      verified: authUser.verified,
-      createdAt: authUser.createdAt,
-      tierMarkupPercent: buyerProfiles.tierMarkupPercent,
-    })
-    .from(authUser)
-    .innerJoin(buyerProfiles, eq(buyerProfiles.authUserId, authUser.id))
-    .where(and(eq(authUser.id, buyerId), eq(authUser.userType, 'buyer')))
-    .limit(1);
-
-  if (!existing) throw notFound('Buyer profile not found.');
-
-  const nowIso = new Date().toISOString();
-  const nextFirstName = input.firstName.trim();
-  const nextLastName = input.lastName.trim();
-  const nextContactName =
-    [nextFirstName, nextLastName].filter(Boolean).join(' ').trim() ||
-    existing.contactName ||
-    existing.name;
-  const nextCompany =
-    input.company !== undefined ? input.company?.trim() || null : existing.companyName;
-  const nextJobTitle =
-    input.jobTitle !== undefined ? input.jobTitle?.trim() || null : existing.jobTitle;
-  const nextPhone = input.phone !== undefined ? input.phone?.trim() || null : existing.phone;
-  const nextCountry = input.country.trim().toUpperCase();
-  const nextCity = input.city !== undefined ? input.city?.trim() || null : existing.city;
-  const nextAddress =
-    input.address !== undefined ? input.address?.trim() || null : existing.address;
-  const nextLocale = input.preferredLocale ?? existing.preferredLocale ?? 'en';
-
-  await db.batch([
-    db
-      .update(authUser)
-      .set({
-        name: nextContactName,
-        contactName: nextContactName,
-        firstName: nextFirstName,
-        lastName: nextLastName,
-        companyName: nextCompany,
-        jobTitle: nextJobTitle,
-        phone: nextPhone,
-        country: nextCountry,
-        city: nextCity,
-        address: nextAddress,
-        preferredLocale: nextLocale,
-        updatedAt: nowIso,
-      })
-      .where(eq(authUser.id, buyerId)),
-    db.insert(auditLog).values({
-      actorType: 'buyer',
-      actorId: buyerId,
-      authMethod: 'session',
-      action: 'buyer.profile.update',
-      resourceType: 'buyer',
-      resourceId: buyerId,
-      afterState: input,
-    }),
-  ]);
-
-  return toBuyerProfilePublic({
-    id: existing.id,
-    email: existing.email,
-    companyName: nextCompany ?? '',
-    contactName: nextContactName,
-    firstName: nextFirstName,
-    lastName: nextLastName,
-    preferredLocale: nextLocale,
-    phone: nextPhone ?? null,
-    jobTitle: nextJobTitle ?? null,
-    country: nextCountry,
-    city: nextCity ?? null,
-    address: nextAddress ?? null,
-    memberSince: existing.createdAt,
-    verified: Boolean(existing.verified),
-  });
 }
 
 /**
@@ -343,4 +242,69 @@ export async function getBuyerProductPricing(
     imageUrl: primaryImg?.url ? resolveImageUrl(primaryImg.url) : null,
     variants,
   };
+}
+
+export type BuyerNotificationType =
+  'order_confirmed' | 'order_decision' | 'message' | 'tier_updated';
+
+export interface BuyerNotificationItem {
+  id: string;
+  type: BuyerNotificationType;
+  params: Record<string, string>;
+  href: string;
+  createdAt: string;
+}
+
+export async function listBuyerNotifications(buyerId: string): Promise<BuyerNotificationItem[]> {
+  const rows = await db
+    .select({
+      id: orderRequests.id,
+      orderNumber: orderRequests.orderNumber,
+      status: orderRequests.status,
+      confirmedAt: orderRequests.confirmedAt,
+      rejectionReason: orderRequests.rejectionReason,
+      updatedAt: orderRequests.updatedAt,
+    })
+    .from(orderRequests)
+    .where(eq(orderRequests.buyerId, buyerId))
+    .orderBy(desc(orderRequests.updatedAt))
+    .limit(20);
+
+  const items: BuyerNotificationItem[] = [];
+  const fourDaysMs = 4 * 24 * 60 * 60 * 1000;
+  const nowMs = Date.now();
+
+  for (const row of rows) {
+    const ts = row.confirmedAt ?? row.updatedAt;
+    if (row.status === 'confirmed') {
+      items.push({
+        id: `ord-confirmed-${row.id}`,
+        type: 'order_confirmed',
+        params: { ref: row.orderNumber },
+        href: `/orders/${row.orderNumber}`,
+        createdAt: ts,
+      });
+
+      const confirmedTime = new Date(ts).getTime();
+      if (!Number.isNaN(confirmedTime) && nowMs - confirmedTime >= fourDaysMs) {
+        items.push({
+          id: `ord-decision-${row.id}`,
+          type: 'order_decision',
+          params: { ref: row.orderNumber },
+          href: `/orders/${row.orderNumber}`,
+          createdAt: row.updatedAt,
+        });
+      }
+    } else if (row.status === 'rejected' && row.rejectionReason) {
+      items.push({
+        id: `ord-msg-${row.id}`,
+        type: 'message',
+        params: { ref: row.orderNumber },
+        href: `/orders/${row.orderNumber}`,
+        createdAt: row.updatedAt,
+      });
+    }
+  }
+
+  return items.slice(0, 20);
 }

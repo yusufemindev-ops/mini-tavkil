@@ -4,8 +4,12 @@ import {
   listAccountRequestsQuerySchema,
   submitAccountRequestSchema,
 } from '@/lib/services/account-requests-schema';
-import { listBuyersQuerySchema, updateBuyerProfileSchema } from '@/lib/services/buyers-schema';
+import { listBuyersQuerySchema } from '@/lib/services/buyers-schema';
 import { listBuyerOrdersQuerySchema, submitBuyerOrderSchema } from '@/lib/services/orders-schema';
+import {
+  listProfileEditRequestsQuerySchema,
+  submitProfileEditRequestSchema,
+} from '@/lib/services/profile-edit-requests-schema';
 
 describe('buyer portal schemas & audience boundary guards', () => {
   it('strips tierMarkupPercent from BuyerProfilePublic', () => {
@@ -106,14 +110,22 @@ describe('buyer portal schemas & audience boundary guards', () => {
     });
   });
 
-  it('validates buyer profile self-service update schema', () => {
-    const updated = updateBuyerProfileSchema.parse({
-      firstName: 'Hans',
-      lastName: 'Gruber',
-      company: 'Acme Industrial GmbH',
-      country: 'DE',
-      preferredLocale: 'en',
+  it('validates buyer profile edit request submission and admin query schemas', () => {
+    const req = submitProfileEditRequestSchema.parse({
+      firstName: '  Hans ',
+      lastName: ' Gruber ',
+      company: 'Acme Global GmbH',
+      jobTitle: 'VP Supply Chain',
+      phone: '+49 170 9999999',
+      country: 'de',
+      city: 'Munich',
+      address: 'Maximilianstr. 1',
     });
-    expect(updated.company).toBe('Acme Industrial GmbH');
+    expect(req.firstName).toBe('Hans');
+    expect(req.country).toBe('DE');
+    expect(req.city).toBe('Munich');
+
+    const adminQuery = listProfileEditRequestsQuerySchema.parse({});
+    expect(adminQuery.status).toBe('pending');
   });
 });

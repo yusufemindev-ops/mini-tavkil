@@ -31,9 +31,6 @@ const ROUTE_META: Record<string, RouteMeta> = {
   'GET /api/buyer/me': {
     summary: 'Current authenticated buyer profile (never exposes tierMarkupPercent)',
   },
-  'PATCH /api/buyer/me': {
-    summary: 'Update current buyer contact details and preferred locale',
-  },
   'GET /api/buyer/products/:slug': {
     summary:
       'Personalized buyer unitPrice for a published product (never exposes basePrice or tierMarkup)',
@@ -378,6 +375,39 @@ const ROUTE_META: Record<string, RouteMeta> = {
     summary: 'Permanently delete an account request',
     permission: 'account_requests:review',
   },
+  'GET /api/admin/profile-edit-requests': {
+    summary: 'List pending or rejected buyer profile edit requests with current vs proposed diffs',
+    permission: 'account_requests:view',
+    queryParams: [{ name: 'status', example: 'pending', description: 'pending | rejected' }],
+  },
+  'POST /api/admin/profile-edit-requests/:id/approve': {
+    summary: 'Approve a buyer profile edit request and apply changes to the buyer account',
+    permission: 'account_requests:review',
+  },
+  'POST /api/admin/profile-edit-requests/:id/reject': {
+    summary: 'Reject a pending buyer profile edit request',
+    permission: 'account_requests:review',
+  },
+  'POST /api/admin/profile-edit-requests/:id/reopen': {
+    summary: 'Move a rejected buyer profile edit request back to pending review',
+    permission: 'account_requests:review',
+  },
+  'DELETE /api/admin/profile-edit-requests/:id': {
+    summary: 'Permanently delete a buyer profile edit request',
+    permission: 'account_requests:review',
+  },
+  'GET /api/buyer/profile-edit-requests/pending': {
+    summary: 'Get the authenticated buyer pending profile edit request (if any)',
+  },
+  'POST /api/buyer/profile-edit-requests': {
+    summary: 'Submit a buyer profile edit request for admin review',
+  },
+  'DELETE /api/buyer/profile-edit-requests/pending': {
+    summary: 'Withdraw the authenticated buyer pending profile edit request',
+  },
+  'GET /api/buyer/notifications': {
+    summary: 'List in-app notifications for the authenticated buyer',
+  },
   'GET /api/admin/orders': {
     summary: 'Paginated admin order request inbox with status, buyer, and search filters',
     permission: 'orders:view',
@@ -446,7 +476,11 @@ function tagForPath(path: string): string {
   if (path.startsWith('/api/admin/categories')) return 'Admin · Categories';
   if (path.startsWith('/api/admin/products')) return 'Admin · Products';
   if (path.startsWith('/api/admin/suppliers')) return 'Admin · Suppliers';
-  if (path.startsWith('/api/admin/buyers') || path.startsWith('/api/admin/account-requests')) {
+  if (
+    path.startsWith('/api/admin/buyers') ||
+    path.startsWith('/api/admin/account-requests') ||
+    path.startsWith('/api/admin/profile-edit-requests')
+  ) {
     return 'Admin · Buyers & Account Requests';
   }
   if (path.startsWith('/api/admin/orders')) return 'Admin · Orders (RFQ Inbox)';
