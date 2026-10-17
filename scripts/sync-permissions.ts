@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import pg from 'pg';
-import { PERMISSION_CATALOG, ROLE_GRANTS, ROLE_LABELS } from '../src/lib/permissions/catalog';
+import {
+  PERMISSION_CATALOG,
+  ROLE_GRANTS,
+  ROLE_LABELS,
+} from '../packages/shared/src/permissions/catalog';
 
 /**
  * Idempotently syncs `PERMISSION_CATALOG`, `ROLE_LABELS`, and `ROLE_GRANTS` into the database over `DIRECT_URL` (`pg` TCP transaction with advisory lock).

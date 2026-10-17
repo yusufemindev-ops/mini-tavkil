@@ -13,8 +13,13 @@ export default defineConfig({
         test: {
           name: 'unit',
           environment: 'node',
-          include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],
-          exclude: ['src/**/*.integration.test.ts'],
+          include: [
+            'apps/storefront/src/**/*.test.ts',
+            'apps/api/src/**/*.test.ts',
+            'packages/shared/src/**/*.test.ts',
+            'scripts/**/*.test.ts',
+          ],
+          exclude: ['apps/storefront/src/**/*.integration.test.ts'],
         },
       },
       {
@@ -22,7 +27,7 @@ export default defineConfig({
         test: {
           name: 'component',
           environment: 'jsdom',
-          include: ['src/**/*.test.tsx'],
+          include: ['apps/storefront/src/**/*.test.tsx'],
         },
       },
       {
@@ -32,7 +37,7 @@ export default defineConfig({
         test: {
           name: 'integration',
           environment: 'node',
-          include: ['src/**/*.integration.test.ts'],
+          include: ['apps/storefront/src/**/*.integration.test.ts'],
           testTimeout: 30_000,
         },
       },

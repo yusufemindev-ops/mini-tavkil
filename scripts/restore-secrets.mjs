@@ -76,7 +76,11 @@ try {
   console.log(
     `Uploading ${Object.keys(payload).length} secrets: ${Object.keys(payload).join(', ')}`,
   );
-  execFileSync('pnpm', ['exec', 'wrangler', 'secret', 'bulk', file], { stdio: 'inherit' });
+  execFileSync(
+    'pnpm',
+    ['exec', 'wrangler', 'secret', 'bulk', file, '-c', 'apps/storefront/wrangler.jsonc'],
+    { stdio: 'inherit' },
+  );
 } finally {
   // Always, including on a failed upload — the file holds every production
   // credential in plaintext.

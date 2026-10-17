@@ -1,24 +1,26 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
  * Blanks server secret values in `.open-next/cloudflare/next-env.mjs` so credentials are never embedded in the build artifact.
  */
 const STRIP = [
-  // Confirmed via `wrangler secret list`.
   'ADMIN_ALLOWLIST',
   'BETTER_AUTH_SECRET',
   'DATABASE_URL',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
   'INDEXNOW_API_KEY',
-  // Only ever used by local scripts over TCP — the Worker never touches it.
+  'INTERNAL_REVALIDATE_SECRET',
   'DIRECT_URL',
-  // Not yet set; will be a Worker secret once Turnstile is configured.
   'TURNSTILE_SECRET_KEY',
 ];
 
-const target = join(process.cwd(), '.open-next/cloudflare/next-env.mjs');
+const candidates = [
+  join(process.cwd(), 'apps/storefront/.open-next/cloudflare/next-env.mjs'),
+  join(process.cwd(), '.open-next/cloudflare/next-env.mjs'),
+];
+const target = candidates.find((p) => existsSync(p)) ?? candidates[0];
 
 let source;
 try {

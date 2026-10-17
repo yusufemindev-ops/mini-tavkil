@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { createDb } from '../src/lib/db';
-import { refreshFxRates } from '../src/lib/services/fx';
+import { createDb } from '../packages/shared/src/db';
+import { refreshFxRates } from '../apps/storefront/src/lib/services/fx';
 
 /**
  * Manual FX refresh: `pnpm fx:refresh`.

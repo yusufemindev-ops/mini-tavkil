@@ -3,7 +3,7 @@
 # Without this, a missing translation = silent fallback = SEO degradation.
 set -euo pipefail
 
-DIR=messages
+DIR=apps/storefront/messages
 
 if [ ! -d "$DIR" ]; then
   exit 0

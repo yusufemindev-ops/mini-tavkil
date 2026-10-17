@@ -58,7 +58,13 @@ function isTestFile(relPath: string): boolean {
 }
 
 function checkWorkerRules(relPath: string, content: string, findings: Finding[]) {
-  if (!relPath.startsWith('src/')) return;
+  if (
+    !relPath.startsWith('apps/storefront/src/') &&
+    !relPath.startsWith('apps/api/src/') &&
+    !relPath.startsWith('packages/shared/src/')
+  ) {
+    return;
+  }
 
   const txMatch = /\b(?:db|tx)\.transaction\s*\(/.exec(content);
   if (txMatch) {
@@ -128,9 +134,11 @@ function checkSecretRules(relPath: string, content: string, findings: Finding[])
 }
 
 function isProtectedAdminRoute(relPath: string): boolean {
-  if (relPath.startsWith('src/app/api/admin/') && relPath.endsWith('/route.ts')) return true;
+  if (relPath.startsWith('apps/storefront/src/app/api/admin/') && relPath.endsWith('/route.ts')) {
+    return true;
+  }
   return (
-    relPath.startsWith('src/server/routes/admin/') &&
+    relPath.startsWith('apps/api/src/routes/admin/') &&
     !relPath.endsWith('/index.ts') &&
     !relPath.endsWith('/me.ts')
   );
@@ -171,7 +179,7 @@ function checkAdminRouteRules(relPath: string, content: string, findings: Findin
 
 function isPublicStorefrontRoute(relPath: string): boolean {
   return (
-    relPath.startsWith('src/app/[locale]/') &&
+    relPath.startsWith('apps/storefront/src/app/[locale]/') &&
     !relPath.includes('/account') &&
     !relPath.includes('/cart') &&
     !relPath.includes('/orders') &&
@@ -180,7 +188,7 @@ function isPublicStorefrontRoute(relPath: string): boolean {
 }
 
 function checkSeoRules(relPath: string, content: string, findings: Finding[]) {
-  if (relPath === 'src/app/sitemap.ts') {
+  if (relPath === 'apps/storefront/src/app/sitemap.ts') {
     const nowDate = /lastModified\s*:\s*new\s+Date\s*\(\s*\)/.exec(content);
     if (nowDate) {
       findings.push({
@@ -272,7 +280,12 @@ function main() {
     `\n🔍 mini-tavkil Quality & Security Gate (${quick ? 'Quick Mode' : 'Full SonarJS + SAST Mode'})\n`,
   );
 
-  const files = [...walkFiles(join(ROOT, 'src')), ...walkFiles(join(ROOT, 'apps/admin/src'))];
+  const files = [
+    ...walkFiles(join(ROOT, 'apps/storefront/src')),
+    ...walkFiles(join(ROOT, 'apps/api/src')),
+    ...walkFiles(join(ROOT, 'apps/admin/src')),
+    ...walkFiles(join(ROOT, 'packages/shared/src')),
+  ];
 
   const customStart = Date.now();
   const findings = scanCustomRules(files);

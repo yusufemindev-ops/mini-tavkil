@@ -1,6 +1,19 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
+
+for (const envName of ['.env.local', '.env']) {
+  const rootEnv = resolve(import.meta.dirname, '../../', envName);
+  if (existsSync(rootEnv)) {
+    try {
+      process.loadEnvFile(rootEnv);
+    } catch {
+      // Ignore if already loaded.
+    }
+  }
+}
 
 // Wires the request config that resolves the locale and loads messages/*.json.
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
@@ -12,6 +25,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 function contentSecurityPolicy(): string {
   const r2 = r2Host();
   const turnstile = 'https://challenges.cloudflare.com';
+  const apiHosts = 'https://api.tavkil.com https://api-dev.tavkil.com';
   const maps = 'https://www.google.com';
   // React dev overlay requires eval for stack traces; omitted in production.
   const evalForReactDev = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'";
@@ -26,7 +40,7 @@ function contentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${r2}`,
     "font-src 'self' data:",
-    `connect-src 'self' ${turnstile}`,
+    `connect-src 'self' ${apiHosts} ${turnstile}`,
     // Allowed frames for Turnstile captcha and Google Maps contact embed.
     `frame-src ${turnstile} ${maps}`,
     "frame-ancestors 'none'",

@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 
 loadEnv({ path: ['.env.local', '.env'] });
 import { and, eq, isNull, like } from 'drizzle-orm';
-import { db } from '../../src/lib/db';
+import { db } from '@/lib/db';
 import {
   authSession,
   authUser,
@@ -16,10 +16,10 @@ import {
   roles,
   suppliers,
   supplierTranslations,
-} from '../../src/lib/db/schema';
-import { OWNER_ROLE, ROLE_LABELS } from '../../src/lib/permissions/catalog';
-import { assignRole, roleCodeFromIdOrCode } from '../../src/lib/services/rbac';
-import { inviteMember, listInvites, revokeInvite } from '../../src/lib/services/team';
+} from '@/lib/db/schema';
+import { OWNER_ROLE, ROLE_LABELS } from '@/lib/permissions/catalog';
+import { assignRole, roleCodeFromIdOrCode } from '@/lib/services/rbac';
+import { inviteMember, listInvites, revokeInvite } from '@/lib/services/team';
 
 /**
  * TESTING.md §2 — Authenticated Admin E2E Flow:

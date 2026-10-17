@@ -43,9 +43,9 @@ jobs:
 
       - name: Measure Bundle Size & Warn on Growth
         run: |
-          HANDLER=".open-next/server-functions/default/handler.mjs"
-          if [ ! -f "$HANDLER" ]; then
-            echo "❌ Worker handler file not found at $HANDLER"
+          HANDLER=$(find apps/storefront/.open-next/server-functions/default -name "handler.mjs" | head -n 1)
+          if [ -z "$HANDLER" ] || [ ! -f "$HANDLER" ]; then
+            echo "❌ Worker handler file not found under apps/storefront/.open-next/server-functions/default"
             exit 1
           fi
 
