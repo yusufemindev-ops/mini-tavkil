@@ -2,13 +2,14 @@ import { and, asc, count, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   authAccount,
+  authSession,
   authUser,
   authUserRoles,
   permissions,
   rolePermissions,
   roles,
 } from '@/lib/db/schema';
-import { conflict, invalid, notFound } from '@/lib/api/errors';
+import { AuthError, conflict, invalid, notFound } from '@/lib/api/errors';
 import { adminAllowlist } from '@/lib/permissions/allowlist';
 import { listInvites } from '@/lib/services/team';
 import {
@@ -42,6 +43,102 @@ export {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Checks whether the given user holds the system Owner (`super_admin`) role. */
+export async function isOwnerUser(userId: string): Promise<boolean> {
+  const assigned = await db
+    .select({ code: roles.code })
+    .from(authUserRoles)
+    .innerJoin(roles, eq(roles.id, authUserRoles.roleId))
+    .where(eq(authUserRoles.authUserId, userId));
+  return assigned.some((row) => row.code === OWNER_ROLE);
+}
+
+/** Resolves all active permission codes held by an admin user. */
+async function resolvedUserPermissions(userId: string): Promise<Set<string>> {
+  const assigned = await db
+    .select({ roleId: authUserRoles.roleId, code: roles.code })
+    .from(authUserRoles)
+    .innerJoin(roles, eq(roles.id, authUserRoles.roleId))
+    .where(eq(authUserRoles.authUserId, userId));
+
+  if (assigned.some((row) => row.code === OWNER_ROLE)) {
+    return new Set(roleGrants(OWNER_ROLE));
+  }
+
+  const out = new Set<string>();
+  for (const row of assigned) {
+    if ((ASSIGNABLE_ROLES as string[]).includes(row.code)) {
+      for (const perm of roleGrants(row.code as RoleCode)) out.add(perm);
+    }
+  }
+
+  const granted = await db
+    .select({ code: permissions.code })
+    .from(authUserRoles)
+    .innerJoin(rolePermissions, eq(rolePermissions.roleId, authUserRoles.roleId))
+    .innerJoin(
+      permissions,
+      and(eq(permissions.id, rolePermissions.permissionId), eq(permissions.deprecated, false)),
+    )
+    .where(eq(authUserRoles.authUserId, userId));
+
+  for (const row of granted) out.add(row.code);
+  return out;
+}
+
+/** Verifies the acting admin holds every permission they are attempting to grant. */
+export async function assertActorGrantsPermissions(
+  actorId: string,
+  requestedPermissions: Iterable<string>,
+): Promise<void> {
+  if (await isOwnerUser(actorId)) return;
+  const held = await resolvedUserPermissions(actorId);
+  for (const perm of requestedPermissions) {
+    if (!held.has(perm)) {
+      throw new AuthError(403, `Cannot grant permission "${perm}" that you do not hold.`);
+    }
+  }
+}
+
+/** Prevents non-Owners from assigning/modifying Owner or roles exceeding their own permissions. */
+export async function assertActorCanAssignRole(
+  actorId: string,
+  targetRoleCode: string,
+  currentRoleCode?: string | null,
+): Promise<void> {
+  if (targetRoleCode === OWNER_ROLE || currentRoleCode === OWNER_ROLE) {
+    if (!(await isOwnerUser(actorId))) {
+      throw new AuthError(403, 'Only an Owner can assign or modify the Owner role.');
+    }
+    return;
+  }
+  if (await isOwnerUser(actorId)) return;
+
+  if (currentRoleCode && currentRoleCode !== targetRoleCode) {
+    await assertActorCanAssignRole(actorId, currentRoleCode);
+  }
+
+  if ((ASSIGNABLE_ROLES as string[]).includes(targetRoleCode)) {
+    await assertActorGrantsPermissions(actorId, roleGrants(targetRoleCode as RoleCode));
+    return;
+  }
+
+  const customPerms = await db
+    .select({ code: permissions.code })
+    .from(roles)
+    .innerJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
+    .innerJoin(
+      permissions,
+      and(eq(permissions.id, rolePermissions.permissionId), eq(permissions.deprecated, false)),
+    )
+    .where(eq(roles.code, targetRoleCode));
+
+  await assertActorGrantsPermissions(
+    actorId,
+    customPerms.map((r) => r.code),
+  );
+}
+
 /** Shape matching admin dashboard team member row requirements. */
 export interface AdminUserRow {
   id: string;
@@ -74,21 +171,26 @@ function resolveRoleLabel(code: string, roleNameByCode: Map<string, string>): st
 export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]> {
   const invites = await listInvites();
   const allowed = new Set([...adminAllowlist(), ...invites.map((i) => i.email.toLowerCase())]);
+  const allowedList = [...allowed];
 
-  const rows = await db
-    .select({
-      id: authUser.id,
-      email: authUser.email,
-      name: authUser.name,
-      image: authUser.image,
-      banned: authUser.banned,
-      lastSeenAt: authUser.lastSeenAt,
-      createdAt: authUser.createdAt,
-    })
-    .from(authUser)
-    .orderBy(asc(authUser.createdAt));
+  const staff =
+    allowedList.length === 0
+      ? []
+      : await db
+          .select({
+            id: authUser.id,
+            email: authUser.email,
+            name: authUser.name,
+            image: authUser.image,
+            banned: authUser.banned,
+            lastSeenAt: authUser.lastSeenAt,
+            createdAt: authUser.createdAt,
+          })
+          .from(authUser)
+          .where(inArray(sql`lower(${authUser.email})`, allowedList))
+          .orderBy(asc(authUser.createdAt))
+          .limit(500);
 
-  const staff = rows.filter((row) => allowed.has(row.email.toLowerCase()));
   const ids = staff.map((row) => row.id);
 
   const assignments =
@@ -176,11 +278,23 @@ export async function listAdminUsers(viewerId?: string): Promise<AdminUserRow[]>
   return [...existing, ...pending];
 }
 
-/** Assigns a single system or custom role to a user while protecting the last active Owner. */
-export async function assignRole(userId: string, roleCode: string): Promise<AdminUserRow> {
+/** Assigns a single system or custom role to a user while protecting Owners and the last active Owner. */
+export async function assignRole(
+  userId: string,
+  roleCode: string,
+  actorId?: string,
+): Promise<AdminUserRow> {
+  if (actorId && actorId === userId) {
+    throw invalid('You cannot change your own role.');
+  }
+
   const users = await listAdminUsers();
   const current = users.find((row) => row.id === userId);
   if (!current) throw notFound('User not found.');
+
+  if (actorId) {
+    await assertActorCanAssignRole(actorId, roleCode, current.role?.code ?? null);
+  }
 
   if (current.role?.code === OWNER_ROLE && roleCode !== OWNER_ROLE) {
     const activeOwners = users.filter(
@@ -210,11 +324,26 @@ export async function assignRole(userId: string, roleCode: string): Promise<Admi
   return updated;
 }
 
-/** Suspends or reactivates an admin while refusing to lock out the last active Owner. */
-export async function setUserSuspended(userId: string, banned: boolean): Promise<AdminUserRow> {
+/** Suspends or reactivates an admin while protecting Owners and revoking active sessions on suspend. */
+export async function setUserSuspended(
+  userId: string,
+  banned: boolean,
+  actorId?: string,
+): Promise<AdminUserRow> {
+  if (actorId && actorId === userId && banned) {
+    throw invalid('You cannot suspend your own account.');
+  }
+
   const users = await listAdminUsers();
   const target = users.find((row) => row.id === userId);
   if (!target) throw notFound('User not found.');
+
+  if (actorId && target.role?.code) {
+    if (target.role.code === OWNER_ROLE && !(await isOwnerUser(actorId))) {
+      throw new AuthError(403, 'Only an Owner can suspend or reactivate an Owner.');
+    }
+    await assertActorCanAssignRole(actorId, target.role.code);
+  }
 
   if (banned && target.role?.code === OWNER_ROLE) {
     const activeOwners = users.filter(
@@ -225,21 +354,34 @@ export async function setUserSuspended(userId: string, banned: boolean): Promise
     }
   }
 
-  await db
-    .update(authUser)
-    .set({ banned, updatedAt: new Date().toISOString() })
-    .where(eq(authUser.id, userId));
+  const now = new Date().toISOString();
+  if (banned) {
+    await db.batch([
+      db.update(authUser).set({ banned: true, updatedAt: now }).where(eq(authUser.id, userId)),
+      db.delete(authSession).where(eq(authSession.userId, userId)),
+    ]);
+  } else {
+    await db.update(authUser).set({ banned: false, updatedAt: now }).where(eq(authUser.id, userId));
+  }
 
   const updated = (await listAdminUsers()).find((row) => row.id === userId);
   if (!updated) throw notFound('User not found.');
   return updated;
 }
 
-/** Removes a user's role assignment while refusing to remove the last active Owner. */
-export async function removeRole(userId: string): Promise<AdminUserRow> {
+/** Removes a user's role assignment while protecting Owners and refusing to remove the last active Owner. */
+export async function removeRole(userId: string, actorId?: string): Promise<AdminUserRow> {
+  if (actorId && actorId === userId) {
+    throw invalid('You cannot remove your own role.');
+  }
+
   const users = await listAdminUsers();
   const target = users.find((row) => row.id === userId);
   if (!target) throw notFound('User not found.');
+
+  if (actorId && target.role?.code === OWNER_ROLE && !(await isOwnerUser(actorId))) {
+    throw new AuthError(403, 'Only an Owner can remove the Owner role.');
+  }
 
   if (target.role?.code === OWNER_ROLE) {
     const activeOwners = users.filter(
@@ -266,7 +408,7 @@ export interface AdminRole {
 
 /** Returns all system and custom roles with member counts and granted permissions. */
 export async function listRoles(): Promise<AdminRole[]> {
-  const [rows, counts, customGrants, invites, signedInUsers] = await Promise.all([
+  const [rows, counts, customGrants, invites] = await Promise.all([
     db
       .select({
         id: roles.id,
@@ -289,8 +431,17 @@ export async function listRoles(): Promise<AdminRole[]> {
         and(eq(permissions.id, rolePermissions.permissionId), eq(permissions.deprecated, false)),
       ),
     listInvites(),
-    db.select({ email: authUser.email }).from(authUser),
   ]);
+
+  const inviteEmails = invites.map((inv) => inv.email.toLowerCase());
+  const signedInUsers =
+    inviteEmails.length === 0
+      ? []
+      : await db
+          .select({ email: authUser.email })
+          .from(authUser)
+          .where(inArray(sql`lower(${authUser.email})`, inviteEmails))
+          .limit(500);
 
   const signedInEmails = new Set(signedInUsers.map((u) => u.email.toLowerCase()));
   const inviteCountByCode = new Map<string, number>();
@@ -396,6 +547,11 @@ export async function createCustomRole(
     throw conflict('A system role with that name already exists.');
   }
 
+  const uniqueCodes = [...new Set(parsed.permissions)].sort();
+  if (actorId) {
+    await assertActorGrantsPermissions(actorId, uniqueCodes);
+  }
+
   const [conflictRow] = await db
     .select({ id: roles.id })
     .from(roles)
@@ -405,7 +561,6 @@ export async function createCustomRole(
     throw conflict('A role with that name already exists.');
   }
 
-  const uniqueCodes = [...new Set(parsed.permissions)].sort();
   const permIdByCode = await resolveCatalogPermissionIds(uniqueCodes);
   const now = new Date().toISOString();
 
@@ -477,6 +632,13 @@ export async function updateCustomRole(
     throw invalid('System roles are fixed in code and cannot be modified.');
   }
 
+  if (actorId) {
+    await assertActorCanAssignRole(actorId, existing.code);
+    if (parsed.permissions !== undefined) {
+      await assertActorGrantsPermissions(actorId, parsed.permissions);
+    }
+  }
+
   if (parsed.name !== undefined) {
     const [duplicate] = await db
       .select({ id: roles.id })
@@ -531,6 +693,7 @@ export async function updateCustomRole(
 /** Deletes a custom RBAC role if it is not a system role and has no assigned members. */
 export async function deleteCustomRole(
   roleId: string,
+  actorId?: string,
 ): Promise<{ id: string; code: string; name: string }> {
   if (!UUID_RE.test(roleId)) throw notFound('Role not found.');
 
@@ -548,6 +711,9 @@ export async function deleteCustomRole(
   if (!existing) throw notFound('Role not found.');
   if (existing.isSystem || (ASSIGNABLE_ROLES as string[]).includes(existing.code)) {
     throw invalid('System roles cannot be deleted.');
+  }
+  if (actorId) {
+    await assertActorCanAssignRole(actorId, existing.code);
   }
 
   const [[assignmentCount], invites] = await Promise.all([

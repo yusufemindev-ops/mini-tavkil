@@ -33,7 +33,8 @@ export async function listCategories(): Promise<AdminCategory[]> {
     .select()
     .from(categories)
     .where(isNull(categories.deletedAt))
-    .orderBy(asc(categories.displayOrder), asc(categories.createdAt));
+    .orderBy(asc(categories.displayOrder), asc(categories.createdAt))
+    .limit(500);
 
   if (rows.length === 0) return [];
   const translations = await translationsFor(rows.map((row) => row.id));
@@ -89,7 +90,19 @@ export async function updateCategory(
   id: string,
   input: UpdateCategoryInput,
 ): Promise<AdminCategory> {
-  await findActive(id);
+  const existing = await findActive(id);
+
+  if (input.status !== undefined && input.status !== existing.status) {
+    throw invalid('Category status changes must use the publish or unpublish endpoints.');
+  }
+  if (existing.status === PUBLISHED && input.translations !== undefined) {
+    const english = input.translations.find((t) => t.locale === DEFAULT_LOCALE);
+    if (!english || !english.name.trim() || !english.slug.trim()) {
+      throw invalid(
+        `Published categories must retain a '${DEFAULT_LOCALE}' translation with a name and slug.`,
+      );
+    }
+  }
 
   if (input.parentId !== undefined && input.parentId === id) {
     throw invalid('A category cannot be its own parent.');
@@ -99,7 +112,6 @@ export async function updateCategory(
   if (input.parentId !== undefined) patch.parentId = input.parentId;
   if (input.imageUrl !== undefined) patch.imageUrl = input.imageUrl;
   if (input.displayOrder !== undefined) patch.displayOrder = input.displayOrder;
-  if (input.status !== undefined) patch.status = input.status;
   if (input.sortStrategy !== undefined) patch.sortStrategy = input.sortStrategy;
 
   if (Object.keys(patch).length > 0) {

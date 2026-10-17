@@ -103,6 +103,34 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   });
 
+  const persistCart = useCallback((updater: (prev: BuyerCartItem[]) => BuyerCartItem[]) => {
+    setCartItems((prev) => {
+      const next = updater(prev);
+      try {
+        if (next.length === 0) {
+          globalThis.window.localStorage.removeItem(CART_STORAGE_KEY);
+        } else {
+          globalThis.window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
+        }
+      } catch {
+        // Ignore storage errors.
+      }
+      return next;
+    });
+  }, []);
+
+  const clearCart = useCallback(() => {
+    persistCart(() => []);
+  }, [persistCart]);
+
+  const applyBuyer = useCallback(
+    (nextBuyer: BuyerProfilePublic | null) => {
+      setBuyer(nextBuyer);
+      if (!nextBuyer) clearCart();
+    },
+    [clearCart],
+  );
+
   const refreshBuyer = useCallback(async () => {
     try {
       const res = await fetch(apiUrl('/api/buyer/me'), {
@@ -110,17 +138,17 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
         cache: 'no-store',
       });
       if (!res.ok) {
-        setBuyer(null);
+        applyBuyer(null);
         return;
       }
       const payload = (await res.json()) as { data?: BuyerProfilePublic | null };
-      setBuyer(payload.data ?? null);
+      applyBuyer(payload.data ?? null);
     } catch {
       setBuyer(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyBuyer]);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,7 +160,7 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
       .then((raw) => {
         if (cancelled) return;
         const payload = raw as { data?: BuyerProfilePublic | null } | null;
-        setBuyer(payload?.data ?? null);
+        applyBuyer(payload?.data ?? null);
       })
       .catch(() => {
         if (!cancelled) setBuyer(null);
@@ -155,7 +183,7 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyBuyer]);
 
   const setCurrency = useCallback((code: string) => {
     const normalized = code.trim().toUpperCase();
@@ -165,18 +193,6 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
     } catch {
       // Ignore storage errors.
     }
-  }, []);
-
-  const persistCart = useCallback((updater: (prev: BuyerCartItem[]) => BuyerCartItem[]) => {
-    setCartItems((prev) => {
-      const next = updater(prev);
-      try {
-        globalThis.window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage errors.
-      }
-      return next;
-    });
   }, []);
 
   const addItem = useCallback(
@@ -227,14 +243,11 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
     [persistCart],
   );
 
-  const clearCart = useCallback(() => {
-    persistCart(() => []);
-  }, [persistCart]);
-
   const signOutBuyer = useCallback(async () => {
     await signOut().catch(() => null);
     setBuyer(null);
-  }, []);
+    clearCart();
+  }, [clearCart]);
 
   const convertAmount = useCallback(
     (amount: number, fromCurrency = 'USD'): number => {

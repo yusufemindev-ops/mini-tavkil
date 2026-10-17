@@ -59,6 +59,15 @@ describe('Admin Router Guards & Global 404', () => {
               <Route path="/dashboard" element={<LocationDisplay label="Dashboard Screen" />} />
               <Route element={<RequirePermission permission="buyers:view" />}>
                 <Route path="/buyer-accounts" element={<LocationDisplay label="Buyers Screen" />} />
+                <Route element={<RequirePermission permission="buyers:create" />}>
+                  <Route
+                    path="/buyer-accounts/new"
+                    element={<LocationDisplay label="New Buyer Screen" />}
+                  />
+                </Route>
+              </Route>
+              <Route element={<RequirePermission permission="users:view" />}>
+                <Route path="/users" element={<LocationDisplay label="Users Screen" />} />
               </Route>
               <Route element={<RequirePermission permission="orders:view" />}>
                 <Route path="/orders" element={<LocationDisplay label="Orders Screen" />} />
@@ -132,6 +141,27 @@ describe('Admin Router Guards & Global 404', () => {
     const root = renderTestRouter('/orders');
     expect(container.textContent).toContain('Dashboard Screen (/dashboard)');
     act(() => root.unmount());
+  });
+
+  it('requires buyers:create on /buyer-accounts/new and allows /users with users:view', () => {
+    mockUseSession.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        id: 'adm-1',
+        email: 'viewer@tavkil.com',
+        name: 'Viewer',
+        permissions: ['buyers:view', 'users:view'],
+      },
+    });
+
+    const root1 = renderTestRouter('/buyer-accounts/new');
+    expect(container.textContent).toContain('Dashboard Screen (/dashboard)');
+    act(() => root1.unmount());
+
+    const root2 = renderTestRouter('/users');
+    expect(container.textContent).toContain('Users Screen (/users)');
+    act(() => root2.unmount());
   });
 
   it('allows access when admin holds exact permission or wildcard (*)', () => {

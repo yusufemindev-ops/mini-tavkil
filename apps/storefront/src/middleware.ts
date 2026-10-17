@@ -4,8 +4,17 @@ import { routing } from './i18n/routing';
 
 const handleI18n = createMiddleware(routing);
 
+const PROTECTED_BUYER_PATH_RE = /^\/(?:(en|tr|ar)\/)?(account|orders|cart)(?:\/|$)/;
+const PRIVATE_NOINDEX_PATH_RE = /^\/(?:(en|tr|ar)\/)?(account|orders|cart|login)(?:\/|$)/;
+
+function hasSessionCookie(request: NextRequest): boolean {
+  return request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.endsWith('.session_token') && Boolean(cookie.value));
+}
+
 /**
- * Locale prefixing and canonical domain redirect for the public storefront.
+ * Locale prefixing, canonical domain redirect, and edge auth guard for private buyer routes.
  */
 export default function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
@@ -31,8 +40,24 @@ export default function middleware(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
+  const protectedMatch = pathname.match(PROTECTED_BUYER_PATH_RE);
+  if (protectedMatch && !hasSessionCookie(request)) {
+    const locale = protectedMatch[1] ?? routing.defaultLocale;
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = `/${locale}/login`;
+    loginUrl.search = '';
+    loginUrl.searchParams.set('next', pathname);
+    const redirectResponse = NextResponse.redirect(loginUrl, 307);
+    redirectResponse.headers.set('Cache-Control', 'private, no-store');
+    redirectResponse.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    return redirectResponse;
+  }
+
   const response = handleI18n(request);
-  if (process.env.SITE_INDEXABLE !== 'true' || host.toLowerCase().startsWith('dev.')) {
+  if (PRIVATE_NOINDEX_PATH_RE.test(pathname)) {
+    response.headers.set('Cache-Control', 'private, no-store');
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  } else if (process.env.SITE_INDEXABLE !== 'true' || host.toLowerCase().startsWith('dev.')) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   }
   return response;
@@ -40,5 +65,5 @@ export default function middleware(request: NextRequest): NextResponse {
 
 export const config = {
   // Matches root, localized storefront paths, and root text files.
-  matcher: ['/', '/(tr|ar|en)/:path*', '/:key.txt'],
+  matcher: ['/', '/(tr|ar|en)/:path*', '/(account|orders|cart|login)/:path*', '/:key.txt'],
 };

@@ -19,6 +19,7 @@ export async function generateMetadata({
     path: '/login',
     title: `${t('si_title')} · Tavkil`,
     description: t('si_sub'),
+    index: false,
   });
 }
 

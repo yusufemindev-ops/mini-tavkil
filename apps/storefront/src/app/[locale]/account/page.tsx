@@ -18,6 +18,7 @@ export async function generateMetadata({
     path: '/account',
     title: `${t('prof_title')} · Tavkil`,
     description: t('prof_acct'),
+    index: false,
   });
 }
 

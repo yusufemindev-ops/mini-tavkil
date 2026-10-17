@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { toErrorResponse } from '@/lib/api/errors';
+import { flushBackgroundTasks } from '@/lib/cache';
 import type { AppEnv } from '@/server/factory';
 import { adminAccountRequestsRoutes } from '@/server/routes/admin/account-requests';
 import { adminAuditLogsRoutes } from '@/server/routes/admin/audit-logs';
@@ -61,7 +62,21 @@ app.use('*', async (c, next) => {
       }
     }
   }
-  await next();
+  try {
+    await next();
+  } finally {
+    const tasks = flushBackgroundTasks();
+    if (tasks.length > 0) {
+      try {
+        const ctx = c.executionCtx;
+        for (const task of tasks) {
+          ctx.waitUntil(task);
+        }
+      } catch {
+        // Non-Worker execution context (e.g., unit tests); tasks still run asynchronously.
+      }
+    }
+  }
 });
 
 app.onError((err) => toErrorResponse(err));

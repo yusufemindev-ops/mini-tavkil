@@ -18,6 +18,7 @@ import { Field, FieldError, FieldHelp, FieldLabel } from '@/components/ui/field'
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { usePermissions } from '@/features/auth/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   assignUserRole,
@@ -106,7 +107,10 @@ function copyInvite(member: AdminTeamMember) {
   toast.success('Sign-in instructions copied');
 }
 
-function buildMemberColumns(onManage: (m: AdminTeamMember) => void): ColumnDef<AdminTeamMember>[] {
+function buildMemberColumns(
+  onManage: (m: AdminTeamMember) => void,
+  canManageMembers: boolean,
+): ColumnDef<AdminTeamMember>[] {
   return [
     {
       id: 'member',
@@ -178,23 +182,32 @@ function buildMemberColumns(onManage: (m: AdminTeamMember) => void): ColumnDef<A
       header: '',
       enableSorting: false,
       enableColumnFilter: false,
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={row.original.isYou}
-            onClick={() => onManage(row.original)}
-          >
-            Manage
-          </Button>
-        </div>
-      ),
+      cell: ({ row }) =>
+        canManageMembers ? (
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={row.original.isYou}
+              onClick={() => onManage(row.original)}
+            >
+              Manage
+            </Button>
+          </div>
+        ) : null,
     },
   ];
 }
 
-function RoleRow({ role, onInspect }: { role: AdminRole; onInspect: (role: AdminRole) => void }) {
+function RoleRow({
+  role,
+  onInspect,
+  canAssignRole,
+}: {
+  role: AdminRole;
+  onInspect: (role: AdminRole) => void;
+  canAssignRole: boolean;
+}) {
   const isSystem = role.type === 'system';
   return (
     <tr>
@@ -210,7 +223,7 @@ function RoleRow({ role, onInspect }: { role: AdminRole; onInspect: (role: Admin
       <td>
         <div className="flex justify-end">
           <Button variant="ghost" size="sm" onClick={() => onInspect(role)}>
-            {isSystem ? 'View' : 'Edit'}
+            {isSystem || !canAssignRole ? 'View' : 'Edit'}
           </Button>
         </div>
       </td>
@@ -226,6 +239,10 @@ const TABS = [
 export function UsersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
+  const canAssignRole = can('users:assign_role');
+  const canEditUser = can('users:edit');
+  const canManageMembers = canAssignRole || canEditUser;
   const { tab } = useParams<{ tab: string }>();
   const active = tab === 'roles' ? 'roles' : 'users';
 
@@ -235,7 +252,10 @@ export function UsersPage() {
   const [managing, setManaging] = useState<AdminTeamMember | null>(null);
   const [editingRole, setEditingRole] = useState<AdminRole | 'new' | null>(null);
 
-  const columns = useMemo(() => buildMemberColumns(setManaging), []);
+  const columns = useMemo(
+    () => buildMemberColumns(setManaging, canManageMembers),
+    [canManageMembers],
+  );
   const roleOptions = useMemo<RoleOption[]>(
     () => roles.map((r) => ({ value: r.id, label: r.name })),
     [roles],
@@ -254,17 +274,19 @@ export function UsersPage() {
         title="User management"
         subtitle="Admin team members and what each one can do"
         actions={
-          active === 'users' ? (
-            <Button onClick={() => setInviting(true)}>
-              <UserPlus className="size-4" />
-              Add member
-            </Button>
-          ) : (
-            <Button onClick={() => setEditingRole('new')}>
-              <Plus className="size-4" />
-              Create role
-            </Button>
-          )
+          canAssignRole ? (
+            active === 'users' ? (
+              <Button onClick={() => setInviting(true)}>
+                <UserPlus className="size-4" />
+                Add member
+              </Button>
+            ) : (
+              <Button onClick={() => setEditingRole('new')}>
+                <Plus className="size-4" />
+                Create role
+              </Button>
+            )
+          ) : undefined
         }
       />
 
@@ -339,7 +361,12 @@ export function UsersPage() {
               </thead>
               <tbody>
                 {roles.map((role) => (
-                  <RoleRow key={role.id} role={role} onInspect={setEditingRole} />
+                  <RoleRow
+                    key={role.id}
+                    role={role}
+                    onInspect={setEditingRole}
+                    canAssignRole={canAssignRole}
+                  />
                 ))}
               </tbody>
             </Table>
@@ -373,6 +400,8 @@ export function UsersPage() {
             key={managing.id}
             member={managing}
             roleOptions={roleOptions}
+            canAssignRole={canAssignRole}
+            canEditUser={canEditUser}
             onClose={() => setManaging(null)}
             onChanged={(m) => {
               setManaging(m);
@@ -576,11 +605,15 @@ function validateMember(v: {
 function ManageMemberPanel({
   member,
   roleOptions,
+  canAssignRole,
+  canEditUser,
   onClose,
   onChanged,
 }: {
   member: AdminTeamMember;
   roleOptions: RoleOption[];
+  canAssignRole: boolean;
+  canEditUser: boolean;
   onClose: () => void;
   onChanged: (m: AdminTeamMember) => void;
 }) {
@@ -588,7 +621,7 @@ function ManageMemberPanel({
   // Name and email are editable only until the invite is accepted. After that
   // Google owns them and anything typed here would be overwritten on next
   // sign-in; the API enforces the same rule.
-  const editable = member.status === 'invited' && member.id.startsWith('invite:');
+  const editable = member.status === 'invited' && member.id.startsWith('invite:') && canAssignRole;
 
   const [firstName, setFirstName] = useState(member.firstName ?? '');
   const [lastName, setLastName] = useState(member.lastName ?? '');
@@ -710,7 +743,7 @@ function ManageMemberPanel({
           <SelectMenu
             id="mng-role"
             value={member.role?.id ?? ''}
-            disabled={busy}
+            disabled={busy || !canAssignRole}
             onValueChange={(roleId) => assign.mutate(roleId)}
             options={roleOptions}
           />
@@ -736,15 +769,17 @@ function ManageMemberPanel({
         </div>
       </div>
 
-      <div className="border-border flex items-center justify-end border-t px-5 py-4">
-        <Button
-          variant={suspended ? 'outline' : 'destructive'}
-          disabled={busy}
-          onClick={() => suspend.mutate()}
-        >
-          {suspended ? 'Reactivate' : 'Suspend'}
-        </Button>
-      </div>
+      {canEditUser && (
+        <div className="border-border flex items-center justify-end border-t px-5 py-4">
+          <Button
+            variant={suspended ? 'outline' : 'destructive'}
+            disabled={busy}
+            onClick={() => suspend.mutate()}
+          >
+            {suspended ? 'Reactivate' : 'Suspend'}
+          </Button>
+        </div>
+      )}
     </SheetContent>
   );
 }

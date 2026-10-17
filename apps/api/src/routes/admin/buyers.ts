@@ -44,13 +44,25 @@ export const adminBuyersRoutes = new Hono<AppEnv>()
   })
   .patch('/:id', requireAdminPerm('buyers:edit'), async (c) => {
     const body = await parseJson(c, updateBuyerSchema);
-    const updated = await updateBuyer(c.req.param('id'), body);
+    const id = c.req.param('id');
+    const before = await getBuyer(id);
+    const updated = await updateBuyer(id, body);
     await auditAdmin(c, {
       action: 'buyer.updated',
       resourceType: 'buyer',
       resourceId: updated.id,
       target: updated.email,
       summary: `Updated buyer ${updated.company ?? updated.email} (tier markup ${updated.tierMarkup}%)`,
+      beforeState: {
+        company: before.company,
+        tierMarkup: before.tierMarkup,
+        verified: before.verified,
+      },
+      afterState: {
+        company: updated.company,
+        tierMarkup: updated.tierMarkup,
+        verified: updated.verified,
+      },
     });
     return adminJson(c, updated);
   })

@@ -18,6 +18,7 @@ export async function generateMetadata({
     path: `/orders/${encodeURIComponent(ref)}`,
     title: `${ref} · ${t('ord_title')} · Tavkil`,
     description: t('ord_lead'),
+    index: false,
   });
 }
 

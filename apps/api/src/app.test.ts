@@ -27,7 +27,8 @@ vi.mock('@/lib/auth-guard', () => ({
   rolesFor: vi.fn(async () => ['super_admin']),
 }));
 
-const { adminJson, parseJson, requireAdminPerm } = await import('@/server/factory');
+const { adminJson, parseJson, requireAdminPerm, requireAdminSession } =
+  await import('@/server/factory');
 const { createDocsRoutes } = await import('@/server/routes/docs');
 
 function buildTestApp() {
@@ -40,6 +41,9 @@ function buildTestApp() {
   const schema = z.object({ name: z.string().min(1) });
 
   app
+    .get('/admin/session-only', requireAdminSession(), (c) =>
+      adminJson(c, { adminId: c.var.admin.id }),
+    )
     .get('/admin/items', requireAdminPerm('products:view'), (c) => adminJson(c, [{ id: 'item-1' }]))
     .post('/admin/items', requireAdminPerm('products:create'), async (c) => {
       const body = await parseJson(c, schema);
@@ -62,6 +66,14 @@ describe('Hono server factory & middleware', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('Cache-Control')).toBe('private, no-store');
     await expect(res.json()).resolves.toEqual({ data: [{ id: 'item-1' }] });
+  });
+
+  it('allows any authenticated admin session on requireAdminSession routes', async () => {
+    const app = buildTestApp();
+    const res = await app.request('/api/admin/session-only');
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ data: { adminId: 'u1' } });
   });
 
   it('validates JSON body with Zod and injects authenticated admin into c.var.admin', async () => {
@@ -149,14 +161,17 @@ describe('Hono server factory & middleware', () => {
     const { registerRevalidator } = await import('@/lib/cache');
     const spy = vi.fn();
     registerRevalidator(spy);
-    vi.stubEnv('BETTER_AUTH_SECRET', 'test-revalidate-secret-123');
+    vi.stubEnv('REVALIDATE_SECRET', 'test-revalidate-secret-123');
 
     const app = buildTestApp();
     app.route('/internal/revalidate', internalRevalidateRoutes);
 
     const unauth = await app.request('/api/internal/revalidate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-revalidate-secret': 'wrong-secret',
+      },
       body: JSON.stringify({ path: '/en/catalogue' }),
     });
     expect(unauth.status).toBe(401);
@@ -173,5 +188,55 @@ describe('Hono server factory & middleware', () => {
     expect(ok.status).toBe(200);
     expect(spy).toHaveBeenCalledWith('/en/catalogue', 'page');
     vi.unstubAllEnvs();
+  });
+
+  it('fails closed on public intake when TURNSTILE_SECRET_KEY is not configured', async () => {
+    const { publicContactRoutes } = await import('@/server/routes/public-intake');
+    vi.stubEnv('TURNSTILE_SECRET_KEY', '');
+
+    const app = buildTestApp();
+    app.route('/contact', publicContactRoutes);
+
+    const res = await app.request('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Test Buyer',
+        email: 'buyer@example.com',
+        subject: 'Wholesale enquiry',
+        message: 'Interested in wholesale valves and fittings.',
+        turnstileToken: 'dummy-token',
+      }),
+    });
+
+    expect(res.status).toBe(422);
+    await expect(res.json()).resolves.toEqual({
+      error: {
+        code: 'validation.failed',
+        message: 'Security verification is unavailable.',
+      },
+    });
+    vi.unstubAllEnvs();
+  });
+
+  it('enforces per-IP sliding window rate limiting with 429 rate_limited', async () => {
+    const { rateLimit } = await import('@/server/factory');
+    const app = buildTestApp();
+    app.post('/limited', rateLimit({ limit: 2, windowMs: 60_000, keyPrefix: 'test-rl' }), (c) =>
+      c.json({ data: { ok: true } }),
+    );
+
+    const headers = { 'cf-connecting-ip': '203.0.113.42' };
+    expect((await app.request('/api/limited', { method: 'POST', headers })).status).toBe(200);
+    expect((await app.request('/api/limited', { method: 'POST', headers })).status).toBe(200);
+
+    const blocked = await app.request('/api/limited', { method: 'POST', headers });
+    expect(blocked.status).toBe(429);
+    await expect(blocked.json()).resolves.toEqual({
+      error: {
+        code: 'rate_limited',
+        message: 'Too many requests. Please wait and try again.',
+      },
+    });
   });
 });

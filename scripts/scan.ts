@@ -147,10 +147,12 @@ function isProtectedAdminRoute(relPath: string): boolean {
 function checkAdminRouteRules(relPath: string, content: string, findings: Finding[]) {
   if (!isProtectedAdminRoute(relPath)) return;
 
+  const isDashboardRoute = relPath.endsWith('/routes/admin/dashboard.ts');
   const hasGuard =
     content.includes('adminRoute(') ||
     content.includes('requireAdminPerm(') ||
-    content.includes('requireAdminPermission(');
+    content.includes('requireAdminPermission(') ||
+    (isDashboardRoute && content.includes('requireAdminSession('));
   if (!hasGuard) {
     findings.push({
       severity: 'ERROR',

@@ -248,7 +248,24 @@ export async function updateProduct(
   input: UpdateProductInput,
   actorId: string,
 ): Promise<AdminProduct> {
-  await findActive(id);
+  const existing = await findActive(id);
+  if (input.status !== undefined && input.status !== existing.status) {
+    throw invalid('Product status changes must use the publish, unpublish, or archive endpoints.');
+  }
+  if (existing.status === PUBLISHED) {
+    if (input.sku !== undefined && (!input.sku || !input.sku.trim())) {
+      throw invalid('Cannot remove the SKU of a published product.');
+    }
+    if (input.images !== undefined && input.images.length === 0) {
+      throw invalid('Cannot remove all images from a published product.');
+    }
+    if (input.translations !== undefined) {
+      const english = input.translations.find((t) => t.locale === 'en');
+      if (!english || !english.name.trim() || !english.slug.trim()) {
+        throw invalid("Published products must retain an 'en' translation with a name and slug.");
+      }
+    }
+  }
 
   const patch: Record<string, unknown> = {};
   const assign = <K extends keyof UpdateProductInput>(
@@ -271,7 +288,6 @@ export async function updateProduct(
   assign('countryOfOrigin', 'countryOfOrigin');
   assign('gtin13', 'gtin13');
   assign('mpn', 'mpn');
-  assign('status', 'status');
   assign('isFeatured', 'isFeatured');
   assign('basePriceAmount', 'basePriceAmount', (v) => (v == null ? null : String(v)));
   assign('basePriceCurrency', 'basePriceCurrency');

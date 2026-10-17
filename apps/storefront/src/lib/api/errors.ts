@@ -70,6 +70,10 @@ export function forbidden(message: string): AuthError {
   return new AuthError(403, message);
 }
 
+export function rateLimited(message: string): AppError {
+  return new AppError('rate_limited', message);
+}
+
 /** Postgres unique-violation. Drizzle surfaces the driver error, not a typed one. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

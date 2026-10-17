@@ -1,6 +1,7 @@
 import { and, asc, count, desc, eq, ilike, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
+  auditLog,
   authUser,
   buyerProfiles,
   orderNumberSequence,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/db/schema';
 import { assertUuid, conflict, forbidden, invalid, notFound } from '@/lib/api/errors';
 import { resolveImageUrl } from '@/lib/media/image-url';
+import { recordAudit } from '@/lib/services/audit-log';
 import { notifyOrderConfirmed, notifyOrderSubmitted } from '@/lib/services/notifications';
 import type {
   AssignOrderInput,
@@ -463,11 +465,7 @@ export async function assignAdminOrder(id: string, input: AssignOrderInput): Pro
   return getAdminOrder(id);
 }
 
-/**
- * Transitions stale `submitted` or `confirmed` orders older than `order.auto_expire_days`
- * (default 30 days) to `expired`. Safe to run repeatedly in Cloudflare Cron Triggers.
- */
-export async function expireStaleOrders(
+async function resolveOrderExpiryCutoffMs(
   dbClient: typeof db = db,
   defaultDays = 30,
 ): Promise<number> {
@@ -479,7 +477,18 @@ export async function expireStaleOrders(
 
   const rawDays = (setting?.value as { days?: unknown } | null)?.days;
   const days = typeof rawDays === 'number' && rawDays > 0 ? rawDays : defaultDays;
-  const cutoffIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  return Date.now() - days * 24 * 60 * 60 * 1000;
+}
+
+/**
+ * Transitions stale `submitted` or `confirmed` orders older than `order.auto_expire_days`
+ * (default 30 days) to `expired`. Safe to run repeatedly in Cloudflare Cron Triggers.
+ */
+export async function expireStaleOrders(
+  dbClient: typeof db = db,
+  defaultDays = 30,
+): Promise<number> {
+  const cutoffIso = new Date(await resolveOrderExpiryCutoffMs(dbClient, defaultDays)).toISOString();
   const nowIso = new Date().toISOString();
 
   const expired = await dbClient
@@ -496,7 +505,30 @@ export async function expireStaleOrders(
         isNull(orderRequests.deletedAt),
       ),
     )
-    .returning({ id: orderRequests.id });
+    .returning({ id: orderRequests.id, orderNumber: orderRequests.orderNumber });
+
+  if (expired.length > 0) {
+    try {
+      await dbClient.insert(auditLog).values(
+        expired.map((row) => ({
+          actorType: 'system' as const,
+          actorId: null,
+          authMethod: 'system' as const,
+          action: 'order.expired',
+          resourceType: 'order',
+          resourceId: row.id,
+          beforeState: null,
+          afterState: {
+            status: 'expired',
+            target: row.orderNumber,
+            summary: `Auto-expired stale order ${row.orderNumber}`,
+          },
+        })),
+      );
+    } catch (error) {
+      console.error('Failed to record order.expired audit logs:', error);
+    }
+  }
 
   return expired.length;
 }
@@ -653,6 +685,7 @@ export async function submitBuyerOrder(
         variantSku: productVariants.sku,
         variantBasePrice: productVariants.basePriceAmount,
         variantCurrency: productVariants.basePriceCurrency,
+        variantMoq: productVariants.moq,
         product: products,
       })
       .from(productVariants)
@@ -687,12 +720,13 @@ export async function submitBuyerOrder(
     if (v) {
       const base = Number(v.variantBasePrice ?? v.product.basePriceAmount ?? 0);
       const currency = (v.variantCurrency ?? v.product.basePriceCurrency ?? 'USD').trim();
+      const moq = v.variantMoq ?? v.product.moq;
       if (base <= 0) throw invalid(`Product ${sku} is not available for ordering.`);
-      if (item.quantity < v.product.moq) {
-        throw invalid(`Minimum order quantity for ${sku} is ${v.product.moq}.`);
+      if (item.quantity < moq) {
+        throw invalid(`Minimum order quantity for ${sku} is ${moq}.`);
       }
       resolvedProductIds.add(v.product.id);
-      return { product: v.product, base, currency, item };
+      return { product: v.product, base, currency, moq, item };
     }
     const p = byProductSku.get(sku);
     if (p) {
@@ -703,10 +737,15 @@ export async function submitBuyerOrder(
         throw invalid(`Minimum order quantity for ${sku} is ${p.moq}.`);
       }
       resolvedProductIds.add(p.id);
-      return { product: p, base, currency, item };
+      return { product: p, base, currency, moq: p.moq, item };
     }
     throw invalid(`Product ${sku} was not found.`);
   });
+
+  const currency = resolvedLines[0]!.currency;
+  if (resolvedLines.some((l) => l.currency !== currency)) {
+    throw invalid('All items in a single order request must use the same currency.');
+  }
 
   const pIds = [...resolvedProductIds];
   const [translations, images] = await Promise.all([
@@ -749,7 +788,6 @@ export async function submitBuyerOrder(
   const orderNumber = `O-${year}-${String(seq!.lastNumber).padStart(4, '0')}`;
   const orderId = crypto.randomUUID();
   const nowIso = new Date().toISOString();
-  const currency = resolvedLines[0]!.currency;
 
   let subtotal = 0;
   const itemValues = resolvedLines.map((line, index) => {
@@ -761,7 +799,7 @@ export async function submitBuyerOrder(
       productNameSnapshot: nameByProduct.get(line.product.id) ?? 'Product',
       productImageUrlSnapshot: imageByProduct.get(line.product.id) ?? null,
       productUnitSnapshot: line.product.unit,
-      productMoqSnapshot: line.product.moq,
+      productMoqSnapshot: line.moq,
       quantity: line.item.quantity,
       unitPriceBase: String(line.base),
       submittedUnitPrice: String(submittedUnit),
@@ -821,15 +859,40 @@ export async function acceptBuyerOrder(buyerId: string, orderNumber: string): Pr
     throw conflict(`Only confirmed quotes can be accepted (current status: ${order.status}).`);
   }
 
+  const cutoffMs = await resolveOrderExpiryCutoffMs();
+  const submittedMs = Date.parse(asUtcIso(order.submittedAt) ?? order.submittedAt);
   const nowIso = new Date().toISOString();
-  await db
+  if (!Number.isNaN(submittedMs) && submittedMs < cutoffMs) {
+    await db
+      .update(orderRequests)
+      .set({ status: 'expired', expiredAt: nowIso, updatedAt: nowIso })
+      .where(and(eq(orderRequests.id, order.id), eq(orderRequests.status, 'confirmed')));
+    await recordAudit({
+      actorType: 'system',
+      action: 'order.expired',
+      resourceType: 'order',
+      resourceId: order.id,
+      target: order.orderNumber,
+      summary: `Auto-expired stale order ${order.orderNumber}`,
+      beforeState: { status: 'confirmed' },
+      afterState: { status: 'expired' },
+    });
+    throw conflict('This quote has expired and can no longer be accepted.');
+  }
+
+  const [updated] = await db
     .update(orderRequests)
     .set({
       status: 'accepted',
       acceptedAt: nowIso,
       updatedAt: nowIso,
     })
-    .where(eq(orderRequests.id, order.id));
+    .where(and(eq(orderRequests.id, order.id), eq(orderRequests.status, 'confirmed')))
+    .returning({ id: orderRequests.id });
+
+  if (!updated) {
+    throw conflict('Order status changed concurrently; please refresh and try again.');
+  }
 
   return getBuyerOrder(buyerId, orderNumber);
 }
@@ -858,7 +921,7 @@ export async function rejectBuyerOrder(
   }
 
   const nowIso = new Date().toISOString();
-  await db
+  const [updated] = await db
     .update(orderRequests)
     .set({
       status: 'rejected',
@@ -866,7 +929,17 @@ export async function rejectBuyerOrder(
       rejectedAt: nowIso,
       updatedAt: nowIso,
     })
-    .where(eq(orderRequests.id, order.id));
+    .where(
+      and(
+        eq(orderRequests.id, order.id),
+        inArray(orderRequests.status, ['submitted', 'confirmed']),
+      ),
+    )
+    .returning({ id: orderRequests.id });
 
-  return getAdminOrder(order.id).then(() => getBuyerOrder(buyerId, orderNumber));
+  if (!updated) {
+    throw conflict('Order status changed concurrently; please refresh and try again.');
+  }
+
+  return getBuyerOrder(buyerId, orderNumber);
 }

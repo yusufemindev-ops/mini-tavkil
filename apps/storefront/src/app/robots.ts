@@ -30,13 +30,30 @@ export default function robots(): MetadataRoute.Robots {
     return { rules: [{ userAgent: '*', disallow: '/' }] };
   }
 
+  const disallow = [
+    '/admin',
+    '/api',
+    '/en/account',
+    '/tr/account',
+    '/ar/account',
+    '/en/orders',
+    '/tr/orders',
+    '/ar/orders',
+    '/en/cart',
+    '/tr/cart',
+    '/ar/cart',
+    '/en/login',
+    '/tr/login',
+    '/ar/login',
+  ];
+
   return {
     rules: [
-      { userAgent: '*', allow: '/', disallow: ['/admin', '/api'] },
+      { userAgent: '*', allow: '/', disallow },
       ...AI_SEARCH_CRAWLERS.map((userAgent) => ({
         userAgent,
         allow: '/',
-        disallow: ['/admin', '/api'],
+        disallow,
       })),
       ...(TRAINING_ONLY.length > 0 ? [{ userAgent: TRAINING_ONLY, disallow: '/' }] : []),
     ],

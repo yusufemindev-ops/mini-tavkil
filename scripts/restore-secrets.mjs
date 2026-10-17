@@ -25,6 +25,7 @@ const SECRETS = [
   'GOOGLE_CLIENT_SECRET',
   'ADMIN_ALLOWLIST',
   'INDEXNOW_API_KEY',
+  'TURNSTILE_SECRET_KEY',
 ];
 
 function parseEnv(text) {

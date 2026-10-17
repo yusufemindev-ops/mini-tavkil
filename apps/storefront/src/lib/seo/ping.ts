@@ -1,3 +1,4 @@
+import { scheduleBackground } from '@/lib/cache';
 import { submitToIndexNow, urlsFor, type IndexNowTarget } from '@/lib/seo/indexnow';
 
 /**
@@ -9,7 +10,5 @@ import { submitToIndexNow, urlsFor, type IndexNowTarget } from '@/lib/seo/indexn
  * place it appears is the Worker log.
  */
 export function pingIndexNow(target: IndexNowTarget): void {
-  void submitToIndexNow(urlsFor(target)).catch(() => {
-    /* already logged in submitToIndexNow */
-  });
+  scheduleBackground(submitToIndexNow(urlsFor(target)));
 }
