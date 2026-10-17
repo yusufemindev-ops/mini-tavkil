@@ -126,10 +126,41 @@ function createAuth() {
             }
           },
           after: async (session) => {
-            await db
+            const [u] = await db
               .update(authUser)
               .set({ lastSeenAt: new Date().toISOString() })
-              .where(eq(authUser.id, session.userId));
+              .where(eq(authUser.id, session.userId))
+              .returning({ email: authUser.email, userType: authUser.userType });
+            if (!u) return;
+
+            const invited = await invitedRoleFor(u.email);
+            const code = isAllowlisted(u.email) ? OWNER_ROLE : invited;
+            if (!code) return;
+
+            if (u.userType !== 'admin') {
+              await db
+                .update(authUser)
+                .set({ userType: 'admin' })
+                .where(eq(authUser.id, session.userId));
+            }
+            const existingRoles = await db
+              .select({ roleId: authUserRoles.roleId })
+              .from(authUserRoles)
+              .where(eq(authUserRoles.authUserId, session.userId))
+              .limit(1);
+            if (existingRoles.length === 0) {
+              const [roleRow] = await db
+                .select({ id: roles.id })
+                .from(roles)
+                .where(eq(roles.code, code))
+                .limit(1);
+              if (roleRow) {
+                await db
+                  .insert(authUserRoles)
+                  .values({ authUserId: session.userId, roleId: roleRow.id })
+                  .onConflictDoNothing();
+              }
+            }
           },
         },
       },

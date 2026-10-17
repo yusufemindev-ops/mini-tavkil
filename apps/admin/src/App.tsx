@@ -60,7 +60,9 @@ export default function App() {
             {/* Buyers & Operations */}
             <Route element={<RequirePermission permission="buyers:view" />}>
               <Route path="/buyer-accounts" element={<BuyersPage />} />
-              <Route path="/buyer-accounts/new" element={<BuyerNewPage />} />
+              <Route element={<RequirePermission permission="buyers:create" />}>
+                <Route path="/buyer-accounts/new" element={<BuyerNewPage />} />
+              </Route>
               <Route path="/buyer-accounts/:id" element={<BuyerEditPage />} />
             </Route>
             <Route element={<RequirePermission permission="account_requests:view" />}>
@@ -72,7 +74,7 @@ export default function App() {
             </Route>
 
             {/* Admin settings */}
-            <Route element={<RequirePermission permission="users:assign_role" />}>
+            <Route element={<RequirePermission permission="users:view" />}>
               <Route path="/users" element={<UsersPage />} />
               <Route path="/users/:tab" element={<UsersPage />} />
             </Route>

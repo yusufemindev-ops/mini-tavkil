@@ -476,11 +476,12 @@ export async function publicProducts(
 
   if (filter.featured) conditions.push(eq(products.isFeatured, true));
 
+  const PUBLIC_PRODUCTS_MAX_LIMIT = 500;
   let query = productBaseQuery()
     .where(and(...conditions))
-    .orderBy(...orderFor(filter.sort ?? DEFAULT_PRODUCT_SORT));
+    .orderBy(...orderFor(filter.sort ?? DEFAULT_PRODUCT_SORT))
+    .limit(Math.min(filter.limit ?? PUBLIC_PRODUCTS_MAX_LIMIT, PUBLIC_PRODUCTS_MAX_LIMIT));
 
-  if (filter.limit !== undefined) query = query.limit(filter.limit);
   if (filter.offset !== undefined) query = query.offset(filter.offset);
 
   const rows = await query;
@@ -569,7 +570,8 @@ export async function publicCategories(locale: Locale): Promise<PublicCategory[]
     .from(categories)
     .innerJoin(categoryTranslations, eq(categoryTranslations.categoryId, categories.id))
     .where(and(categoryIsPublic, categoryTranslationIsComplete(locale)))
-    .orderBy(asc(categories.displayOrder), asc(categoryTranslations.name));
+    .orderBy(asc(categories.displayOrder), asc(categoryTranslations.name))
+    .limit(500);
 
   if (rows.length === 0) return [];
 
@@ -630,7 +632,8 @@ export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
       })
       .from(products)
       .innerJoin(productTranslations, eq(productTranslations.productId, products.id))
-      .where(and(productIsPublic, eq(productTranslations.isComplete, true))),
+      .where(and(productIsPublic, eq(productTranslations.isComplete, true)))
+      .limit(10000),
     db
       .select({
         id: categories.id,
@@ -640,7 +643,8 @@ export async function publicSitemapEntries(): Promise<SitemapEntry[]> {
       })
       .from(categories)
       .innerJoin(categoryTranslations, eq(categoryTranslations.categoryId, categories.id))
-      .where(and(categoryIsPublic, eq(categoryTranslations.isComplete, true))),
+      .where(and(categoryIsPublic, eq(categoryTranslations.isComplete, true)))
+      .limit(1000),
   ]);
 
   const entries: SitemapEntry[] = [];

@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { Panel, PanelBody, PanelHead } from '@/components/ui/panel';
 import { ActivitySkeleton, KpiCardSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { usePermissions } from '@/features/auth/use-permissions';
 import { type ActivityIcon, type ActivityTone, type ValueTone } from './types';
 import { useDashboard } from './queries';
 
@@ -31,6 +32,7 @@ const VALUE_TONE: Record<ValueTone, string> = {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const { can } = usePermissions();
   const { data, isLoading } = useDashboard();
   const kpis = data?.kpis ?? [];
   const publishSummary = data?.publishSummary ?? [];
@@ -62,13 +64,15 @@ export function DashboardPage() {
         <PanelHead
           title="Catalog publish-readiness"
           action={
-            <button
-              type="button"
-              onClick={() => navigate('/products')}
-              className="text-primary text-sm font-medium hover:underline"
-            >
-              Manage products →
-            </button>
+            can('products:view') ? (
+              <button
+                type="button"
+                onClick={() => navigate('/products')}
+                className="text-primary text-sm font-medium hover:underline"
+              >
+                Manage products →
+              </button>
+            ) : undefined
           }
         />
         <PanelBody>
@@ -119,59 +123,61 @@ export function DashboardPage() {
       </Panel>
 
       {/* Recent activity */}
-      <Panel>
-        <PanelHead
-          title="Recent activity"
-          action={
-            <button
-              type="button"
-              onClick={() => navigate('/audit-log')}
-              className="text-primary text-sm font-medium hover:underline"
-            >
-              View all
-            </button>
-          }
-        />
-        <PanelBody tight>
-          {isLoading ? (
-            <ActivitySkeleton rows={5} />
-          ) : activity.length === 0 ? (
-            <p className="text-muted-foreground py-6 text-center text-sm">No recent activity.</p>
-          ) : (
-            <div className="flex flex-col">
-              {activity.map((a, i) => {
-                const Icon = ACTIVITY_ICON[a.icon];
-                return (
-                  <div
-                    key={a.id}
-                    className={cn(
-                      'flex items-start gap-3 px-[18px] py-3.5',
-                      i > 0 && 'border-border border-t',
-                    )}
-                  >
-                    <span
+      {can('audit_log:view') && (
+        <Panel>
+          <PanelHead
+            title="Recent activity"
+            action={
+              <button
+                type="button"
+                onClick={() => navigate('/audit-log')}
+                className="text-primary text-sm font-medium hover:underline"
+              >
+                View all
+              </button>
+            }
+          />
+          <PanelBody tight>
+            {isLoading ? (
+              <ActivitySkeleton rows={5} />
+            ) : activity.length === 0 ? (
+              <p className="text-muted-foreground py-6 text-center text-sm">No recent activity.</p>
+            ) : (
+              <div className="flex flex-col">
+                {activity.map((a, i) => {
+                  const Icon = ACTIVITY_ICON[a.icon];
+                  return (
+                    <div
+                      key={a.id}
                       className={cn(
-                        'grid size-8 flex-none place-items-center rounded-full',
-                        ACTIVITY_TONE[a.tone],
+                        'flex items-start gap-3 px-[18px] py-3.5',
+                        i > 0 && 'border-border border-t',
                       )}
                     >
-                      <Icon className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-foreground text-[0.85rem]">
-                        {a.before}
-                        <b className="font-semibold">{a.strong}</b>
-                        {a.after}
+                      <span
+                        className={cn(
+                          'grid size-8 flex-none place-items-center rounded-full',
+                          ACTIVITY_TONE[a.tone],
+                        )}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-foreground text-[0.85rem]">
+                          {a.before}
+                          <b className="font-semibold">{a.strong}</b>
+                          {a.after}
+                        </div>
+                        <div className="text-muted-foreground mt-0.5 text-[0.72rem]">{a.meta}</div>
                       </div>
-                      <div className="text-muted-foreground mt-0.5 text-[0.72rem]">{a.meta}</div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </PanelBody>
-      </Panel>
+                  );
+                })}
+              </div>
+            )}
+          </PanelBody>
+        </Panel>
+      )}
     </div>
   );
 }

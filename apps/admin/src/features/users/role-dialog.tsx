@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Field, FieldError, FieldHelp, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { usePermissions } from '@/features/auth/use-permissions';
 import {
   domainCodes,
   grantWithDeps,
@@ -56,8 +57,10 @@ export function RoleEditorSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { can } = usePermissions();
   const isNew = role === null;
   const isSystem = role?.type === 'system';
+  const readOnly = Boolean(isSystem || !can('users:assign_role'));
   const { data: catalog = [] } = usePermissionCatalog();
 
   const [name, setName] = useState(role?.name ?? '');
@@ -72,7 +75,7 @@ export function RoleEditorSheet({
   const locked = useMemo(() => lockedCodes(selected, allCodes), [selected, allCodes]);
 
   const handleTogglePermission = (code: string) => {
-    if (isSystem || locked.has(code)) return;
+    if (readOnly || locked.has(code)) return;
     setSelected((prev) =>
       prev.has(code) ? toggleAction(prev, code, false) : grantWithDeps(prev, code, allCodes),
     );
@@ -80,7 +83,7 @@ export function RoleEditorSheet({
   };
 
   const handleToggleDomain = (group: PermissionCatalogDomain) => {
-    if (isSystem) return;
+    if (readOnly) return;
     const state = groupState(group, selected);
     setSelected((prev) => toggleDomain(prev, group, state !== 'all'));
     setErrors((prev) => ({ ...prev, permissions: undefined }));
@@ -150,7 +153,7 @@ export function RoleEditorSheet({
       <div className="border-border flex items-center justify-between border-b px-5 py-4">
         <div className="flex items-center gap-2">
           <SheetTitle>
-            {isNew ? 'Create custom role' : isSystem ? role.name : `Edit role: ${role.name}`}
+            {isNew ? 'Create custom role' : readOnly ? role.name : `Edit role: ${role.name}`}
           </SheetTitle>
           {role && (
             <Badge variant={isSystem ? 'secondary' : 'primary'}>
@@ -170,14 +173,14 @@ export function RoleEditorSheet({
 
       <div className="flex-1 overflow-auto px-5 py-4">
         <Field>
-          <FieldLabel htmlFor="role-name" required={!isSystem}>
+          <FieldLabel htmlFor="role-name" required={!readOnly}>
             Role name
           </FieldLabel>
           <Input
             id="role-name"
             value={name}
             maxLength={60}
-            disabled={isSystem || busy}
+            disabled={readOnly || busy}
             placeholder="e.g. Order Coordinator"
             aria-invalid={!!errors.name}
             onChange={(e) => {
@@ -194,7 +197,7 @@ export function RoleEditorSheet({
             id="role-description"
             value={description}
             maxLength={240}
-            disabled={isSystem || busy}
+            disabled={readOnly || busy}
             placeholder="Short summary of what members with this role can do"
             aria-invalid={!!errors.description}
             onChange={(e) => {
@@ -227,7 +230,7 @@ export function RoleEditorSheet({
                     <span className="text-foreground text-xs font-semibold">
                       {DOMAIN_LABELS[group.domain] ?? group.domain}
                     </span>
-                    {!isSystem && (
+                    {!readOnly && (
                       <button
                         type="button"
                         onClick={() => handleToggleDomain(group)}
@@ -249,7 +252,7 @@ export function RoleEditorSheet({
                           <input
                             type="checkbox"
                             checked={checked}
-                            disabled={isSystem || busy || isLocked}
+                            disabled={readOnly || busy || isLocked}
                             onChange={() => handleTogglePermission(perm.code)}
                             className="mt-0.5 rounded"
                           />
@@ -272,7 +275,7 @@ export function RoleEditorSheet({
 
       <div className="border-border flex items-center justify-between border-t px-5 py-4">
         <div>
-          {!isNew && !isSystem && (
+          {!isNew && !readOnly && (
             <ConfirmDialog
               trigger={
                 <Button
@@ -299,9 +302,9 @@ export function RoleEditorSheet({
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            {isSystem ? 'Close' : 'Cancel'}
+            {readOnly ? 'Close' : 'Cancel'}
           </Button>
-          {!isSystem && (
+          {!readOnly && (
             <Button onClick={handleSave} disabled={busy}>
               {isNew ? 'Create role' : 'Save role'}
             </Button>

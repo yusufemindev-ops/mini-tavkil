@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { systemSettings } from '@/lib/db/schema';
+import { authSession, authUser, systemSettings } from '@/lib/db/schema';
 import { conflict, invalid } from '@/lib/api/errors';
 import { adminAllowlist } from '@/lib/permissions/allowlist';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type RoleCode } from '@/lib/permissions/catalog';
@@ -160,7 +160,7 @@ export async function updateInviteRole(
   return next;
 }
 
-/** Remove an invite. Takes effect on their next request, not their next login. */
+/** Remove an invite and revoke any active sessions for that address. */
 export async function revokeInvite(email: string, actorId: string): Promise<void> {
   const target = email.trim().toLowerCase();
   const invites = await listInvites();
@@ -168,6 +168,14 @@ export async function revokeInvite(email: string, actorId: string): Promise<void
     invites.filter((entry) => entry.email.toLowerCase() !== target),
     actorId,
   );
+  const [existingUser] = await db
+    .select({ id: authUser.id })
+    .from(authUser)
+    .where(eq(sql`lower(${authUser.email})`, target))
+    .limit(1);
+  if (existingUser?.id) {
+    await db.delete(authSession).where(eq(authSession.userId, existingUser.id));
+  }
 }
 
 /** Human label for a role code, for building an `AdminTeamMember` response. */

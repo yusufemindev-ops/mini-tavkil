@@ -190,7 +190,6 @@ function SupplierEditor({ supplier, isNew }: { supplier: AdminSupplier | null; i
         ? createSupplier({ ...base, translations })
         : updateSupplier(supplierId, {
             ...base,
-            status: status as 'draft' | 'published',
             translations,
           });
     },

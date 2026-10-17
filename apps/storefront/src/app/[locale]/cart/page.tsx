@@ -18,6 +18,7 @@ export async function generateMetadata({
     path: '/cart',
     title: `${t('cart_title')} · Tavkil`,
     description: t('cart_lead'),
+    index: false,
   });
 }
 

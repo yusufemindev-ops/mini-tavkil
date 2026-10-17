@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { invalid } from '@/lib/api/errors';
 import {
+  assertActorCanAssignRole,
   assignRole,
   assignRoleSchema,
   createCustomRole,
@@ -19,11 +20,20 @@ import {
 import {
   createMemberSchema,
   inviteMember,
+  listInvites,
   updateInvite,
   updateInviteRole,
   updateMemberSchema,
 } from '@/lib/services/team';
 import { adminJson, auditAdmin, parseJson, requireAdminPerm, type AppEnv } from '@/server/factory';
+
+async function resolveInviteForActor(actorId: string, inviteEmail: string, nextRoleCode?: string) {
+  const existing = (await listInvites()).find((i) => i.email.toLowerCase() === inviteEmail);
+  const targetRole = nextRoleCode ?? existing?.role;
+  if (targetRole) {
+    await assertActorCanAssignRole(actorId, targetRole, existing?.role ?? null);
+  }
+}
 
 export const adminUsersRoutes = new Hono<AppEnv>()
   .get('/', requireAdminPerm('users:view'), async (c) => {
@@ -31,6 +41,9 @@ export const adminUsersRoutes = new Hono<AppEnv>()
   })
   .post('/', requireAdminPerm('users:assign_role'), async (c) => {
     const body = await parseJson(c, createMemberSchema);
+    const code = await roleCodeFromIdOrCode(body.roleId);
+    if (!code) throw invalid('Select a valid role.');
+    await assertActorCanAssignRole(c.var.admin.id, code);
     await inviteMember(body, c.var.admin.id, roleCodeFromIdOrCode);
     const members = await listAdminUsers(c.var.admin.id);
     const wanted = body.email.trim().toLowerCase();
@@ -52,9 +65,11 @@ export const adminUsersRoutes = new Hono<AppEnv>()
         'Only invited members can be edited here. Once someone signs in, their name and email come from their Google account.',
       );
     }
-    await updateInvite(id.slice('invite:'.length), body, c.var.admin.id);
+    const inviteEmail = id.slice('invite:'.length).trim().toLowerCase();
+    await resolveInviteForActor(c.var.admin.id, inviteEmail);
+    await updateInvite(inviteEmail, body, c.var.admin.id);
     const members = await listAdminUsers(c.var.admin.id);
-    const wanted = (body.email ?? id.slice('invite:'.length)).trim().toLowerCase();
+    const wanted = (body.email ?? inviteEmail).trim().toLowerCase();
     const updated = members.find((member) => member.email.toLowerCase() === wanted) ?? members[0];
     await auditAdmin(c, {
       action: 'user.updated',
@@ -71,7 +86,8 @@ export const adminUsersRoutes = new Hono<AppEnv>()
     if (!code) throw invalid('That role does not exist.');
     const targetId = decodeURIComponent(c.req.param('id'));
     if (targetId.startsWith('invite:')) {
-      const inviteEmail = targetId.slice('invite:'.length);
+      const inviteEmail = targetId.slice('invite:'.length).trim().toLowerCase();
+      await resolveInviteForActor(c.var.admin.id, inviteEmail, code);
       await updateInviteRole(inviteEmail, code, c.var.admin.id);
       const members = await listAdminUsers(c.var.admin.id);
       const updated =
@@ -85,7 +101,7 @@ export const adminUsersRoutes = new Hono<AppEnv>()
       });
       return adminJson(c, updated);
     }
-    const updated = await assignRole(targetId, code);
+    const updated = await assignRole(targetId, code, c.var.admin.id);
     await auditAdmin(c, {
       action: 'user.role_assigned',
       resourceType: 'user',
@@ -97,7 +113,7 @@ export const adminUsersRoutes = new Hono<AppEnv>()
   })
   .delete('/:id/role', requireAdminPerm('users:assign_role'), async (c) => {
     const targetId = c.req.param('id');
-    const updated = await removeRole(targetId);
+    const updated = await removeRole(targetId, c.var.admin.id);
     await auditAdmin(c, {
       action: 'user.role_revoked',
       resourceType: 'user',
@@ -109,7 +125,7 @@ export const adminUsersRoutes = new Hono<AppEnv>()
   })
   .post('/:id/suspend', requireAdminPerm('users:edit'), async (c) => {
     const targetId = c.req.param('id');
-    const updated = await setUserSuspended(targetId, true);
+    const updated = await setUserSuspended(targetId, true, c.var.admin.id);
     await auditAdmin(c, {
       action: 'user.suspended',
       resourceType: 'user',
@@ -121,7 +137,7 @@ export const adminUsersRoutes = new Hono<AppEnv>()
   })
   .post('/:id/reactivate', requireAdminPerm('users:edit'), async (c) => {
     const targetId = c.req.param('id');
-    const updated = await setUserSuspended(targetId, false);
+    const updated = await setUserSuspended(targetId, false, c.var.admin.id);
     await auditAdmin(c, {
       action: 'user.reactivated',
       resourceType: 'user',
@@ -162,7 +178,7 @@ export const adminRolesRoutes = new Hono<AppEnv>()
     return adminJson(c, updated);
   })
   .delete('/:id', requireAdminPerm('users:assign_role'), async (c) => {
-    const deleted = await deleteCustomRole(c.req.param('id'));
+    const deleted = await deleteCustomRole(c.req.param('id'), c.var.admin.id);
     await auditAdmin(c, {
       action: 'role.deleted',
       resourceType: 'user',

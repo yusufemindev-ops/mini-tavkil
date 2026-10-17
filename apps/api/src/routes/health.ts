@@ -11,6 +11,7 @@ export const healthRoutes = new Hono<AppEnv>().get('/', async (c) => {
     const [prod] = await db.select({ n: count() }).from(products);
     return c.json({ ok: true, categories: cat.n, products: prod.n });
   } catch (error) {
-    return c.json({ ok: false, error: error instanceof Error ? error.message : 'unknown' }, 500);
+    console.error('Healthcheck failed:', error);
+    return c.json({ ok: false, error: 'Database unavailable' }, 500);
   }
 });

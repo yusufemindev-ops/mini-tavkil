@@ -25,6 +25,13 @@ const worker = {
     env: AppEnv['Bindings'],
     ctx: { waitUntil: (p: Promise<unknown>) => void },
   ) {
+    if (env && typeof env === 'object') {
+      for (const [key, value] of Object.entries(env)) {
+        if (typeof value === 'string' && !process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
     if (!env.DATABASE_URL) {
       console.error('Cron: DATABASE_URL is not set; skipping scheduled tasks.');
       return;

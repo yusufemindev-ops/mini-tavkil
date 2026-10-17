@@ -1,3 +1,4 @@
+import { scheduleBackground } from '@/lib/cache';
 import { getSiteSettings } from '@/lib/settings';
 
 export interface EmailMessage {
@@ -20,26 +21,31 @@ export async function sendTransactionalEmail(msg: EmailMessage): Promise<{ sent:
     return { sent: false };
   }
 
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from,
-        to: [msg.to],
-        subject: msg.subject,
-        html: msg.html,
-        ...(msg.replyTo ? { reply_to: msg.replyTo } : {}),
-      }),
-      signal: AbortSignal.timeout(8000),
-    });
-    return { sent: res.ok };
-  } catch {
-    return { sent: false };
-  }
+  const task = (async () => {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from,
+          to: [msg.to],
+          subject: msg.subject,
+          html: msg.html,
+          ...(msg.replyTo ? { reply_to: msg.replyTo } : {}),
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      return { sent: res.ok };
+    } catch {
+      return { sent: false };
+    }
+  })();
+
+  scheduleBackground(task);
+  return task;
 }
 
 function escapeHtml(value: string): string {

@@ -494,7 +494,6 @@ function ProductEditForm({ product, isNew }: { product: AdminProduct | null; isN
           })
         : updateProduct(productId, {
             ...base,
-            status: status as 'draft' | 'published' | 'archived',
             translations: translationsPayload,
             attributes: attributesPayload,
             images: imagesPayload,

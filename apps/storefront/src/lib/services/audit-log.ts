@@ -11,6 +11,8 @@ export interface RecordAuditInput {
   resourceId?: string | null;
   target?: string | null;
   summary: string;
+  beforeState?: Record<string, unknown> | null;
+  afterState?: Record<string, unknown> | null;
   ipAddress?: string | null;
   userAgent?: string | null;
 }
@@ -92,7 +94,13 @@ export function extractAuditDetails(
 /** Writes an audit log entry without failing the parent request on error. */
 export async function recordAudit(input: RecordAuditInput): Promise<void> {
   if (!process.env.DATABASE_URL) return;
-  if (input.actorId?.startsWith('e2e-')) return;
+  if (
+    input.actorId?.startsWith('e2e-') ||
+    input.target?.toLowerCase().includes('e2e-') ||
+    input.summary.toLowerCase().includes('e2e-')
+  ) {
+    return;
+  }
   try {
     await db.insert(auditLog).values({
       actorType: input.actorType ?? 'user',
@@ -101,7 +109,9 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
       action: input.action,
       resourceType: input.resourceType,
       resourceId: input.resourceId ? String(input.resourceId) : null,
+      beforeState: input.beforeState ?? null,
       afterState: {
+        ...(input.afterState ?? {}),
         target: input.target ?? input.resourceId ?? null,
         summary: input.summary,
       },
@@ -181,7 +191,9 @@ export async function listAuditLogs(query: ListAuditLogsQuery): Promise<AdminAud
       createdAt: row.createdAt,
       actor: {
         id: row.actorId,
-        name: row.actorName ?? (row.actorType === 'system' ? 'System' : 'Admin'),
+        name:
+          row.actorName ??
+          (row.actorType === 'system' ? 'System' : row.actorType === 'buyer' ? 'Buyer' : 'Admin'),
         email: row.actorEmail ?? null,
         type: row.actorType,
       },

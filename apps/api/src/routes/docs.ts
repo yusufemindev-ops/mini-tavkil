@@ -55,7 +55,6 @@ const ROUTE_META: Record<string, RouteMeta> = {
   },
   'GET /api/admin/dashboard': {
     summary: 'Operator dashboard KPIs, FX status, and catalog publish readiness summary',
-    permission: 'products:view',
   },
   'GET /api/admin/categories': {
     summary: 'List all categories (draft & published) with translations',
@@ -530,7 +529,9 @@ export function createDocsRoutes(rootApp: Hono<AppEnv>) {
   const docs = new Hono<AppEnv>();
 
   docs.use('*', async (c, next) => {
-    if (process.env.NODE_ENV === 'production') {
+    const authUrl = process.env.BETTER_AUTH_URL ?? '';
+    const isNonLocalHttps = authUrl.startsWith('https://') && !authUrl.includes('localhost');
+    if (process.env.NODE_ENV === 'production' || isNonLocalHttps) {
       await requireAdmin(c.req.raw);
     }
     await next();

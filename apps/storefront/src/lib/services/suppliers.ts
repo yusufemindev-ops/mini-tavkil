@@ -59,7 +59,8 @@ export async function listSuppliers(): Promise<AdminSupplier[]> {
     .select()
     .from(suppliers)
     .where(isNull(suppliers.deletedAt))
-    .orderBy(asc(suppliers.createdAt));
+    .orderBy(asc(suppliers.createdAt))
+    .limit(500);
   if (rows.length === 0) return [];
   const translations = await translationsFor(rows.map((row) => row.id));
   return rows.map((row) => toAdminSupplier(row, translations.get(row.id) ?? []));
@@ -114,7 +115,18 @@ export async function updateSupplier(
   id: string,
   input: UpdateSupplierInput,
 ): Promise<AdminSupplier> {
-  await findActive(id);
+  const existing = await findActive(id);
+  if (input.status !== undefined && input.status !== existing.status) {
+    throw invalid('Supplier status changes must use the publish or unpublish endpoints.');
+  }
+  if (existing.status === 'published' && input.translations !== undefined) {
+    const english = input.translations.find((t) => t.locale === DEFAULT_LOCALE);
+    if (!english || !english.name.trim()) {
+      throw invalid(
+        `Published suppliers must retain a '${DEFAULT_LOCALE}' translation with a name.`,
+      );
+    }
+  }
 
   const patch: Record<string, unknown> = {};
   const fields = [
@@ -126,7 +138,6 @@ export async function updateSupplier(
     'internalNotes',
     'address',
     'mapUrl',
-    'status',
   ] as const;
   for (const field of fields) {
     if (input[field] !== undefined) patch[field] = input[field];

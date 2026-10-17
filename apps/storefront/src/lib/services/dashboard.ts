@@ -67,8 +67,11 @@ function mapAuditToneAndIcon(action: string): {
   return { icon: 'inbox', tone: 'primary' };
 }
 
-export async function dashboardSummary(): Promise<DashboardData> {
+export async function dashboardSummary(options?: {
+  includeAuditActivity?: boolean;
+}): Promise<DashboardData> {
   const live = isNull(products.deletedAt);
+  const includeAuditActivity = options?.includeAuditActivity ?? true;
 
   const [
     statusRows,
@@ -120,21 +123,23 @@ export async function dashboardSummary(): Promise<DashboardData> {
         ),
       ),
 
-    db
-      .select({
-        id: auditLog.id,
-        createdAt: auditLog.createdAt,
-        actorType: auditLog.actorType,
-        actorName: authUser.name,
-        action: auditLog.action,
-        resourceType: auditLog.resourceType,
-        resourceId: auditLog.resourceId,
-        afterState: auditLog.afterState,
-      })
-      .from(auditLog)
-      .leftJoin(authUser, eq(auditLog.actorId, authUser.id))
-      .orderBy(desc(auditLog.createdAt))
-      .limit(5),
+    includeAuditActivity
+      ? db
+          .select({
+            id: auditLog.id,
+            createdAt: auditLog.createdAt,
+            actorType: auditLog.actorType,
+            actorName: authUser.name,
+            action: auditLog.action,
+            resourceType: auditLog.resourceType,
+            resourceId: auditLog.resourceId,
+            afterState: auditLog.afterState,
+          })
+          .from(auditLog)
+          .leftJoin(authUser, eq(auditLog.actorId, authUser.id))
+          .orderBy(desc(auditLog.createdAt))
+          .limit(5)
+      : Promise.resolve([]),
   ]);
 
   const byStatus = Object.fromEntries(statusRows.map((row) => [row.status, Number(row.n)]));
@@ -150,7 +155,9 @@ export async function dashboardSummary(): Promise<DashboardData> {
       row.afterState,
     );
     const { icon, tone } = mapAuditToneAndIcon(row.action);
-    const actor = row.actorName ?? (row.actorType === 'system' ? 'System' : 'Admin');
+    const actor =
+      row.actorName ??
+      (row.actorType === 'system' ? 'System' : row.actorType === 'buyer' ? 'Buyer' : 'Admin');
     return {
       id: row.id,
       icon,

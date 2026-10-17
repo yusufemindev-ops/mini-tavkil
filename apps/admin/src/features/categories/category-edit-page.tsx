@@ -193,7 +193,6 @@ function EditForm({ category, isNew }: { category: AdminCategory | null; isNew: 
         ? createCategory({ ...base, translations })
         : updateCategory(categoryId, {
             ...base,
-            status: status as 'draft' | 'published',
             translations,
           });
     },

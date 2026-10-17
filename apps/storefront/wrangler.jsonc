@@ -46,17 +46,6 @@
     },
   ],
 
-  // ─── Cron ──────────────────────────────────────────────────────────────────
-  // Workers have no long-lived process. The FX refresh that was a Nest
-  // WORKER_MODE loop runs here instead. Handler: src/app/api/cron/fx/route.ts
-  // Every 2 hours, not once a day. The handler no-ops if a refresh already
-  // succeeded today, so this is "one success per day plus automatic retries
-  // until it works" — a daily-only trigger would leave rates a full day stale
-  // after a single bad morning. 12 invocations/day is well inside the free plan.
-  "triggers": {
-    "crons": ["0 */2 * * *"],
-  },
-
   // The live domain. Declared here rather than added in the dashboard so the
   // deployment target is version-controlled and a fresh clone deploys to the same
   // place. `custom_domain` makes Cloudflare own the apex DNS record and issue the
@@ -92,6 +81,8 @@
     // is the only switch that does, and flipping it needs a rebuild because it is
     // baked into the prerendered HTML, robots.txt and the sitemap.
     "SITE_INDEXABLE": "false",
+    "NEXT_PUBLIC_SITE_URL": "https://tavkil.com",
+    "NEXT_PUBLIC_API_URL": "https://api.tavkil.com",
   },
 
   "env": {

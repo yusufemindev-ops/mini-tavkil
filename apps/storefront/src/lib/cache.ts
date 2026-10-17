@@ -7,6 +7,24 @@ import { routing } from '@/i18n/routing';
 type RevalidateFn = (path: string, type?: 'page' | 'layout') => void;
 
 let revalidateImpl: RevalidateFn | null = null;
+const pendingBackgroundTasks = new Set<Promise<unknown>>();
+
+/** Enqueues a background promise so the Worker request handler can attach it to `ctx.waitUntil()`. */
+export function scheduleBackground(promise: Promise<unknown>): void {
+  const tracked = promise
+    .catch(() => {})
+    .finally(() => {
+      pendingBackgroundTasks.delete(tracked);
+    });
+  pendingBackgroundTasks.add(tracked);
+}
+
+/** Drains all background promises queued during the current request. */
+export function flushBackgroundTasks(): Promise<unknown>[] {
+  const tasks = [...pendingBackgroundTasks];
+  pendingBackgroundTasks.clear();
+  return tasks;
+}
 
 /** Registers the framework ISR revalidator (e.g. `revalidatePath` from `next/cache`). */
 export function registerRevalidator(fn: RevalidateFn): void {
@@ -30,16 +48,18 @@ function safeRevalidate(path: string, type?: 'page' | 'layout'): void {
     return;
   }
   const storefrontUrl = process.env.STOREFRONT_URL;
-  const secret = process.env.BETTER_AUTH_SECRET;
+  const secret = process.env.REVALIDATE_SECRET || process.env.BETTER_AUTH_SECRET;
   if (!storefrontUrl || !secret) return;
-  void fetch(`${storefrontUrl.replace(/\/$/, '')}/api/internal/revalidate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-revalidate-secret': secret,
-    },
-    body: JSON.stringify({ path, type }),
-  }).catch(() => {});
+  scheduleBackground(
+    fetch(`${storefrontUrl.replace(/\/$/, '')}/api/internal/revalidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-revalidate-secret': secret,
+      },
+      body: JSON.stringify({ path, type }),
+    }),
+  );
 }
 
 function forEachLocale(path: string): void {
