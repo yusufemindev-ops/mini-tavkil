@@ -9,4 +9,10 @@
     "not_found_handling": "single-page-application",
   },
   "routes": [{ "pattern": "admin.tavkil.com", "custom_domain": true }],
+  "env": {
+    "dev": {
+      "name": "tavkil-admin-dev",
+      "routes": [{ "pattern": "admin-dev.tavkil.com", "custom_domain": true }],
+    },
+  },
 }

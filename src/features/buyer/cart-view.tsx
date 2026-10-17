@@ -14,6 +14,7 @@ import {
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useBuyer } from '@/features/buyer/buyer-context';
 import { Link, useRouter } from '@/i18n/navigation';
+import { apiUrl } from '@/lib/env';
 import { cn } from '@/lib/utils';
 
 export function CartView() {
@@ -96,7 +97,7 @@ export function CartView() {
     setSubmitError(null);
 
     try {
-      const res = await fetch('/api/buyer/orders', {
+      const res = await fetch(apiUrl('/api/buyer/orders'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

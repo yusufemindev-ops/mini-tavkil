@@ -94,6 +94,37 @@
     "SITE_INDEXABLE": "false",
   },
 
+  "env": {
+    "dev": {
+      "name": "mini-tavkil-dev",
+      "keep_vars": true,
+      "d1_databases": [
+        {
+          "binding": "NEXT_TAG_CACHE_D1",
+          "database_name": "tavkil-tags",
+          "database_id": "c37acd64-984d-461e-9987-1261ecf05ee4",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "IMAGES",
+          "bucket_name": "tavkil-images-dev",
+          "remote": true,
+        },
+        {
+          "binding": "NEXT_INC_CACHE_R2_BUCKET",
+          "bucket_name": "tavkil-cache-dev",
+        },
+      ],
+      "routes": [{ "pattern": "dev.tavkil.com", "custom_domain": true }],
+      "vars": {
+        "SITE_INDEXABLE": "false",
+        "NEXT_PUBLIC_SITE_URL": "https://dev.tavkil.com",
+        "NEXT_PUBLIC_API_URL": "https://api-dev.tavkil.com",
+      },
+    },
+  },
+
   // Secrets are NOT listed here. Local: .env (wrangler falls back to it when no
   // .dev.vars exists). Production: `wrangler secret put`.
   // DATABASE_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,

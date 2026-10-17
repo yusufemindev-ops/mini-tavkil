@@ -18,6 +18,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { useBuyer } from '@/features/buyer/buyer-context';
 import { Link, useRouter } from '@/i18n/navigation';
 import { COUNTRIES, countryName, type CountryLocale } from '@/lib/countries';
+import { apiUrl } from '@/lib/env';
 import { cn } from '@/lib/utils';
 
 const INPUT_CLASS =
@@ -78,7 +79,7 @@ export function AccountView() {
   useEffect(() => {
     if (!buyer) return;
     let cancelled = false;
-    fetch('/api/buyer/profile-edit-requests/pending', { credentials: 'include' })
+    fetch(apiUrl('/api/buyer/profile-edit-requests/pending'), { credentials: 'include' })
       .then((res) => (res.ok ? (res.json() as Promise<{ data: PendingProfileEdit | null }>) : null))
       .then((body) => {
         if (!cancelled) setPendingEdit(body?.data ?? null);
@@ -115,7 +116,7 @@ export function AccountView() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/buyer/profile-edit-requests', {
+      const res = await fetch(apiUrl('/api/buyer/profile-edit-requests'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -151,7 +152,7 @@ export function AccountView() {
   const handleWithdraw = async () => {
     setWithdrawing(true);
     try {
-      const res = await fetch('/api/buyer/profile-edit-requests/pending', {
+      const res = await fetch(apiUrl('/api/buyer/profile-edit-requests/pending'), {
         method: 'DELETE',
         credentials: 'include',
       });

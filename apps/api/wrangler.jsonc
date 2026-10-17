@@ -1,0 +1,54 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "tavkil-api",
+  "account_id": "0b90963dada5e65530f075206f214362",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-10",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "observability": { "enabled": true },
+  "keep_vars": true,
+
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "tavkil-images",
+      "preview_bucket_name": "tavkil-images-dev",
+      "remote": true,
+    },
+  ],
+
+  "triggers": {
+    "crons": ["0 */2 * * *"],
+  },
+
+  "routes": [{ "pattern": "api.tavkil.com", "custom_domain": true }],
+
+  "vars": {
+    "BETTER_AUTH_URL": "https://api.tavkil.com",
+    "STOREFRONT_URL": "https://tavkil.com",
+    "SITE_INDEXABLE": "false",
+  },
+
+  "env": {
+    "dev": {
+      "name": "tavkil-api-dev",
+      "keep_vars": true,
+      "r2_buckets": [
+        {
+          "binding": "IMAGES",
+          "bucket_name": "tavkil-images-dev",
+          "remote": true,
+        },
+      ],
+      "triggers": {
+        "crons": ["0 */2 * * *"],
+      },
+      "routes": [{ "pattern": "api-dev.tavkil.com", "custom_domain": true }],
+      "vars": {
+        "BETTER_AUTH_URL": "https://api-dev.tavkil.com",
+        "STOREFRONT_URL": "https://dev.tavkil.com",
+        "SITE_INDEXABLE": "false",
+      },
+    },
+  },
+}

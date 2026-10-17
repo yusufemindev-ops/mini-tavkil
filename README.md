@@ -64,34 +64,41 @@ pnpm preview                  # Build and run locally on the Cloudflare Workers 
 
 - **Neon Postgres:** Use the **pooled** connection string (`-pooler` host) for `DATABASE_URL` (HTTP mode, allows compute autosuspend) and the direct connection string for `DIRECT_URL` (used by `drizzle-kit` and CLI scripts).
 - **Cloudflare R2:** Bound directly via `wrangler.jsonc` (`IMAGES_BUCKET` and `NEXT_INC_CACHE_R2_BUCKET`) with `preview_bucket_name` isolation for local development.
-- **Google OAuth:** Ensure `http://localhost:3000/api/auth/callback/google` and `https://tavkil.com/api/auth/callback/google` are registered in Google Cloud Console.
+- **Google OAuth:** Ensure `http://localhost:3000/api/auth/callback/google`, `https://api-dev.tavkil.com/api/auth/callback/google`, and `https://api.tavkil.com/api/auth/callback/google` are registered in Google Cloud Console.
 
 ---
 
 ## Commands
 
-| Command                   | Description                                                        |
-| ------------------------- | ------------------------------------------------------------------ |
-| `pnpm dev`                | Start Storefront (`:3000`) and Admin SPA (`:5173`) in parallel     |
-| `pnpm dev:next`           | Storefront + `/api` only on `:3000`                                |
-| `pnpm dev:admin`          | Admin Vite SPA only on `:5173` (with HMR)                          |
-| `pnpm preview`            | Build & run against the local Cloudflare Workers runtime           |
-| `pnpm deploy`             | Build production bundle (`cf:build:prod`) + deploy to Workers      |
-| `pnpm lint`               | ESLint check for Next.js storefront & API                          |
-| `pnpm admin:lint`         | ESLint check for Admin SPA                                         |
-| `pnpm typecheck`          | Next.js route typegen + TypeScript check                           |
-| `pnpm admin:typecheck`    | TypeScript check for Admin SPA                                     |
-| `pnpm format:check`       | Prettier formatting check                                          |
-| `pnpm check:i18n`         | Verify translation key parity across `en`, `tr`, and `ar`          |
-| `pnpm check:pricing-leak` | Guard against price or supplier leaks on public surfaces           |
-| `pnpm test`               | Run Vitest unit & component tests                                  |
-| `pnpm test:integration`   | Run Vitest database integration tests                              |
-| `pnpm e2e`                | Run Playwright E2E test suite                                      |
-| `pnpm db:generate`        | Generate Drizzle SQL migration from schema changes                 |
-| `pnpm db:migrate`         | Apply pending migrations to the configured database                |
-| `pnpm db:studio`          | Open Drizzle Studio                                                |
-| `pnpm sync:permissions`   | Sync `permissions` and `role_permissions` tables from `catalog.ts` |
-| `pnpm fx:refresh`         | Refresh FX exchange rates (also runs via Cloudflare Cron Trigger)  |
+| Command                   | Description                                                         |
+| ------------------------- | ------------------------------------------------------------------- |
+| `pnpm dev`                | Start Storefront (`:3000`) and Admin SPA (`:5173`) in parallel      |
+| `pnpm dev:next`           | Storefront + `/api` only on `:3000`                                 |
+| `pnpm dev:admin`          | Admin Vite SPA only on `:5173` (with HMR)                           |
+| `pnpm api:dev`            | Standalone Hono API Worker locally on `:8787` (`wrangler dev`)      |
+| `pnpm preview`            | Build & run Storefront against the local Cloudflare Workers runtime |
+| `pnpm deploy`             | Deploy Storefront to production (`tavkil.com`)                      |
+| `pnpm deploy:dev`         | Deploy Storefront to private staging (`dev.tavkil.com`)             |
+| `pnpm admin:deploy`       | Deploy Admin SPA to production (`admin.tavkil.com`)                 |
+| `pnpm admin:deploy:dev`   | Deploy Admin SPA to private staging (`admin-dev.tavkil.com`)        |
+| `pnpm api:deploy`         | Deploy Hono API Worker to production (`api.tavkil.com`)             |
+| `pnpm api:deploy:dev`     | Deploy Hono API Worker to private staging (`api-dev.tavkil.com`)    |
+| `pnpm lint`               | ESLint check for Next.js storefront & API                           |
+| `pnpm admin:lint`         | ESLint check for Admin SPA                                          |
+| `pnpm typecheck`          | Next.js route typegen + TypeScript check                            |
+| `pnpm admin:typecheck`    | TypeScript check for Admin SPA                                      |
+| `pnpm api:typecheck`      | TypeScript check for standalone Hono API Worker                     |
+| `pnpm format:check`       | Prettier formatting check                                           |
+| `pnpm check:i18n`         | Verify translation key parity across `en`, `tr`, and `ar`           |
+| `pnpm check:pricing-leak` | Guard against price or supplier leaks on public surfaces            |
+| `pnpm test`               | Run Vitest unit & component tests                                   |
+| `pnpm test:integration`   | Run Vitest database integration tests                               |
+| `pnpm e2e`                | Run Playwright E2E test suite                                       |
+| `pnpm db:generate`        | Generate Drizzle SQL migration from schema changes                  |
+| `pnpm db:migrate`         | Apply pending migrations to the configured database                 |
+| `pnpm db:studio`          | Open Drizzle Studio                                                 |
+| `pnpm sync:permissions`   | Sync `permissions` and `role_permissions` tables from `catalog.ts`  |
+| `pnpm fx:refresh`         | Refresh FX exchange rates (also runs via Cloudflare Cron Trigger)   |
 
 ---
 

@@ -31,7 +31,11 @@ export default function middleware(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
-  return handleI18n(request);
+  const response = handleI18n(request);
+  if (process.env.SITE_INDEXABLE !== 'true' || host.toLowerCase().startsWith('dev.')) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
+  return response;
 }
 
 export const config = {

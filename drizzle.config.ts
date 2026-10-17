@@ -5,7 +5,7 @@ import { defineConfig } from 'drizzle-kit';
 // The runtime uses the pooled HTTP connection — see src/lib/db.ts.
 export default defineConfig({
   dialect: 'postgresql',
-  schema: './src/lib/db/schema.ts',
+  schema: './packages/shared/src/db/schema.ts',
   out: './drizzle',
   dbCredentials: {
     url: process.env.DIRECT_URL!,

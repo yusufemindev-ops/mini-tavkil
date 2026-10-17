@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { signOut } from '@/lib/auth-client';
 import type { BuyerProfilePublic } from '@/lib/buyer-guard';
+import { apiUrl } from '@/lib/env';
 
 export interface PublicCurrency {
   code: string;
@@ -104,7 +105,7 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const refreshBuyer = useCallback(async () => {
     try {
-      const res = await fetch('/api/buyer/me', {
+      const res = await fetch(apiUrl('/api/buyer/me'), {
         credentials: 'include',
         cache: 'no-store',
       });
@@ -123,7 +124,7 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   useEffect(() => {
     let cancelled = false;
-    void fetch('/api/buyer/me', {
+    void fetch(apiUrl('/api/buyer/me'), {
       credentials: 'include',
       cache: 'no-store',
     })
@@ -140,7 +141,7 @@ export function BuyerProvider({ children }: Readonly<{ children: ReactNode }>) {
         if (!cancelled) setLoading(false);
       });
 
-    void fetch('/api/currencies')
+    void fetch(apiUrl('/api/currencies'))
       .then((res) => (res.ok ? res.json() : null))
       .then((raw) => {
         if (cancelled) return;

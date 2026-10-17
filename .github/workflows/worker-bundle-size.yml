@@ -63,3 +63,10 @@ jobs:
           else
             echo "✅ Worker bundle size is ${SIZE_MB} MB (well within 3 MB free tier limits)."
           fi
+
+      - name: Build & Measure Standalone API Worker (apps/api)
+        run: |
+          pnpm --filter mini-tavkil-api exec wrangler deploy --env="" --dry-run --outdir dist
+          API_BYTES=$(gzip -c apps/api/dist/index.js | wc -c | tr -d ' ')
+          API_KB=$(awk "BEGIN {printf \"%.2f\", $API_BYTES/1024}")
+          echo "⚡ Standalone Hono API Worker Gzipped Size: ${API_KB} KB (${API_BYTES} bytes)"

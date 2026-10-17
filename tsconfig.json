@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tavkil/shared/*": ["./packages/shared/src/*"]
     }
   },
   "include": [

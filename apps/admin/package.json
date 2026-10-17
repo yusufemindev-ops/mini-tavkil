@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "deploy": "tsc -b && vite build && wrangler deploy",
+    "deploy": "tsc -b && vite build && wrangler deploy --env=\"\"",
+    "deploy:dev": "tsc -b && vite build && wrangler deploy --env dev",
     "lint": "eslint .",
     "preview": "vite preview",
     "tsc": "tsc",
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@tavkil/shared": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@fontsource-variable/ibm-plex-sans": "^5.2.8",

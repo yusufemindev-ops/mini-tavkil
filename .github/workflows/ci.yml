@@ -47,10 +47,11 @@ jobs:
       - name: Typecheck Next.js
         run: pnpm typecheck
 
-      - name: Verify admin (typecheck + lint)
+      - name: Verify admin & API packages (typecheck + lint)
         run: |
           pnpm admin:typecheck
           pnpm admin:lint
+          pnpm api:typecheck
 
       - name: Run unit & component tests
         run: pnpm test

@@ -6,6 +6,7 @@ import { ArrowRight, Package } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { useBuyer } from '@/features/buyer/buyer-context';
 import { Link, useRouter } from '@/i18n/navigation';
+import { apiUrl } from '@/lib/env';
 import type { BuyerOrder } from '@/lib/services/orders';
 import type { OrderStatus } from '@/lib/services/orders-schema';
 import { cn } from '@/lib/utils';
@@ -35,7 +36,7 @@ export function OrdersListView() {
     if (!buyer) return;
     let cancelled = false;
 
-    void fetch('/api/buyer/orders?page=1&pageSize=100', {
+    void fetch(apiUrl('/api/buyer/orders?page=1&pageSize=100'), {
       credentials: 'include',
       cache: 'no-store',
     })
