@@ -1,0 +1,22 @@
+{
+  "name": "@tavkil/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./db": "./src/db/index.ts",
+    "./db/schema": "./src/db/schema.ts",
+    "./db/relations": "./src/db/relations.ts",
+    "./db/citext": "./src/db/citext.ts",
+    "./permissions/catalog": "./src/permissions/catalog.ts",
+    "./permissions/allowlist": "./src/permissions/allowlist.ts",
+    "./countries": "./src/countries.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Clock, FileCheck2, XCircle } from
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useBuyer } from '@/features/buyer/buyer-context';
 import { Link, useRouter } from '@/i18n/navigation';
+import { apiUrl } from '@/lib/env';
 import type { BuyerOrder } from '@/lib/services/orders';
 import type { OrderStatus } from '@/lib/services/orders-schema';
 import { cn } from '@/lib/utils';
@@ -42,7 +43,7 @@ export function OrderDetailView({ orderNumber }: Readonly<{ orderNumber: string 
     if (!buyer) return;
     let cancelled = false;
 
-    void fetch(`/api/buyer/orders/${encodeURIComponent(orderNumber)}`, {
+    void fetch(apiUrl(`/api/buyer/orders/${encodeURIComponent(orderNumber)}`), {
       credentials: 'include',
       cache: 'no-store',
     })
@@ -106,10 +107,13 @@ export function OrderDetailView({ orderNumber }: Readonly<{ orderNumber: string 
     setActing(true);
     setActionError(null);
     try {
-      const res = await fetch(`/api/buyer/orders/${encodeURIComponent(orderNumber)}/accept`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      const res = await fetch(
+        apiUrl(`/api/buyer/orders/${encodeURIComponent(orderNumber)}/accept`),
+        {
+          method: 'POST',
+          credentials: 'include',
+        },
+      );
       if (!res.ok) {
         setActionError(t('ord_decide_error'));
         return;
@@ -127,12 +131,15 @@ export function OrderDetailView({ orderNumber }: Readonly<{ orderNumber: string 
     setActing(true);
     setActionError(null);
     try {
-      const res = await fetch(`/api/buyer/orders/${encodeURIComponent(orderNumber)}/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ reason: rejectReason.trim() || undefined }),
-      });
+      const res = await fetch(
+        apiUrl(`/api/buyer/orders/${encodeURIComponent(orderNumber)}/reject`),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ reason: rejectReason.trim() || undefined }),
+        },
+      );
       if (!res.ok) {
         setActionError(t('ord_decide_error'));
         return;

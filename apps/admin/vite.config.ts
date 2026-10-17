@@ -33,6 +33,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
+      '@tavkil/shared': path.resolve(import.meta.dirname, '../../packages/shared/src'),
       '@repo/countries': path.resolve(import.meta.dirname, './src/vendor/countries'),
       '@repo/icons': path.resolve(import.meta.dirname, './src/vendor/icons'),
     },

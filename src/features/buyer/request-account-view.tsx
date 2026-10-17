@@ -7,6 +7,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { useBuyer } from '@/features/buyer/buyer-context';
 import { Link, useRouter } from '@/i18n/navigation';
 import { COUNTRIES, countryName, type CountryLocale } from '@/lib/countries';
+import { apiUrl } from '@/lib/env';
 import { cn } from '@/lib/utils';
 
 const INPUT_CLASS =
@@ -55,7 +56,7 @@ export function RequestAccountView() {
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/account-requests', {
+      const res = await fetch(apiUrl('/api/account-requests'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

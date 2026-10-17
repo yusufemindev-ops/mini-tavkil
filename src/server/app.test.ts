@@ -143,4 +143,35 @@ describe('Hono server factory & middleware', () => {
       'Tavkil B2B Wholesale Platform — Hono API Explorer',
     );
   });
+
+  it('validates x-revalidate-secret on /api/internal/revalidate and triggers registered revalidator', async () => {
+    const { internalRevalidateRoutes } = await import('@/server/routes/revalidate');
+    const { registerRevalidator } = await import('@/lib/cache');
+    const spy = vi.fn();
+    registerRevalidator(spy);
+    vi.stubEnv('BETTER_AUTH_SECRET', 'test-revalidate-secret-123');
+
+    const app = buildTestApp();
+    app.route('/internal/revalidate', internalRevalidateRoutes);
+
+    const unauth = await app.request('/api/internal/revalidate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: '/en/catalogue' }),
+    });
+    expect(unauth.status).toBe(401);
+    expect(spy).not.toHaveBeenCalled();
+
+    const ok = await app.request('/api/internal/revalidate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-revalidate-secret': 'test-revalidate-secret-123',
+      },
+      body: JSON.stringify({ path: '/en/catalogue', type: 'page' }),
+    });
+    expect(ok.status).toBe(200);
+    expect(spy).toHaveBeenCalledWith('/en/catalogue', 'page');
+    vi.unstubAllEnvs();
+  });
 });

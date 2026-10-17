@@ -7,6 +7,7 @@ import { iconButtonVariants } from '@/components/ui/icon-button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useRouter } from '@/i18n/navigation';
+import { apiUrl } from '@/lib/env';
 import { cn } from '@/lib/utils';
 
 type NotificationType = 'order_confirmed' | 'order_decision' | 'message' | 'tier_updated';
@@ -53,7 +54,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/buyer/notifications', { credentials: 'include' })
+    fetch(apiUrl('/api/buyer/notifications'), { credentials: 'include' })
       .then((res) => (res.ok ? (res.json() as Promise<{ data: BuyerNotificationItem[] }>) : null))
       .then((body) => {
         if (!cancelled && Array.isArray(body?.data)) {

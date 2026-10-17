@@ -13,7 +13,8 @@ export function registerRevalidator(fn: RevalidateFn): void {
   revalidateImpl = fn;
 }
 
-function safeRevalidate(path: string, type?: 'page' | 'layout'): void {
+/** Executes the registered local framework revalidator when running inside the Storefront Worker. */
+export function revalidateLocal(path: string, type?: 'page' | 'layout'): void {
   if (!revalidateImpl) return;
   try {
     if (type) revalidateImpl(path, type);
@@ -21,6 +22,24 @@ function safeRevalidate(path: string, type?: 'page' | 'layout'): void {
   } catch {
     // Not in a request context; the background window still covers it.
   }
+}
+
+function safeRevalidate(path: string, type?: 'page' | 'layout'): void {
+  if (revalidateImpl) {
+    revalidateLocal(path, type);
+    return;
+  }
+  const storefrontUrl = process.env.STOREFRONT_URL;
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!storefrontUrl || !secret) return;
+  void fetch(`${storefrontUrl.replace(/\/$/, '')}/api/internal/revalidate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-revalidate-secret': secret,
+    },
+    body: JSON.stringify({ path, type }),
+  }).catch(() => {});
 }
 
 function forEachLocale(path: string): void {

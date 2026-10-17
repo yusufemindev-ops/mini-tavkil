@@ -6,6 +6,7 @@ import { Check, Clock, Lock, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useBuyer } from '@/features/buyer/buyer-context';
 import { Link } from '@/i18n/navigation';
+import { apiUrl } from '@/lib/env';
 import { cn } from '@/lib/utils';
 
 interface VariantRate {
@@ -58,7 +59,7 @@ export function ProductBuyerBox({
     if (!buyer) return;
 
     let cancelled = false;
-    void fetch(`/api/buyer/products/${encodeURIComponent(slug)}`, {
+    void fetch(apiUrl(`/api/buyer/products/${encodeURIComponent(slug)}`), {
       credentials: 'include',
       cache: 'no-store',
     })

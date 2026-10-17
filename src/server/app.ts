@@ -26,6 +26,7 @@ import { publicCurrenciesRoutes } from '@/server/routes/currencies';
 import { createDocsRoutes } from '@/server/routes/docs';
 import { healthRoutes } from '@/server/routes/health';
 import { publicAccountRequestsRoutes, publicContactRoutes } from '@/server/routes/public-intake';
+import { internalRevalidateRoutes } from '@/server/routes/revalidate';
 
 /**
  * Root Hono backend application serving all `/api/*` endpoints.
@@ -37,11 +38,17 @@ app.use(
   cors({
     origin: [
       'https://tavkil.com',
+      'https://www.tavkil.com',
       'https://admin.tavkil.com',
+      'https://dev.tavkil.com',
+      'https://admin-dev.tavkil.com',
       'http://localhost:3000',
       'http://localhost:5173',
+      'http://localhost:8787',
     ],
     credentials: true,
+    allowMethods: ['GET', 'HEAD', 'PUT', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 
@@ -65,6 +72,7 @@ app.notFound((c) =>
 
 const _routes = app
   .route('/health', healthRoutes)
+  .route('/internal/revalidate', internalRevalidateRoutes)
   .route('/auth', authRoutes)
   .route('/currencies', publicCurrenciesRoutes)
   .route('/account-requests', publicAccountRequestsRoutes)

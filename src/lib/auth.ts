@@ -23,6 +23,11 @@ import { and, eq, sql } from 'drizzle-orm';
 function createAuth() {
   const authUrl = process.env.BETTER_AUTH_URL ?? '';
   const isProdDomain = authUrl.startsWith('https://') && !authUrl.includes('localhost');
+  const isDevSubdomain =
+    authUrl.includes('-dev.tavkil.com') || authUrl.includes('//dev.tavkil.com');
+  const storefrontOrigin =
+    process.env.STOREFRONT_URL?.replace(/\/$/, '') ||
+    (isProdDomain ? (isDevSubdomain ? 'https://dev.tavkil.com' : 'https://tavkil.com') : '');
 
   return betterAuth({
     database: drizzleAdapter(db, {
@@ -38,8 +43,13 @@ function createAuth() {
     baseURL: process.env.BETTER_AUTH_URL,
     trustedOrigins: [
       'https://tavkil.com',
+      'https://www.tavkil.com',
       'https://admin.tavkil.com',
-      ...(isProdDomain ? [] : ['http://localhost:3000', 'http://localhost:5173']),
+      'https://dev.tavkil.com',
+      'https://admin-dev.tavkil.com',
+      ...(isProdDomain
+        ? []
+        : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8787']),
     ],
     emailAndPassword: { enabled: false },
     account: {
@@ -124,7 +134,7 @@ function createAuth() {
         },
       },
     },
-    onAPIError: { errorURL: '/en/login' },
+    onAPIError: { errorURL: `${storefrontOrigin}/en/login` },
     socialProviders: {
       google: {
         clientId: process.env.GOOGLE_CLIENT_ID ?? '',
@@ -136,6 +146,7 @@ function createAuth() {
       updateAge: 60 * 60 * 24,
     },
     advanced: {
+      ...(isDevSubdomain ? { cookiePrefix: 'tavkil-dev' } : {}),
       crossSubDomainCookies: {
         enabled: isProdDomain,
         domain: '.tavkil.com',

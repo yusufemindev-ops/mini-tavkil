@@ -22,6 +22,7 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@tavkil/shared/*": ["../../packages/shared/src/*"],
       "@repo/countries": ["./src/vendor/countries"],
       "@repo/icons": ["./src/vendor/icons"]
     }

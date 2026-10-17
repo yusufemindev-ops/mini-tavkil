@@ -1,29 +1,13 @@
 import { Hono } from 'hono';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { AppError, invalid } from '@/lib/api/errors';
 import { resolveImageUrl } from '@/lib/media/image-url';
 import { contentTypeFor, extensionFor, sniffImageFormat } from '@/lib/media/sniff';
-import {
-  adminJson,
-  auditAdmin,
-  requireAdminPerm,
-  type AppEnv,
-  type R2BucketLike,
-} from '@/server/factory';
+import { adminJson, auditAdmin, requireAdminPerm, type AppEnv } from '@/server/factory';
 
 function maxBytes(): number {
   const configured = Number(process.env.MAX_UPLOAD_MB);
   const megabytes = Number.isFinite(configured) && configured > 0 ? configured : 10;
   return megabytes * 1024 * 1024;
-}
-
-function resolveImagesBucket(cEnv?: AppEnv['Bindings']): R2BucketLike | undefined {
-  if (cEnv?.IMAGES) return cEnv.IMAGES;
-  try {
-    return (getCloudflareContext().env as unknown as { IMAGES?: R2BucketLike }).IMAGES;
-  } catch {
-    return undefined;
-  }
 }
 
 /** Admin image upload to Cloudflare R2 (`IMAGES` binding). */
@@ -46,7 +30,7 @@ export const adminMediaRoutes = new Hono<AppEnv>().post(
       throw invalid('Only JPEG, PNG and WebP images are accepted. SVG is not allowed.');
     }
 
-    const bucket = resolveImagesBucket(c.env);
+    const bucket = c.env?.IMAGES;
     if (!bucket) {
       throw new AppError(
         'internal.error',

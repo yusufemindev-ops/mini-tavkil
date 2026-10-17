@@ -37,18 +37,20 @@ Tavkil separates public/buyer traffic, internal operator backoffice, and the edg
 
 ### Domains & Deployments
 
-| Surface                 | Subdomain                  | Local Dev        | Workspace         | Runtime                                                               |
-| :---------------------- | :------------------------- | :--------------- | :---------------- | :-------------------------------------------------------------------- |
-| **Customer Storefront** | `tavkil.com` (`www` → 308) | `localhost:3000` | `apps/storefront` | Next.js 16 on Cloudflare Workers (OpenNext SSR/ISR)                   |
-| **Admin Backoffice**    | `admin.tavkil.com`         | `localhost:5173` | `apps/admin`      | React 19 + Vite SPA on Cloudflare Workers Static Assets (`base: '/'`) |
-| **Backend API**         | `api.tavkil.com`           | `localhost:8787` | `apps/api`        | Standalone Hono Worker (Drizzle, R2 `IMAGES`, Cron FX)                |
-| **Shared Contracts**    | —                          | —                | `packages/shared` | Shared Zod schemas, RBAC permissions, country catalog, types          |
+| Surface                 | Production (`main`)        | Private Staging (`develop`) | Local Dev        | Workspace         | Runtime                                                               |
+| :---------------------- | :------------------------- | :-------------------------- | :--------------- | :---------------- | :-------------------------------------------------------------------- |
+| **Customer Storefront** | `tavkil.com` (`www` → 308) | `dev.tavkil.com`            | `localhost:3000` | `apps/storefront` | Next.js 16 on Cloudflare Workers (OpenNext SSR/ISR)                   |
+| **Admin Backoffice**    | `admin.tavkil.com`         | `admin-dev.tavkil.com`      | `localhost:5173` | `apps/admin`      | React 19 + Vite SPA on Cloudflare Workers Static Assets (`base: '/'`) |
+| **Backend API**         | `api.tavkil.com`           | `api-dev.tavkil.com`        | `localhost:8787` | `apps/api`        | Standalone Hono Worker (Drizzle, R2 `IMAGES`, Cron FX)                |
+| **Shared Contracts**    | —                          | —                           | —                | `packages/shared` | Shared Drizzle schema/client, RBAC permissions, country catalog       |
 
-### Why Subdomains (No `/admin` on `tavkil.com`)
+### Why Single-Level Subdomains (No `/admin` on `tavkil.com`)
 
-1. **Zero Backoffice Exposure on Storefront:** `tavkil.com/admin` does not exist (returns 404). `admin.tavkil.com` can be gated behind Cloudflare Zero Trust / WAF rules without affecting customer traffic.
-2. **Independent Blast Radius & Deploys:** Deploying an admin UI change takes seconds and never rebuilds or risks the revenue-generating storefront (`tavkil.com`) or SEO cache.
-3. **Worker Memory & Bundle Isolation:** Splitting `apps/storefront`, `apps/admin`, and `apps/api` keeps each Worker well below Cloudflare's bundle and 128 MB isolate RAM limits.
+1. **Zero Backoffice Exposure on Storefront:** `tavkil.com/admin` does not exist (returns 404). `admin.tavkil.com` and `*-dev.tavkil.com` are gated behind Cloudflare Zero Trust Access policies without affecting public customer traffic.
+2. **Free Universal SSL Coverage:** Single-level hyphenated staging subdomains (`dev.tavkil.com`, `admin-dev.tavkil.com`, `api-dev.tavkil.com`) are automatically covered by Cloudflare's free `*.tavkil.com` wildcard SSL certificate (unlike multi-level `*.dev.tavkil.com` subdomains).
+3. **Private Staging (`develop` branch):** The `dev` environment runs with `SITE_INDEXABLE=false`, emits `X-Robots-Tag: noindex, nofollow, noarchive` on every response, blocks crawlers in `robots.txt`, disables IndexNow pings, and sits behind a Cloudflare Zero Trust Access email allowlist.
+4. **Independent Blast Radius & Deploys:** Deploying an admin UI or API change takes seconds and never rebuilds or risks the revenue-generating storefront (`tavkil.com`).
+5. **Worker Memory & Bundle Isolation:** Splitting `apps/storefront`, `apps/admin`, and `apps/api` keeps each Worker well below Cloudflare's bundle and 128 MB isolate RAM limits.
 
 ---
 
@@ -56,12 +58,12 @@ Tavkil separates public/buyer traffic, internal operator backoffice, and the edg
 
 ### Authentication (`Better Auth` + Google OAuth)
 
-- **Shared Parent Cookie Domain:** In production, Better Auth issues `HttpOnly`, `Secure`, `SameSite=Lax` session cookies scoped to `.tavkil.com` (`crossSubDomainCookies: { enabled: true, domain: '.tavkil.com' }`), allowing sessions to authenticate seamlessly across `tavkil.com`, `admin.tavkil.com`, and `api.tavkil.com`.
-- **Trusted Origins & CORS:** Hono enforces strict CORS (`credentials: true`) restricted to `https://tavkil.com` and `https://admin.tavkil.com` (plus `http://localhost:3000` and `http://localhost:5173` in development).
+- **Shared Parent Cookie Domain with Environment Prefix Isolation:** Better Auth issues `HttpOnly`, `Secure`, `SameSite=Lax` session cookies scoped to `.tavkil.com` (`crossSubDomainCookies: { enabled: true, domain: '.tavkil.com' }`). Production uses the default `better-auth` cookie prefix while staging (`*-dev.tavkil.com` / `dev.tavkil.com`) uses `cookiePrefix: 'tavkil-dev'` so staging and production sessions never collide.
+- **Trusted Origins & CORS:** Hono enforces strict CORS (`credentials: true`) restricted to `https://tavkil.com`, `https://www.tavkil.com`, `https://admin.tavkil.com`, `https://dev.tavkil.com`, and `https://admin-dev.tavkil.com` (plus `http://localhost:3000`, `http://localhost:5173`, and `http://localhost:8787` in local development).
 
 ### Cross-Worker Storefront ISR Cache Invalidation
 
-- When an admin publishes or edits a product, category, or setting on `api.tavkil.com`, the API Worker triggers storefront ISR cache invalidation (`revalidatePath`) on `tavkil.com` via `ctx.waitUntil()` using a signed internal webhook (`REVALIDATE_SECRET`) and/or Cloudflare Service Binding.
+- When an admin publishes or edits a product, category, or setting on `api.tavkil.com` (or `api-dev.tavkil.com`), `src/lib/cache.ts` triggers storefront ISR cache invalidation (`POST /api/internal/revalidate`) on `STOREFRONT_URL` (`https://tavkil.com` or `https://dev.tavkil.com`) authenticated via `x-revalidate-secret`.
 
 ---
 
