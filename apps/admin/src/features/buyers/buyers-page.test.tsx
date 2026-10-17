@@ -25,6 +25,7 @@ vi.mock('./queries', async (importOriginal) => {
     useBuyers: () => mockUseBuyers(),
     useBuyer: () => mockUseBuyer(),
     useAccountRequests: () => mockUseAccountRequests(),
+    useProfileEditRequests: () => ({ data: [], isLoading: false }),
     useBuyerOrders: () => mockUseOrders(),
   };
 });

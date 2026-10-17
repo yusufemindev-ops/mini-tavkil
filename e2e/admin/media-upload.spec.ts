@@ -90,7 +90,7 @@ test('an image picked in the admin is converted to WebP and stored in R2', async
     expect(created.status(), 'create product').toBe(200);
     productId = ((await created.json()).data as { id: string }).id;
 
-    await page.goto(`/admin/products/${productId}`, { waitUntil: 'load' });
+    await page.goto(`/products/${productId}`, { waitUntil: 'load' });
     // Match either save button label depending on draft or published status.
     const save = page.getByRole('button', { name: /^Save (changes|as draft)$/ });
     await expect(save).toBeVisible({ timeout: 20_000 });

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { toErrorResponse } from '@/lib/api/errors';
 import type { AppEnv } from '@/server/factory';
 import { adminAccountRequestsRoutes } from '@/server/routes/admin/account-requests';
@@ -30,6 +31,19 @@ import { publicAccountRequestsRoutes, publicContactRoutes } from '@/server/route
  * Root Hono backend application serving all `/api/*` endpoints.
  */
 export const app = new Hono<AppEnv>().basePath('/api');
+
+app.use(
+  '*',
+  cors({
+    origin: [
+      'https://tavkil.com',
+      'https://admin.tavkil.com',
+      'http://localhost:3000',
+      'http://localhost:5173',
+    ],
+    credentials: true,
+  }),
+);
 
 // Hydrate process.env from Worker bindings (`c.env`) when invoked via Hono CLI or standalone Worker.
 app.use('*', async (c, next) => {

@@ -11,10 +11,7 @@ if (!existsSync(envFile)) {
 process.loadEnvFile(envFile);
 
 console.log('🚀 Building Cloudflare Worker bundle with production environment (.env.prod)...');
-execSync(
-  'pnpm admin:build && opennextjs-cloudflare build && node scripts/strip-build-secrets.mjs',
-  {
-    stdio: 'inherit',
-    env: process.env,
-  },
-);
+execSync('opennextjs-cloudflare build && node scripts/strip-build-secrets.mjs', {
+  stdio: 'inherit',
+  env: process.env,
+});

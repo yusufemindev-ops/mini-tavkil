@@ -26,12 +26,12 @@ test.describe('admin, driven as a person would', () => {
 
   test('every section loads with real data, not an empty state', async ({ page }) => {
     const sections = [
-      { path: '/admin/dashboard', heading: 'Dashboard' },
-      { path: '/admin/products', heading: 'Products' },
-      { path: '/admin/categories', heading: 'Categories' },
-      { path: '/admin/suppliers', heading: 'Suppliers' },
-      { path: '/admin/users', heading: 'User management' },
-      { path: '/admin/settings', heading: 'Settings' },
+      { path: '/dashboard', heading: 'Dashboard' },
+      { path: '/products', heading: 'Products' },
+      { path: '/categories', heading: 'Categories' },
+      { path: '/suppliers', heading: 'Suppliers' },
+      { path: '/users', heading: 'User management' },
+      { path: '/settings', heading: 'Settings' },
     ];
 
     for (const { path, heading } of sections) {
@@ -50,7 +50,7 @@ test.describe('admin, driven as a person would', () => {
   });
 
   test('products list shows the catalogue with its real columns', async ({ page }) => {
-    await page.goto('/admin/products', { waitUntil: 'load' });
+    await page.goto('/products', { waitUntil: 'load' });
     await expect(page.getByRole('heading', { name: 'Products', level: 1 })).toBeVisible();
 
     // 82 real products; a table of dashes is what a broken DTO looks like.
@@ -81,11 +81,11 @@ test.describe('admin, driven as a person would', () => {
       id = ((await created.json()).data as { id: string }).id;
 
       // It must actually appear on the list a person is looking at.
-      await page.goto('/admin/categories', { waitUntil: 'load' });
+      await page.goto('/categories', { waitUntil: 'load' });
       await expect(page.getByText(`${RUN} category`)).toBeVisible({ timeout: 20_000 });
 
       // And its editor must open with the values it was given.
-      await page.goto(`/admin/categories/${id}`, { waitUntil: 'load' });
+      await page.goto(`/categories/${id}`, { waitUntil: 'load' });
       await expect(page.locator(`input[value="${RUN} category"]`).first()).toBeVisible({
         timeout: 20_000,
       });
@@ -108,7 +108,7 @@ test.describe('admin, driven as a person would', () => {
     const list = await request.get('/api/admin/products?pageSize=1');
     const product = (await list.json()).data.items[0] as { id: string; sku: string };
 
-    await page.goto(`/admin/products/${product.id}`, { waitUntil: 'load' });
+    await page.goto(`/products/${product.id}`, { waitUntil: 'load' });
     await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible({
       timeout: 20_000,
     });
@@ -142,7 +142,7 @@ test.describe('admin, driven as a person would', () => {
     const child = categories.find((c) => c.parentId);
     expect(child, 'no sub-category to arrange').toBeTruthy();
 
-    await page.goto(`/admin/products/arrange/${child!.id}`, { waitUntil: 'load' });
+    await page.goto(`/products/arrange/${child!.id}`, { waitUntil: 'load' });
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Arrange', {
       timeout: 20_000,
     });

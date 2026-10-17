@@ -8,8 +8,8 @@
 
 **mini-tavkil is the production Tavkil codebase** (`tavkil.com`). The initial foundation is already deployed. We are actively expanding this repository to full feature parity with the original `tavkil` codebase (buyer authentication, personalized tier pricing, RFQ/order request lifecycle, custom RBAC roles, and audit logging), while executing the target architecture defined in `ARCHITECTURE.md`:
 
-- **Two separate frontends:** Customer Storefront (Next.js 16 SSR/ISR) and Vendor/Admin Panel (React 19 + Vite standalone SPA).
-- **Backend API on Cloudflare Workers:** Transitioning from the initial Next.js `/api` route handlers to a dedicated, high-performance **Hono** backend API running on Cloudflare Workers, connecting to Neon Serverless Postgres via Cloudflare Hyperdrive connection pooling.
+- **Two separate frontends on dedicated domains:** Customer Storefront on `tavkil.com` (Next.js 16 SSR/ISR) and Vendor/Admin Panel on `admin.tavkil.com` (`apps/admin/` — React 19 + Vite standalone SPA at root `/`; zero `/admin` route on `tavkil.com`).
+- **Backend API on Cloudflare Workers (`api.tavkil.com`):** Dedicated, high-performance **Hono** backend API running on Cloudflare Workers, connecting to Neon Serverless Postgres via Cloudflare Hyperdrive / pooled HTTP connections.
 
 The repo folder is named `mini-tavkil` only because `~/Documents/tavkil` holds the legacy Nest.js/Prisma reference codebase we are porting features from. **At the end, after we finish and reach full feature parity, we will rename `mini-tavkil` to `tavkil` and delete the old `tavkil` folder.**
 
@@ -39,13 +39,13 @@ Three layers of audience, three strict views of data. Any leak across audience b
 
 ### 2. Cloudflare Workers constraints — know what cannot run
 
-| Doesn't work                          | Use instead                                                                |
-| ------------------------------------- | -------------------------------------------------------------------------- |
-| Sharp / native image libs             | Browser-side canvas → WebP before upload (`admin/src/lib/image-resize.ts`) |
-| Long-lived background processes       | **Cron Triggers** in `wrangler.jsonc` + `ctx.waitUntil()`                  |
-| `onApplicationBootstrap` / boot hooks | A script run on deploy (`pnpm sync:permissions`)                           |
-| Node TCP database drivers             | `@neondatabase/serverless` over **HTTP**                                   |
-| Unbounded queries (> 128 MB isolate)  | Strict pagination (`LIMIT`), lean column projections, streaming            |
+| Doesn't work                          | Use instead                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------- |
+| Sharp / native image libs             | Browser-side canvas → WebP before upload (`apps/admin/src/lib/image-resize.ts`) |
+| Long-lived background processes       | **Cron Triggers** in `wrangler.jsonc` + `ctx.waitUntil()`                       |
+| `onApplicationBootstrap` / boot hooks | A script run on deploy (`pnpm sync:permissions`)                                |
+| Node TCP database drivers             | `@neondatabase/serverless` over **HTTP**                                        |
+| Unbounded queries (> 128 MB isolate)  | Strict pagination (`LIMIT`), lean column projections, streaming                 |
 
 **Drizzle, not Prisma — measured, not preference.** Prisma's client costs 1.85 MB gzipped on Workers, whereas Drizzle's DB layer costs ~88 KB. **Never migrate back to Prisma.**
 
@@ -65,7 +65,7 @@ If you genuinely need an interactive transaction, it belongs in a CLI script usi
 ### 4. SEO/GEO/AEO Knowledge Engine principle
 
 - **Public indexable pages:** Next.js **Server Components + direct query / native `fetch`**. Never use TanStack Query on a public, indexable page.
-- **Authenticated buyer pages & Admin SPA:** TanStack Query is used for dynamic per-user state on buyer routes (`/account`, `/cart`, `/orders`) and in the separate Admin SPA (`admin/`).
+- **Authenticated buyer pages & Admin SPA:** TanStack Query is used for dynamic per-user state on buyer routes (`/account`, `/cart`, `/orders`) and in the separate Admin SPA (`apps/admin/`).
 - Every public page emits full metadata: canonical, `hreflang` for all 3 locales (`en`, `tr`, `ar`) + `x-default`, OG tags, and JSON-LD.
 - `Product` JSON-LD **without `offers`** — anonymous pages have no public price, and faking one is spam.
 - `BreadcrumbList` on product + category pages.
@@ -129,9 +129,9 @@ pnpm exec hono request /api/health src/server/app.ts  # Execute an in-process re
 
 | Layer      | Choice                                                                                      |
 | ---------- | ------------------------------------------------------------------------------------------- |
-| Storefront | Next.js 16 App Router (B2B customer storefront — SSR/ISR public catalog + buyer portal)     |
-| Admin      | React 19 + Vite SPA (`admin/` — standalone operator dashboard frontend)                     |
-| API / Edge | **Hono on Cloudflare Workers** (Edge API orchestrator replacing transitional Next.js API)   |
+| Storefront | Next.js 16 App Router (`tavkil.com` — SSR/ISR public catalog + buyer portal)                |
+| Admin      | React 19 + Vite SPA (`apps/admin/` on `admin.tavkil.com` — standalone operator backoffice)  |
+| API / Edge | **Hono on Cloudflare Workers** (`api.tavkil.com` — Edge API orchestrator)                   |
 | DB         | **Neon Serverless Postgres + Drizzle ORM** via **Cloudflare Hyperdrive** connection pool    |
 | Storage    | Cloudflare R2 (Worker bindings — zero egress, no S3 credentials)                            |
 | Auth       | Better Auth + Google OAuth (Admins + admin-provisioned Buyers; no buyer self-signup)        |

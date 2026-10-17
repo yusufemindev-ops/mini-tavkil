@@ -3,8 +3,7 @@
 .wrangler/
 node_modules/
 pnpm-lock.yaml
-src/generated/
-public/admin/
+apps/admin/dist/
 drizzle/
 playwright-report/
 test-results/

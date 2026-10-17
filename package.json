@@ -28,7 +28,7 @@
     "test:integration": "vitest run --passWithNoTests --project integration",
     "e2e": "E2E_BASE_URL=${E2E_BASE_URL:-https://mini-tavkil.yusufemin-dev.workers.dev} playwright test",
     "e2e:report": "playwright show-report",
-    "cf:build": "pnpm admin:build && opennextjs-cloudflare build && node scripts/strip-build-secrets.mjs",
+    "cf:build": "opennextjs-cloudflare build && node scripts/strip-build-secrets.mjs",
     "cf:build:prod": "node scripts/build-cloudflare-prod.mjs",
     "preview": "pnpm cf:build && opennextjs-cloudflare preview",
     "deploy": "pnpm cf:build:prod && opennextjs-cloudflare deploy",
@@ -41,7 +41,8 @@
     "db:studio": "drizzle-kit studio",
     "db:studio:prod": "DOTENV_CONFIG_PATH=.env.prod drizzle-kit studio",
     "secrets:restore:prod": "node scripts/restore-secrets.mjs",
-    "admin:build": "pnpm --filter mini-tavkil-admin build && node scripts/bundle-admin-shell.mjs",
+    "admin:build": "pnpm --filter mini-tavkil-admin build",
+    "admin:deploy": "pnpm --filter mini-tavkil-admin deploy",
     "admin:typecheck": "pnpm --filter mini-tavkil-admin exec tsc -b --noEmit",
     "admin:lint": "pnpm --filter mini-tavkil-admin lint",
     "api:routes": "hono routes src/server/app.ts --plain"

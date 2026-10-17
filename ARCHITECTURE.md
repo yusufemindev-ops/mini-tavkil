@@ -1,53 +1,71 @@
 # Tavkil — System Architecture & Infrastructure Guide
 
-This document captures the locked architecture, infrastructure specifications, and memory/database constraints for evolving Tavkil into a full-scale B2B wholesale platform.
+This document captures the locked architecture, subdomain topology, monorepo layout, and memory/database constraints for the Tavkil B2B wholesale platform.
 
 ---
 
-## 1. System Overview
+## 1. System Overview & Subdomain Topology
+
+Tavkil separates public/buyer traffic, internal operator backoffice, and the edge API across three dedicated subdomains (and zero `/admin` routes on the storefront):
 
 ```text
-       [ CLIENT / FRONTEND LAYER ]
-┌─────────────────────────┐     ┌─────────────────────────┐
-│  B2B Customer Storefront│     │   Vendor/Admin Panel    │
-│   Next.js (Dynamic SSR) │     │    React.js (SPA UI)    │
-└────────────┬────────────┘     └────────────┬────────────┘
-             │                               │
-             └───────────────┬───────────────┘
-                             ▼  [ Standard HTTPS Requests ]
-              ┌─────────────────────────────┐
-              │   Cloudflare Pages Network  │ (Global UI Edge)
-              └──────────────┬──────────────┘
-                             │
-                             ▼  [ JSON API / Cookies ]
-              ┌─────────────────────────────┐
-              │    Cloudflare Workers       │ (Edge API Orchestrator)
-              │    • Backend API: Hono      │
-              └──────────────┬──────────────┘
-                             │
-                             ▼  [ Fast ~1ms Proxy Connection ]
-              ┌─────────────────────────────┐
-              │ Cloudflare Hyperdrive Pool  │ (Globally Distributed Connection)
-              └──────────────┬──────────────┘
-                             │
-                             ▼
-              ┌─────────────────────────────┐
-              │  Neon Serverless Postgres   │ (The Single Source of Truth)
-              └─────────────────────────────┘
+                [ CLIENT / FRONTEND LAYER ]
+┌─────────────────────────────┐     ┌─────────────────────────────┐
+│   B2B Customer Storefront   │     │     Vendor / Admin Panel    │
+│         tavkil.com          │     │       admin.tavkil.com      │
+│    Next.js 16 (SSR / ISR)   │     │   React 19 + Vite SPA (/)   │
+└──────────────┬──────────────┘     └──────────────┬──────────────┘
+               │                                   │
+               └─────────────────┬─────────────────┘
+                                 ▼  [ HTTPS + Credentials (.tavkil.com Cookie) ]
+                  ┌─────────────────────────────┐
+                  │      Edge Backend API       │
+                  │       api.tavkil.com        │
+                  │  Hono on Cloudflare Workers │
+                  └──────────────┬──────────────┘
+                                 │
+                                 ▼  [ Fast ~1ms Proxy / HTTP Pool ]
+                  ┌─────────────────────────────┐
+                  │ Cloudflare Hyperdrive / HTTP│
+                  └──────────────┬──────────────┘
+                                 │
+                                 ▼
+                  ┌─────────────────────────────┐
+                  │  Neon Serverless Postgres   │ (Single Source of Truth)
+                  └─────────────────────────────┘
 ```
 
-### Components
+### Domains & Deployments
 
-1. **B2B Customer Storefront (Next.js)**: Server-rendered for top-tier SEO/GEO/AEO, localized (EN, TR, AR), no public prices.
-2. **Vendor / Admin Panel (React SPA)**: Fast, dynamic management dashboard for catalog, order inquiries, and permissions.
-3. **Backend API (Hono on Cloudflare Workers)**: Lightweight, zero-cold-start API layer isolating business logic and database credentials.
-4. **Cloudflare Hyperdrive**: Globally pools and accelerates database connections from edge workers down to ~1ms.
-5. **Database (Neon Serverless Postgres + Drizzle ORM)**: Scalable relational database with instant branching, automated backups, and point-in-time recovery.
-6. **Object Storage (Cloudflare R2)**: Zero-egress S3-compatible buckets for catalog images and ISR page cache.
+| Surface                 | Subdomain                  | Local Dev        | Workspace         | Runtime                                                               |
+| :---------------------- | :------------------------- | :--------------- | :---------------- | :-------------------------------------------------------------------- |
+| **Customer Storefront** | `tavkil.com` (`www` → 308) | `localhost:3000` | `apps/storefront` | Next.js 16 on Cloudflare Workers (OpenNext SSR/ISR)                   |
+| **Admin Backoffice**    | `admin.tavkil.com`         | `localhost:5173` | `apps/admin`      | React 19 + Vite SPA on Cloudflare Workers Static Assets (`base: '/'`) |
+| **Backend API**         | `api.tavkil.com`           | `localhost:8787` | `apps/api`        | Standalone Hono Worker (Drizzle, R2 `IMAGES`, Cron FX)                |
+| **Shared Contracts**    | —                          | —                | `packages/shared` | Shared Zod schemas, RBAC permissions, country catalog, types          |
+
+### Why Subdomains (No `/admin` on `tavkil.com`)
+
+1. **Zero Backoffice Exposure on Storefront:** `tavkil.com/admin` does not exist (returns 404). `admin.tavkil.com` can be gated behind Cloudflare Zero Trust / WAF rules without affecting customer traffic.
+2. **Independent Blast Radius & Deploys:** Deploying an admin UI change takes seconds and never rebuilds or risks the revenue-generating storefront (`tavkil.com`) or SEO cache.
+3. **Worker Memory & Bundle Isolation:** Splitting `apps/storefront`, `apps/admin`, and `apps/api` keeps each Worker well below Cloudflare's bundle and 128 MB isolate RAM limits.
 
 ---
 
-## 2. Cloudflare Workers Paid Plan (Target Specs)
+## 2. Cross-Subdomain Auth, CORS & Cache Revalidation
+
+### Authentication (`Better Auth` + Google OAuth)
+
+- **Shared Parent Cookie Domain:** In production, Better Auth issues `HttpOnly`, `Secure`, `SameSite=Lax` session cookies scoped to `.tavkil.com` (`crossSubDomainCookies: { enabled: true, domain: '.tavkil.com' }`), allowing sessions to authenticate seamlessly across `tavkil.com`, `admin.tavkil.com`, and `api.tavkil.com`.
+- **Trusted Origins & CORS:** Hono enforces strict CORS (`credentials: true`) restricted to `https://tavkil.com` and `https://admin.tavkil.com` (plus `http://localhost:3000` and `http://localhost:5173` in development).
+
+### Cross-Worker Storefront ISR Cache Invalidation
+
+- When an admin publishes or edits a product, category, or setting on `api.tavkil.com`, the API Worker triggers storefront ISR cache invalidation (`revalidatePath`) on `tavkil.com` via `ctx.waitUntil()` using a signed internal webhook (`REVALIDATE_SECRET`) and/or Cloudflare Service Binding.
+
+---
+
+## 3. Cloudflare Workers Paid Plan (Target Specs)
 
 - **Base Cost:** $5/month (Standard usage model).
 - **Included Monthly Allotment:** 10 million requests + 30 million CPU milliseconds (extra: $0.30/M requests, $0.02/M CPU ms).
@@ -58,7 +76,7 @@ This document captures the locked architecture, infrastructure specifications, a
 
 ---
 
-## 3. Memory & Neon Database Constraints (128 MB RAM Boundary)
+## 4. Memory & Neon Database Constraints (128 MB RAM Boundary)
 
 ### The 128 MB Hard Boundary
 
@@ -74,22 +92,22 @@ A Worker instance terminates with an unrecoverable **Out-Of-Memory (OOM)** error
 3. **Streaming for Large Payloads**:
    - When generating large CSVs or exporting catalogs, stream results via Web Streams rather than buffering arrays in worker memory.
 4. **Connection Optimization**:
-   - Use Cloudflare Hyperdrive with Drizzle to pool database connections and avoid edge TLS handshake overhead.
+   - Use Neon pooled HTTP connections (`@neondatabase/serverless`) / Cloudflare Hyperdrive with Drizzle to avoid edge TLS handshake overhead.
 
 ---
 
-## 4. Asynchronous Tasks & Media Processing
+## 5. Asynchronous Tasks & Media Processing
 
-1. **Background Tasks (Emails, SMS, Notifications)**:
-   - Use `ctx.waitUntil()` for fire-and-forget notifications (Resend/Postmark emails, Twilio SMS, WhatsApp alerts).
-   - Use Cloudflare Cron Triggers for scheduled periodic jobs (FX currency rate syncing).
+1. **Background Tasks (Emails, Notifications, IndexNow)**:
+   - Use `ctx.waitUntil()` for fire-and-forget notifications and IndexNow pings.
+   - Use Cloudflare Cron Triggers (`0 */2 * * *`) for scheduled periodic jobs (FX currency rate syncing).
 2. **Image Processing**:
    - Cloudflare Workers cannot run native C/C++ libraries like `sharp`.
-   - All image resizing happens in the admin browser using the Canvas WebP pipeline (`lib/image-resize.ts`, max 1600px) before uploading directly to Cloudflare R2.
+   - All image resizing happens in the admin browser using the Canvas WebP pipeline (`apps/admin/src/lib/image-resize.ts`, max 1600px) before uploading to Cloudflare R2 (`IMAGES` binding).
 
 ---
 
-## 5. Branching & Environments
+## 6. Branching & Environments
 
 - **Git Branches**:
   - `main`: Clean, stable production releases.
@@ -104,7 +122,7 @@ A Worker instance terminates with an unrecoverable **Out-Of-Memory (OOM)** error
 
 ---
 
-## 6. Accepted Design & Accessibility Decisions
+## 7. Accepted Design & Accessibility Decisions
 
 - **Brand Orange & WhatsApp Green on Buttons**:
   - Brand orange with white text (`#f2640c` on white ≈ 3.18:1) and WhatsApp green with white text (`#25D366` on white ≈ 1.98:1) deliberately fail WCAG AA 4.5:1 text contrast on buttons to preserve brand identity.

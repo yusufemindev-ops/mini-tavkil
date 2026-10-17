@@ -21,6 +21,9 @@ import { and, eq, sql } from 'drizzle-orm';
  * Initialized lazily on first access so Worker bindings hydrate `process.env` first.
  */
 function createAuth() {
+  const authUrl = process.env.BETTER_AUTH_URL ?? '';
+  const isProdDomain = authUrl.startsWith('https://') && !authUrl.includes('localhost');
+
   return betterAuth({
     database: drizzleAdapter(db, {
       provider: 'pg',
@@ -33,7 +36,11 @@ function createAuth() {
     }),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
-    trustedOrigins: process.env.NODE_ENV === 'development' ? ['http://localhost:5173'] : undefined,
+    trustedOrigins: [
+      'https://tavkil.com',
+      'https://admin.tavkil.com',
+      ...(isProdDomain ? [] : ['http://localhost:3000', 'http://localhost:5173']),
+    ],
     emailAndPassword: { enabled: false },
     account: {
       accountLinking: { enabled: true, trustedProviders: ['google'] },
@@ -129,11 +136,15 @@ function createAuth() {
       updateAge: 60 * 60 * 24,
     },
     advanced: {
+      crossSubDomainCookies: {
+        enabled: isProdDomain,
+        domain: '.tavkil.com',
+      },
       // HttpOnly, Secure, SameSite=Lax cookie session protection.
       defaultCookieAttributes: {
         httpOnly: true,
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProdDomain,
       },
     },
   });

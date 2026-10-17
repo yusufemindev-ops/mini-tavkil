@@ -10,29 +10,31 @@ export interface CurrentAdmin {
 }
 
 // Resolves the signed-in admin and effective RBAC permissions from Better Auth + /api/admin/me.
-export async function fetchCurrentAdmin(): Promise<CurrentAdmin> {
+export async function fetchCurrentAdmin(): Promise<CurrentAdmin | null> {
   const { data } = await authClient.getSession();
   const user = data?.user as
     { id: string; email: string; name: string; userType?: string | null } | undefined;
 
   if (!user) {
-    throw new Error('unauthorized');
+    return null;
   }
 
-  let permissions: string[] = [];
-  let roles: string[] = [];
   try {
     const res = await api.get<{
       permissions: string[];
       assignedRoles: { code: string; label: string }[];
     }>('/admin/me');
-    permissions = res.permissions;
-    roles = res.assignedRoles.map((r) => r.label);
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.name,
+      permissions: res.permissions,
+      roles: res.assignedRoles.map((r) => r.label),
+    };
   } catch (err) {
     if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-      throw new Error('unauthorized', { cause: err });
+      return null;
     }
+    throw err;
   }
-
-  return { id: user.id, email: user.email, fullName: user.name, permissions, roles };
 }

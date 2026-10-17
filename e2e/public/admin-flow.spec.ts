@@ -292,12 +292,16 @@ test.describe.serial('Authenticated Admin Panel & Custom RBAC Flow', () => {
     await db.delete(authUser).where(like(authUser.id, 'e2e-admin-%'));
   });
 
-  test('1. rejects non-allowlisted user on /api/admin/me and redirects /admin to sign-in, while allowlisted Owner loads dashboard', async ({
+  test('1. returns 404 on storefront /admin, rejects non-allowlisted user on /api/admin/me, and loads standalone admin dashboard for Owner', async ({
     page,
     baseURL,
   }) => {
     const targetBase = baseURL ?? 'http://localhost:3000';
+    const adminBase = process.env.E2E_ADMIN_URL ?? 'http://localhost:5173';
     const cookieDomain = new URL(targetBase).hostname;
+
+    const storefrontAdminRes = await page.goto(`${targetBase}/admin`);
+    expect(storefrontAdminRes?.status()).toBe(404);
 
     await page.context().addCookies([
       {
@@ -313,7 +317,7 @@ test.describe.serial('Authenticated Admin Panel & Custom RBAC Flow', () => {
     const meRes = await page.request.get('/api/admin/me');
     expect(meRes.status()).toBe(401);
 
-    await page.goto('/admin/dashboard');
+    await page.goto(`${adminBase}/dashboard`);
     await expect(page.getByRole('heading', { name: /admin sign in/i })).toBeVisible({
       timeout: 15_000,
     });
@@ -333,7 +337,7 @@ test.describe.serial('Authenticated Admin Panel & Custom RBAC Flow', () => {
     const ownerMeRes = await page.request.get('/api/admin/me');
     expect(ownerMeRes.status()).toBe(200);
 
-    await page.goto('/admin/dashboard');
+    await page.goto(`${adminBase}/dashboard`);
     await expect(page.getByRole('heading', { name: /^dashboard$/i })).toBeVisible({
       timeout: 15_000,
     });
@@ -345,6 +349,7 @@ test.describe.serial('Authenticated Admin Panel & Custom RBAC Flow', () => {
     baseURL,
   }) => {
     const targetBase = baseURL ?? 'http://localhost:3000';
+    const adminBase = process.env.E2E_ADMIN_URL ?? 'http://localhost:5173';
     const cookieDomain = new URL(targetBase).hostname;
 
     await page.context().addCookies([
@@ -358,7 +363,7 @@ test.describe.serial('Authenticated Admin Panel & Custom RBAC Flow', () => {
       },
     ]);
 
-    await page.goto('/admin/users/roles');
+    await page.goto(`${adminBase}/users/roles`);
     await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({
       timeout: 15_000,
     });
@@ -407,8 +412,8 @@ test.describe.serial('Authenticated Admin Panel & Custom RBAC Flow', () => {
     const forbiddenSettings = await staffPage.request.get('/api/admin/settings');
     expect(forbiddenSettings.status()).toBe(403);
 
-    await staffPage.goto('/admin/users');
-    await expect(staffPage).toHaveURL(/\/admin\/dashboard/);
+    await staffPage.goto(`${adminBase}/users`);
+    await expect(staffPage).toHaveURL(/\/dashboard/);
 
     await staffContext.close();
 

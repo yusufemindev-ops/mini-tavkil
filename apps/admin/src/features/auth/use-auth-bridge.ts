@@ -20,10 +20,12 @@ export function useAuthBridge(): void {
 
   useEffect(() => {
     setOnUnauthorized(() => {
-      queryClient.removeQueries({ queryKey: SESSION_QUERY_KEY });
+      queryClient.setQueryData(SESSION_QUERY_KEY, null);
       // Clear the now-dead session cookie (the server already revoked the session).
       void authClient.signOut().catch(() => undefined);
-      navigate('/login', { replace: true });
+      if (window.location.pathname !== '/login') {
+        navigate('/login', { replace: true });
+      }
     });
     return () => setOnUnauthorized(null);
   }, [queryClient, navigate]);

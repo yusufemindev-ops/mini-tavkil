@@ -961,7 +961,7 @@ function renderDocsHtml(): string {
           text.textContent = data.email + ' (' + role + ')';
         } else {
           dot.className = 'dot warn';
-          text.innerHTML = 'Anonymous (401 on /api/admin/*) · <a href="http://localhost:5173/admin/login" style="color:#f97316">Sign in</a>';
+          text.innerHTML = 'Anonymous (401 on /api/admin/*) · <a href="http://localhost:5173/login" style="color:#f97316">Sign in</a>';
         }
       } catch {
         dot.className = 'dot warn';

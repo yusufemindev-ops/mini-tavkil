@@ -1,10 +1,10 @@
 # Tavkil (`mini-tavkil`)
 
-B2B cross-border wholesale platform ([tavkil.com](https://tavkil.com)) connecting international buyers with verified Turkish manufacturers. Built with two separate frontends — a **Next.js 16 App Router Storefront** and a standalone **React 19 + Vite Admin SPA** — backed by **Cloudflare Workers (Hono Backend API) + Cloudflare Hyperdrive + Neon Serverless Postgres + Cloudflare R2**.
+B2B cross-border wholesale platform ([tavkil.com](https://tavkil.com)) connecting international buyers with verified Turkish manufacturers. Built with two separate frontends on dedicated domains — a **Next.js 16 App Router Storefront** (`tavkil.com`) and a standalone **React 19 + Vite Admin SPA** (`admin.tavkil.com`) — backed by **Cloudflare Workers (Hono Backend API) + Cloudflare Hyperdrive + Neon Serverless Postgres + Cloudflare R2**.
 
-- **B2B Customer Storefront (Next.js 16):** Multilingual public catalog (`en`, `tr`, `ar` RTL) optimized for SEO/GEO/AEO (zero public prices/suppliers), plus authenticated buyer portal for personalized tier pricing and RFQ / order requests.
-- **Vendor / Admin Panel (React 19 + Vite SPA):** Separate operator dashboard (`admin/`) for managing catalog, suppliers, buyers, order requests, RBAC roles, audit logs, and settings.
-- **Backend API (Hono on Cloudflare Workers):** Dedicated Edge API orchestrator replacing transitional Next.js route handlers, connected via Cloudflare Hyperdrive to Neon Serverless Postgres.
+- **B2B Customer Storefront (`tavkil.com` — Next.js 16):** Multilingual public catalog (`en`, `tr`, `ar` RTL) optimized for SEO/GEO/AEO (zero public prices/suppliers), plus authenticated buyer portal for personalized tier pricing and RFQ / order requests.
+- **Vendor / Admin Panel (`admin.tavkil.com` — React 19 + Vite SPA):** Standalone operator dashboard (`apps/admin/`, `base: '/'`) for managing catalog, suppliers, buyers, order requests, RBAC roles, audit logs, and settings.
+- **Backend API (`api.tavkil.com` — Hono on Cloudflare Workers):** Dedicated Edge API orchestrator connected via Cloudflare Hyperdrive / pooled HTTP to Neon Serverless Postgres.
 
 ---
 
@@ -25,10 +25,13 @@ Product & design specifications live at `~/Documents/foundation-pm/Tavkil/`. Leg
 ## Layout
 
 ```text
+apps/
+  admin/               Standalone React 19 + Vite Admin SPA (`admin.tavkil.com`, `apps/admin/src/lib/image-resize.ts` handles Canvas → WebP)
 src/
   app/
-    [locale]/          Storefront (Server Components for public SEO pages; client query on buyer pages)
-    api/               API Route Handlers (public, buyer, and permission-gated admin endpoints)
+    [locale]/          Storefront (`tavkil.com` — Server Components for public SEO pages; client query on buyer pages)
+    api/               Hono API entry point
+  server/              Hono API routes (public, buyer, and permission-gated admin endpoints)
   components/          Shared UI primitives (shadcn/ui + Base UI) and catalog components
   lib/
     db/                Drizzle schema, relations, and citext custom type
@@ -37,7 +40,6 @@ src/
     media/             Magic-byte upload sniffing (`sniff.ts`) and R2 image URL helpers
     permissions/       Permission catalog (`catalog.ts`) and allowlist helpers
     seo/               Metadata, hreflang, Schema.org JSON-LD, sitemap, and IndexNow helpers
-admin/                 Standalone React 19 + Vite Admin SPA (`admin/src/lib/image-resize.ts` handles Canvas → WebP)
 drizzle/               SQL migrations + Drizzle Kit metadata
 messages/              Locale dictionaries (`en.json`, `tr.json`, `ar.json`)
 e2e/                   Playwright end-to-end test suites (public & admin)
@@ -50,7 +52,7 @@ wrangler.jsonc         Cloudflare Worker bindings (R2 buckets, Cron Triggers, ru
 ## Setup
 
 ```bash
-pnpm install                  # Installs root Next.js storefront + admin/ SPA workspace
+pnpm install                  # Installs root Next.js storefront + apps/admin SPA workspace
 cp .env.example .env          # Configure local dev environment (uses Neon `dev` branch)
 
 pnpm db:migrate               # Apply Drizzle migrations via DIRECT_URL
@@ -95,7 +97,7 @@ pnpm preview                  # Build and run locally on the Cloudflare Workers 
 
 ## Key Platform Constraints
 
-- **No Sharp on Workers:** Images are downscaled and converted to WebP in the admin browser via Canvas (`admin/src/lib/image-resize.ts`) before uploading to R2, and byte-sniffed on the server (`src/lib/media/sniff.ts`).
+- **No Sharp on Workers:** Images are downscaled and converted to WebP in the admin browser via Canvas (`apps/admin/src/lib/image-resize.ts`) before uploading to R2, and byte-sniffed on the server (`src/lib/media/sniff.ts`).
 - **Nothing runs on boot:** Workers wake per request. Migrations and permission syncing run via explicit CLI/CI scripts, and periodic jobs run via Cloudflare Cron Triggers.
 - **No interactive transactions on request paths:** Neon HTTP mode supports `db.batch([q1, q2])`, not interactive `db.transaction(async (tx) => ...)` callbacks.
 - **128 MB Worker RAM limit:** Always paginate queries (`LIMIT`) and select lean projections.

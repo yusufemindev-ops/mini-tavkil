@@ -5,13 +5,13 @@ import { expect, test } from '@playwright/test';
  */
 test.describe('admin', () => {
   test('the dashboard loads behind auth', async ({ page }) => {
-    await page.goto('/admin');
+    await page.goto('/');
     await expect(page).not.toHaveURL(/sign-in/);
     await expect(page.locator('body')).toContainText(/dashboard/i);
   });
 
   test('products are listable', async ({ page }) => {
-    await page.goto('/admin/products');
+    await page.goto('/products');
     await expect(page).not.toHaveURL(/sign-in/);
     await expect(page.locator('table, [role="table"]').first()).toBeVisible();
   });
@@ -28,7 +28,7 @@ test.describe('admin', () => {
   });
 
   test('every admin response is wrapped in { data } — the SPA unwraps it', async ({ request }) => {
-    // admin/src/lib/api/client.ts unwraps `payload.data` on every response.
+    // apps/admin/src/lib/api/client.ts unwraps `payload.data` on every response.
     for (const path of ['/api/admin/categories', '/api/admin/suppliers', '/api/admin/me']) {
       const response = await request.get(path);
       expect(response.status(), path).toBe(200);
@@ -44,20 +44,20 @@ test.describe('admin', () => {
   });
 
   test('the sidebar shows every section an Owner may reach', async ({ page }) => {
-    await page.goto('/admin/dashboard');
+    await page.goto('/dashboard');
     for (const label of ['Products', 'Categories', 'Suppliers', 'User management', 'Settings']) {
       await expect(page.getByRole('link', { name: label })).toBeVisible();
     }
   });
 
   test('the dashboard shows real catalogue numbers, not an empty state', async ({ page }) => {
-    await page.goto('/admin/dashboard');
+    await page.goto('/dashboard');
     await expect(page.getByText('No catalog metrics yet.')).toHaveCount(0);
     await expect(page.getByText('Published products').first()).toBeVisible();
   });
 
   test('the users table renders', async ({ page }) => {
-    await page.goto('/admin/users');
+    await page.goto('/users');
     await expect(page.getByRole('heading', { name: 'User management' })).toBeVisible();
     await expect(page.getByText('row(s)')).toBeVisible();
   });
@@ -69,15 +69,13 @@ test.describe('admin', () => {
     const categoryId = categories[0].id;
 
     for (const path of [
-      `/admin/preview/product/${productId}`,
-      `/admin/preview/category/${categoryId}`,
-      '/admin/preview/catalogue',
+      `/preview/product/${productId}`,
+      `/preview/category/${categoryId}`,
+      '/preview/catalogue',
     ]) {
       const response = await page.goto(path);
       expect(response?.status(), `${path} should render`).toBe(200);
-      await expect(page).not.toHaveURL(/admin\/login/);
-      // The SPA shell resolves the route client-side; a 404 renders Next's own
-      // "This page could not be found", which the shell never contains.
+      await expect(page).not.toHaveURL(/\/login/);
       await expect(page.locator('body')).not.toContainText('This page could not be found');
     }
   });

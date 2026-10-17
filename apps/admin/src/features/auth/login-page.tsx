@@ -18,8 +18,7 @@ export function LoginPage() {
     setPending(true);
     const { error } = await authClient.signIn.social({
       provider: 'google',
-      // Better Auth redirects relative to origin, not the router basename.
-      callbackURL: `${window.location.origin}/admin/dashboard`,
+      callbackURL: `${window.location.origin}/dashboard`,
     });
     if (error) {
       toast.error(error.message ?? 'Could not start Google sign-in.');

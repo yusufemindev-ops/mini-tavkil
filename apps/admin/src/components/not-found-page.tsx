@@ -21,7 +21,7 @@ export function NotFoundPage() {
           <p className="text-muted-foreground mt-2 max-w-sm text-[13.5px] leading-relaxed">
             No admin page matches{' '}
             <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-              /admin{location.pathname === '/' ? '' : location.pathname}
+              {location.pathname}
             </code>
             . Check the URL or return to the dashboard.
           </p>
