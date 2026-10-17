@@ -181,7 +181,7 @@ describe('Admin Router Guards & Global 404', () => {
     const root = renderTestRouter('/unknown-feature/123');
     expect(container.textContent).toContain('Error 404');
     expect(container.textContent).toContain('Page not found');
-    expect(container.textContent).toContain('/admin/unknown-feature/123');
+    expect(container.textContent).toContain('/unknown-feature/123');
 
     const backToDashboardBtn = Array.from(container.querySelectorAll('button')).find((b) =>
       b.textContent?.includes('Back to dashboard'),

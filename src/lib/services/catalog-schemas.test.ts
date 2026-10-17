@@ -111,7 +111,7 @@ describe('category schemas', () => {
 describe('adminListProductsSchema pageSize', () => {
   const CAP = Number(
     /CATEGORY_PRODUCTS_CAP = (\d+)/.exec(
-      readFileSync('admin/src/features/products/queries.ts', 'utf8'),
+      readFileSync('apps/admin/src/features/products/queries.ts', 'utf8'),
     )?.[1],
   );
 

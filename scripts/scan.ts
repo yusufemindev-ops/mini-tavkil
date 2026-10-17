@@ -272,7 +272,7 @@ function main() {
     `\n🔍 mini-tavkil Quality & Security Gate (${quick ? 'Quick Mode' : 'Full SonarJS + SAST Mode'})\n`,
   );
 
-  const files = [...walkFiles(join(ROOT, 'src')), ...walkFiles(join(ROOT, 'admin/src'))];
+  const files = [...walkFiles(join(ROOT, 'src')), ...walkFiles(join(ROOT, 'apps/admin/src'))];
 
   const customStart = Date.now();
   const findings = scanCustomRules(files);

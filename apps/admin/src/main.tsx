@@ -20,7 +20,7 @@ if (!rootEl) throw new Error('Root element not found');
 createRoot(rootEl).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/admin">
+      <BrowserRouter>
         <App />
       </BrowserRouter>
     </QueryClientProvider>

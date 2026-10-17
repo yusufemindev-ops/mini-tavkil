@@ -16,7 +16,7 @@ const backendUrl =
 
 const services = [
   { name: 'Storefront (Next.js)', url: siteUrl },
-  { name: 'Admin Dashboard (Vite)', url: 'http://localhost:5173/admin' },
+  { name: 'Admin Dashboard (Vite)', url: 'http://localhost:5173' },
   { name: 'Backend API (Hono)', url: backendUrl },
   { name: 'API Docs (Hono UI)', url: `${backendUrl}/docs` },
 ];

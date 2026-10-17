@@ -68,9 +68,7 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
-      # Production build: `next start` serves prerendered pages instantly, where
-      # `next dev` compiles each route on first hit and times tests out.
-      # admin:build first — next build typechecks, and /admin imports its output.
+      # Production build for both Admin SPA (:5173) and Storefront (:3000).
       - name: Build
         run: |
           pnpm admin:build

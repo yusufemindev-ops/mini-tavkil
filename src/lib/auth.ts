@@ -33,7 +33,13 @@ function createAuth() {
     }),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
-    trustedOrigins: process.env.NODE_ENV === 'development' ? ['http://localhost:5173'] : undefined,
+    trustedOrigins: [
+      'https://tavkil.com',
+      'https://admin.tavkil.com',
+      ...(process.env.NODE_ENV !== 'production'
+        ? ['http://localhost:3000', 'http://localhost:5173']
+        : []),
+    ],
     emailAndPassword: { enabled: false },
     account: {
       accountLinking: { enabled: true, trustedProviders: ['google'] },
@@ -129,6 +135,10 @@ function createAuth() {
       updateAge: 60 * 60 * 24,
     },
     advanced: {
+      crossSubDomainCookies: {
+        enabled: process.env.NODE_ENV === 'production',
+        domain: '.tavkil.com',
+      },
       // HttpOnly, Secure, SameSite=Lax cookie session protection.
       defaultCookieAttributes: {
         httpOnly: true,
