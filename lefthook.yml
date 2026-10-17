@@ -15,7 +15,7 @@ pre-commit:
         fi
 
     - name: locale-parity
-      glob: 'messages/*.json'
+      glob: 'apps/storefront/messages/*.json'
       run: bash scripts/check-locale-parity.sh
 
     - name: prettier

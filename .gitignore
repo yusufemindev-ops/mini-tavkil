@@ -25,10 +25,13 @@ coverage/
 
 .DS_Store
 
-# Built admin & API workers
+# Built admin, API, & storefront workers
 /apps/admin/dist/
 /apps/admin/node_modules/
 /apps/api/dist/
 /apps/api/node_modules/
+/apps/storefront/.next/
+/apps/storefront/.open-next/
+/apps/storefront/node_modules/
 /packages/shared/node_modules/
 e2e/.auth/

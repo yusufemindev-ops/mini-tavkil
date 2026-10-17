@@ -3,7 +3,8 @@ name: DB Schema Check
 on:
   pull_request:
     paths:
-      - 'src/lib/db/**'
+      - 'packages/shared/src/db/**'
+      - 'apps/storefront/src/lib/db/**'
       - 'drizzle/**'
       - 'drizzle.config.ts'
 

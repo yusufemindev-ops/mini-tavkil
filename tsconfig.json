@@ -13,24 +13,23 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "paths": {
-      "@/*": ["./src/*"],
+      "@/server/*": ["./apps/api/src/*"],
+      "@/*": ["./apps/storefront/src/*"],
       "@tavkil/shared/*": ["./packages/shared/src/*"]
     }
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "vitest.setup.ts",
+    "apps/storefront/next-env.d.ts",
+    "apps/storefront/src/**/*.ts",
+    "apps/storefront/src/**/*.tsx",
+    "apps/api/src/**/*.ts",
+    "packages/shared/src/**/*.ts",
+    "scripts/**/*.ts",
+    "e2e/**/*.ts",
+    "apps/storefront/.next/types/**/*.ts",
+    "apps/storefront/.next/dev/types/**/*.ts"
   ],
-  "//": "Excluded: `apps/admin` is a separate package with its own tsconfig and its own `@/*` root, so checking it here resolves its imports against this app's src (use `pnpm admin:typecheck`). `worker.ts` imports .open-next/worker.js, which the OpenNext build generates AFTER `next build` — checking it here is a chicken-and-egg failure, and wrangler bundles it at deploy time.",
-  "exclude": ["node_modules", "apps", "public", "worker.ts"]
+  "exclude": ["node_modules", "apps/admin", "apps/storefront/public", "apps/storefront/worker.ts"]
 }

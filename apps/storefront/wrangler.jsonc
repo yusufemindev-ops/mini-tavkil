@@ -1,5 +1,5 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "mini-tavkil",
   // Pinned: wrangler was once authenticated to the temsan account, which made the
   // R2 buckets look "not found". Pinning fails loudly instead of deploying elsewhere.

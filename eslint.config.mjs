@@ -14,21 +14,34 @@ const eslintConfig = defineConfig([
   // Global Ignores
   globalIgnores([
     '.next/**',
+    'apps/storefront/.next/**',
     'out/**',
     'build/**',
     'next-env.d.ts',
+    'apps/storefront/next-env.d.ts',
     '.open-next/**',
-    'apps/**',
+    'apps/storefront/.open-next/**',
+    'apps/admin/**',
+    'apps/api/dist/**',
     '.wrangler/**',
+    'apps/**/.wrangler/**',
     'drizzle/**',
     'node_modules/**',
+    'apps/**/node_modules/**',
+    'packages/**/node_modules/**',
     'cloudflare-env.d.ts',
+    'apps/storefront/cloudflare-env.d.ts',
     'playwright-report/**',
     'test-results/**',
   ]),
 
   // Senior Engineering, SonarJS & Security Rules
   {
+    settings: {
+      next: {
+        rootDir: 'apps/storefront',
+      },
+    },
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -60,7 +73,7 @@ const eslintConfig = defineConfig([
 
   // CLI scripts & test files legitimately spawn binaries, read paths, and use complex test regexes
   {
-    files: ['scripts/**', 'e2e/**', '**/*.test.ts', '**/*.test.tsx'],
+    files: ['scripts/**', 'e2e/**', '**/*.test.ts', '**/*.test.tsx', '**/next.config.ts'],
     rules: {
       'sonarjs/no-os-command-from-path': 'off',
       'sonarjs/no-fixed-wait-in-tests': 'off',
@@ -75,14 +88,14 @@ const eslintConfig = defineConfig([
   // PRICING-VISIBILITY GUARD (Tavkil Hard Rule #1)
   // Internal pricing fields must NEVER appear in public-facing code
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['apps/storefront/src/**/*.{ts,tsx}', 'apps/api/src/**/*.{ts,tsx}'],
     ignores: [
-      'src/app/api/admin/**',
-      'src/server/routes/admin/**',
-      'src/lib/services/**',
-      'src/lib/db/**',
-      'src/lib/auth.ts',
-      'src/**/__tests__/**',
+      'apps/storefront/src/app/api/admin/**',
+      'apps/api/src/routes/admin/**',
+      'apps/storefront/src/lib/services/**',
+      'apps/storefront/src/lib/db/**',
+      'apps/storefront/src/lib/auth.ts',
+      'apps/**/__tests__/**',
       '**/*.test.ts',
     ],
     rules: {

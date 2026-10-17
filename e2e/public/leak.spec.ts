@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { expect, test } from '@playwright/test';
-import { db } from '../../src/lib/db';
-import { supplierTranslations } from '../../src/lib/db/schema';
+import { db } from '@/lib/db';
+import { supplierTranslations } from '@/lib/db/schema';
 
 /**
  * TESTING.md flow 2 — the one that must never be skipped or muted.

@@ -11,9 +11,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "paths": {
-      "@/*": ["../../src/*"],
+      "@/server/*": ["./src/*"],
+      "@/*": ["../storefront/src/*"],
       "@tavkil/shared/*": ["../../packages/shared/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "../../src/server/**/*.ts", "../../src/lib/services/**/*.ts"]
+  "include": ["src/**/*.ts", "../storefront/src/lib/services/**/*.ts"]
 }

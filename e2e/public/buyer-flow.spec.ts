@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 
 loadEnv({ path: ['.env.local', '.env'] });
 import { and, eq, gt, isNull, like } from 'drizzle-orm';
-import { db } from '../../src/lib/db';
+import { db } from '@/lib/db';
 import {
   authSession,
   authUser,
@@ -14,8 +14,8 @@ import {
   products,
   productTranslations,
   profileEditRequests,
-} from '../../src/lib/db/schema';
-import { confirmAdminOrder } from '../../src/lib/services/orders';
+} from '@/lib/db/schema';
+import { confirmAdminOrder } from '@/lib/services/orders';
 
 /**
  * TESTING.md §2 — Authenticated Buyer E2E Flow:

@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
  * deliberately (CLAUDE.md §1) rather than reaching for the admin module.
  */
 
-const SRC = join(process.cwd(), 'src');
+const SRC = join(process.cwd(), 'apps', 'storefront', 'src');
 
 function filesUnder(dir: string): string[] {
   let out: string[] = [];

@@ -5,6 +5,8 @@ node_modules/
 pnpm-lock.yaml
 apps/admin/dist/
 apps/api/dist/
+apps/storefront/.next/
+apps/storefront/.open-next/
 drizzle/
 playwright-report/
 test-results/
