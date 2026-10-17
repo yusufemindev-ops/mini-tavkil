@@ -62,9 +62,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     throw new ApiError('network.unreachable', 'Could not reach the server.', 0);
   }
 
-  // 401 → the Better Auth session is gone/expired. No refresh exists, so this is
-  // terminal: notify the app (clear session + redirect to login).
-  if (res.status === 401) {
+  if (res.status === 401 && path !== '/admin/me') {
     onUnauthorized?.();
   }
 

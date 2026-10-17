@@ -7,6 +7,8 @@ export default defineConfig({
   base: '/',
   plugins: [react(), tailwindcss()],
   server: {
+    port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
@@ -15,6 +17,8 @@ export default defineConfig({
     },
   },
   preview: {
+    port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
@@ -28,9 +32,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@repo/countries': path.resolve(__dirname, './src/vendor/countries'),
-      '@repo/icons': path.resolve(__dirname, './src/vendor/icons'),
+      '@': path.resolve(import.meta.dirname, './src'),
+      '@repo/countries': path.resolve(import.meta.dirname, './src/vendor/countries'),
+      '@repo/icons': path.resolve(import.meta.dirname, './src/vendor/icons'),
     },
   },
   test: {
